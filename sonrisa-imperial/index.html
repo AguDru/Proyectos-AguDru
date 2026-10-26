@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sonrisa Imperial · Clínica Dental</title>
+  <meta name="description" content="Sonrisa Imperial, clínica dental. Agenda tu cita en menos de un minuto.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container header__inner">
+      <a href="#" class="brand" aria-label="Sonrisa Imperial">
+        <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M6 9l5 4 5-7 5 7 5-4-2 13H8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M10 26h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <span>Sonrisa <em>Imperial</em></span>
+      </a>
+      <a href="#agendar" class="btn btn--ghost">Agendar cita</a>
+    </div>
+  </header>
+
+  <main class="hero">
+    <div class="container hero__inner">
+      <section class="hero__copy">
+        <p class="eyebrow">Clínica dental</p>
+        <h1>Tu sonrisa, en las mejores manos.</h1>
+        <p class="lead">Odontología general y estética con atención personalizada. Reserva tu primera consulta en menos de un minuto.</p>
+        <ul class="points">
+          <li>Valoración inicial sin compromiso</li>
+          <li>Especialistas certificados</li>
+          <li>Horarios de lunes a sábado</li>
+        </ul>
+      </section>
+
+      <section class="card" id="agendar" aria-labelledby="form-title">
+        <form id="booking" novalidate>
+          <h2 id="form-title">Agenda tu cita</h2>
+          <p class="card__sub">Te confirmaremos por teléfono o correo.</p>
+
+          <div class="field">
+            <label for="name">Nombre completo</label>
+            <input id="name" name="name" type="text" autocomplete="name" required>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="phone">Teléfono</label>
+              <input id="phone" name="phone" type="tel" autocomplete="tel" required>
+            </div>
+            <div class="field">
+              <label for="email">Correo</label>
+              <input id="email" name="email" type="email" autocomplete="email" required>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="date">Fecha</label>
+              <input id="date" name="date" type="date" required>
+            </div>
+            <div class="field">
+              <label for="time">Hora</label>
+              <select id="time" name="time" required>
+                <option value="" selected disabled>Selecciona</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="reason">Motivo de la consulta</label>
+            <select id="reason" name="reason" required>
+              <option value="" selected disabled>Selecciona</option>
+              <option>Revisión y limpieza</option>
+              <option>Blanqueamiento</option>
+              <option>Ortodoncia</option>
+              <option>Implantes</option>
+              <option>Dolor o urgencia</option>
+              <option>Otro</option>
+            </select>
+          </div>
+
+          <p class="form-error" id="form-error" role="alert" hidden></p>
+          <button type="submit" class="btn btn--primary btn--block">Confirmar cita</button>
+        </form>
+
+        <div class="success" id="success" hidden tabindex="-1">
+          <div class="success__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h2>¡Solicitud recibida!</h2>
+          <p id="success-text"></p>
+          <button type="button" class="btn btn--ghost" id="again">Agendar otra cita</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <span>© <span id="year"></span> Sonrisa Imperial</span>
+      <span>Lun–Vie 9:00–19:00 · Sáb 9:00–14:00</span>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
