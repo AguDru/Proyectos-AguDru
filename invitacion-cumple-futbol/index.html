@@ -90,6 +90,8 @@
   .sheet div.wide { grid-column: 1 / -1; border-right: 0; }
   .sheet div:last-child { border-bottom: 0; }
   .sheet .value { font-family: var(--display); font-size: 23px; font-weight: 500; line-height: 1.25; overflow-wrap: anywhere; }
+  .sheet input[type="text"] { font: 500 19px var(--body); margin-top: 4px; }
+  .edit-bar { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
   .note { text-align: center; font-family: var(--display); font-style: italic; font-size: 19px; color: var(--chalk-dim); margin: 22px auto 0; max-width: 46ch; text-wrap: balance; }
 
   h2 { font-family: var(--display); font-weight: 700; font-size: 32px; margin: 4px 0 0; text-align: center; text-wrap: balance; }
@@ -193,11 +195,17 @@
 
   <section aria-label="Datos del partido">
     <div class="sheet">
-      <div><div class="label">Fecha</div><div class="value" id="v-fecha">A confirmar</div></div>
-      <div><div class="label">Pitazo inicial</div><div class="value" id="v-hora">A confirmar</div></div>
-      <div class="wide"><div class="label">Cancha</div><div class="value" id="v-lugar">A confirmar</div></div>
-      <div class="wide"><div class="label">Dirección</div><div class="value" id="v-direccion">A confirmar</div></div>
+      <div><label class="label" for="s-fecha">Fecha</label><div class="value" id="v-fecha">A confirmar</div><input type="text" id="s-fecha" maxlength="60" placeholder="Sábado 15 de noviembre" hidden></div>
+      <div><label class="label" for="s-hora">Pitazo inicial</label><div class="value" id="v-hora">A confirmar</div><input type="text" id="s-hora" maxlength="40" placeholder="17:00 hs" hidden></div>
+      <div class="wide"><label class="label" for="s-lugar">Cancha</label><div class="value" id="v-lugar">A confirmar</div><input type="text" id="s-lugar" maxlength="80" placeholder="Complejo El Potrero, cancha 3" hidden></div>
+      <div class="wide"><label class="label" for="s-direccion">Dirección</label><div class="value" id="v-direccion">A confirmar</div><input type="text" id="s-direccion" maxlength="120" placeholder="Calle y número, ciudad" hidden></div>
     </div>
+    <div class="edit-bar" id="edit-bar" hidden>
+      <button type="button" class="ghost" id="s-editar">Editar fecha, cancha y horario</button>
+      <button type="button" id="s-guardar" hidden>Guardar cambios</button>
+      <button type="button" class="ghost" id="s-cancelar" hidden>Cancelar</button>
+    </div>
+    <p class="status" id="sheet-status" role="status"></p>
     <p class="note" id="v-nota">Traé botines o zapatillas, ropa cómoda y muchas ganas de jugar. Después del partido, festejo y torta.</p>
   </section>
 
@@ -242,10 +250,6 @@
     <div class="owner-grid">
       <div class="field"><label class="label" for="e-nombre">Cumpleañero</label><input type="text" id="e-nombre" maxlength="40"></div>
       <div class="field"><label class="label" for="e-edad">Años que cumple</label><input type="text" id="e-edad" maxlength="4"></div>
-      <div class="field"><label class="label" for="e-fecha">Fecha</label><input type="text" id="e-fecha" maxlength="60" placeholder="Sábado 15 de noviembre"></div>
-      <div class="field"><label class="label" for="e-hora">Hora</label><input type="text" id="e-hora" maxlength="40" placeholder="17:00 hs"></div>
-      <div class="field wide"><label class="label" for="e-lugar">Cancha</label><input type="text" id="e-lugar" maxlength="80" placeholder="Complejo El Potrero, cancha 3"></div>
-      <div class="field wide"><label class="label" for="e-direccion">Dirección</label><input type="text" id="e-direccion" maxlength="120"></div>
       <div class="field wide"><label class="label" for="e-nota">Mensaje</label><input type="text" id="e-nota" maxlength="200"></div>
     </div>
     <button type="button" class="ghost" id="guardar">Guardar datos</button>
@@ -259,6 +263,10 @@
 (() => {
   const $ = (id) => document.getElementById(id);
   const FIELDS = ["nombre", "edad", "fecha", "hora", "lugar", "direccion", "nota"];
+  const SHEET = ["fecha", "hora", "lugar", "direccion"];
+  const PANEL = ["nombre", "edad", "nota"];
+  let stored = {};
+  let editing = false;
   const DEFAULTS = {
     nombre: "Lorenzo", edad: "", fecha: "A confirmar", hora: "A confirmar",
     lugar: "A confirmar", direccion: "A confirmar",
@@ -336,10 +344,42 @@
     }
   });
 
+  function setEditing(on) {
+    editing = on;
+    for (const f of SHEET) {
+      $("v-" + f).hidden = on;
+      $("s-" + f).hidden = !on;
+      if (on) $("s-" + f).value = (stored[f] ?? "").toString();
+    }
+    $("s-editar").hidden = on;
+    $("s-guardar").hidden = !on;
+    $("s-cancelar").hidden = !on;
+    if (on) $("s-fecha").focus();
+  }
+
+  $("s-editar").addEventListener("click", () => { setStatus($("sheet-status"), ""); setEditing(true); });
+  $("s-cancelar").addEventListener("click", () => setEditing(false));
+  $("s-guardar").addEventListener("click", async () => {
+    const status = $("sheet-status");
+    const data = { ...stored };
+    for (const f of SHEET) data[f] = $("s-" + f).value.trim();
+    $("s-guardar").disabled = true;
+    try {
+      await db.doc("config/evento").set(data);
+      stored = data;
+      setEditing(false);
+      setStatus(status, "Datos del partido guardados.", "ok");
+    } catch (err) {
+      setStatus(status, "No se pudieron guardar los cambios. Probá de nuevo.", "err");
+    } finally {
+      $("s-guardar").disabled = false;
+    }
+  });
+
   $("guardar").addEventListener("click", async () => {
     const status = $("owner-status");
-    const data = {};
-    for (const f of FIELDS) data[f] = $("e-" + f).value.trim();
+    const data = { ...stored };
+    for (const f of PANEL) data[f] = $("e-" + f).value.trim();
     $("guardar").disabled = true;
     try {
       await db.doc("config/evento").set(data);
@@ -359,21 +399,21 @@
     if (user) {
       try { myId = await user.id(); } catch (_) { myId = null; }
       const owner = await user.isOwner().catch(() => false);
-      if (owner) $("owner").hidden = false;
+      if (owner) { $("owner").hidden = false; $("edit-bar").hidden = false; }
     }
 
     let ownerFilled = false;
     db.doc("config/evento").onSnapshot((snap) => {
       const d = snap.exists ? snap.data() || {} : {};
+      stored = { ...d };
       evento = { ...DEFAULTS };
       for (const f of FIELDS) if (typeof d[f] === "string" && d[f].trim()) evento[f] = d[f];
       if (!snap.exists) evento.edad = "";
       renderEvento();
       if (!ownerFilled) {
         ownerFilled = true;
-        for (const f of FIELDS) {
-          const v = snap.exists ? (d[f] ?? "") : (f === "fecha" || f === "hora" || f === "lugar" || f === "direccion" ? "" : DEFAULTS[f]);
-          $("e-" + f).value = v;
+        for (const f of PANEL) {
+          $("e-" + f).value = snap.exists ? (d[f] ?? "") : DEFAULTS[f];
         }
       }
     }, () => {});
