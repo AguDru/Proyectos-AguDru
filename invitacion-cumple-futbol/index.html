@@ -1,0 +1,396 @@
+<title>Invitación Cumple Futbolero</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,700;1,500&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500&display=swap">
+<style>
+  /* Layout: una "ficha de partido" impresa sobre césped nocturno, con las líneas de cal de la cancha como único ornamento. */
+  :root {
+    --pitch: #0f3b26;
+    --pitch-deep: #0a2a1b;
+    --chalk: #f3f1e8;
+    --chalk-dim: #b9c7bb;
+    --gold: #d9b45a;
+    --line: rgba(243, 241, 232, 0.28);
+    --field: rgba(243, 241, 232, 0.07);
+    --yes: #8fd19e;
+    --no: #e7a08f;
+    --display: "Cormorant Garamond", "Times New Roman", Georgia, serif;
+    --label: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+    --body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--pitch-deep);
+    background-image: repeating-linear-gradient(90deg, var(--pitch) 0 64px, var(--pitch-deep) 64px 128px);
+    color: var(--chalk);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.55;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 40px 56px;
+  }
+  .card {
+    max-width: 640px;
+    margin: 0 auto;
+    border: 2px solid var(--chalk);
+    outline: 1px solid var(--line);
+    outline-offset: 6px;
+    background: rgba(10, 42, 27, 0.82);
+    padding: 40px clamp(20px, 6vw, 48px) 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    /* círculo central de la cancha */
+    content: "";
+    position: absolute;
+    width: 300px; height: 300px;
+    border: 2px solid var(--line);
+    border-radius: 50%;
+    top: -150px; left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  .eyebrow, .label {
+    font-family: var(--label);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--gold);
+  }
+  header { text-align: center; position: relative; display: grid; gap: 10px; padding-top: 28px; }
+  .intro { font-family: var(--display); font-style: italic; font-size: 21px; color: var(--chalk-dim); margin: 0; }
+  h1 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(44px, 11vw, 72px);
+    line-height: 1;
+    margin: 4px 0;
+    text-wrap: balance;
+  }
+  .age {
+    font-family: var(--label);
+    font-size: 20px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .age strong { color: var(--gold); font-size: 30px; font-weight: 700; margin: 0 4px; }
+  .ball { width: 46px; height: 46px; margin: 6px auto 0; }
+
+  hr { border: 0; border-top: 1px solid var(--line); margin: 32px 0; }
+
+  .sheet { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); }
+  .sheet div { padding: 14px 16px; border-bottom: 1px solid var(--line); min-width: 0; }
+  .sheet div:nth-child(odd) { border-right: 1px solid var(--line); }
+  .sheet div.wide { grid-column: 1 / -1; border-right: 0; }
+  .sheet div:last-child { border-bottom: 0; }
+  .sheet .value { font-family: var(--display); font-size: 23px; font-weight: 500; line-height: 1.25; overflow-wrap: anywhere; }
+  .note { text-align: center; font-family: var(--display); font-style: italic; font-size: 19px; color: var(--chalk-dim); margin: 22px auto 0; max-width: 46ch; text-wrap: balance; }
+
+  h2 { font-family: var(--display); font-weight: 700; font-size: 32px; margin: 4px 0 0; text-align: center; text-wrap: balance; }
+  .rsvp-head { display: grid; gap: 4px; text-align: center; margin-bottom: 22px; }
+  .rsvp-head p { margin: 0; color: var(--chalk-dim); }
+
+  form { display: grid; gap: 18px; }
+  .field { display: grid; gap: 6px; }
+  input[type="text"] {
+    font: 500 18px var(--body);
+    color: var(--chalk);
+    background: var(--field);
+    border: 0;
+    border-bottom: 2px solid var(--chalk-dim);
+    padding: 10px 12px;
+    width: 100%;
+  }
+  input[type="text"]::placeholder { color: var(--chalk-dim); opacity: 0.7; }
+  input[type="text"]:focus { outline: none; border-bottom-color: var(--gold); background: rgba(243,241,232,0.11); }
+  fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; }
+  legend { padding: 0; margin-bottom: 8px; }
+  .choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .choice input { position: absolute; opacity: 0; pointer-events: none; }
+  .choice span {
+    display: block;
+    text-align: center;
+    padding: 14px 10px;
+    border: 1.5px solid var(--line);
+    font-family: var(--label);
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .choice:hover span { border-color: var(--chalk-dim); }
+  .choice input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .choice input[value="si"]:checked + span { border-color: var(--yes); background: rgba(143,209,158,0.16); color: var(--yes); }
+  .choice input[value="no"]:checked + span { border-color: var(--no); background: rgba(231,160,143,0.14); color: var(--no); }
+  button {
+    font-family: var(--label);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    background: var(--chalk);
+    color: var(--pitch-deep);
+    border: 0;
+    padding: 14px 20px;
+    cursor: pointer;
+  }
+  button:hover { background: var(--gold); }
+  button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+  button:disabled { opacity: 0.55; cursor: default; }
+  button.ghost { background: transparent; color: var(--chalk); border: 1.5px solid var(--line); font-size: 15px; padding: 10px 16px; }
+  button.ghost:hover { border-color: var(--gold); color: var(--gold); background: transparent; }
+  .status { min-height: 1.5em; margin: 0; text-align: center; color: var(--chalk-dim); }
+  .status.ok { color: var(--yes); }
+  .status.err { color: var(--no); }
+
+  .roster-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+  .score { font-family: var(--label); font-size: 17px; font-weight: 600; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
+  .score .y { color: var(--yes); }
+  .score .n { color: var(--no); }
+  ol.roster { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  ol.roster li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 2px; border-bottom: 1px solid var(--line); }
+  ol.roster li .who { min-width: 0; overflow-wrap: anywhere; }
+  ol.roster li .tag { font-family: var(--label); text-transform: uppercase; letter-spacing: 0.1em; font-size: 14px; font-weight: 600; flex-shrink: 0; }
+  ol.roster li .tag.si { color: var(--yes); }
+  ol.roster li .tag.no { color: var(--no); }
+  .empty { color: var(--chalk-dim); font-style: italic; margin: 12px 0 0; }
+
+  .owner { margin-top: 32px; border: 1px dashed var(--line); padding: 18px; display: grid; gap: 14px; }
+  .owner-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .owner-grid .wide { grid-column: 1 / -1; }
+  footer { text-align: center; margin-top: 28px; }
+
+  @media (max-width: 480px) {
+    .sheet, .owner-grid { grid-template-columns: 1fr; }
+    .sheet div:nth-child(odd) { border-right: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<main class="card">
+  <header>
+    <span class="eyebrow">Convocatoria oficial</span>
+    <p class="intro">Tenemos el agrado de invitarte al cumpleaños de</p>
+    <h1 id="v-nombre">Agustín</h1>
+    <div class="age" id="v-edad-wrap">que cumple <strong id="v-edad">—</strong> años</div>
+    <svg class="ball" viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="24" cy="24" r="21" fill="#f3f1e8" stroke="#0a2a1b" stroke-width="1.5"/>
+      <polygon points="24,15 32,21 29,30 19,30 16,21" fill="#0a2a1b"/>
+      <path d="M24 15 V5 M32 21 L41 17 M29 30 L35 39 M19 30 L13 39 M16 21 L7 17" stroke="#0a2a1b" stroke-width="1.5" fill="none"/>
+    </svg>
+    <p class="intro" style="font-style:normal;color:var(--chalk)">a disputarse en un partido de fútbol entre amigos.</p>
+  </header>
+
+  <hr>
+
+  <section aria-label="Datos del partido">
+    <div class="sheet">
+      <div><div class="label">Fecha</div><div class="value" id="v-fecha">A confirmar</div></div>
+      <div><div class="label">Pitazo inicial</div><div class="value" id="v-hora">A confirmar</div></div>
+      <div class="wide"><div class="label">Cancha</div><div class="value" id="v-lugar">A confirmar</div></div>
+      <div class="wide"><div class="label">Dirección</div><div class="value" id="v-direccion">A confirmar</div></div>
+    </div>
+    <p class="note" id="v-nota">Traé botines o zapatillas, ropa cómoda y muchas ganas de jugar. Después del partido, festejo y torta.</p>
+  </section>
+
+  <hr>
+
+  <section aria-labelledby="rsvp-title">
+    <div class="rsvp-head">
+      <span class="eyebrow">R.S.V.P.</span>
+      <h2 id="rsvp-title">Confirmá tu asistencia</h2>
+      <p>Completá tu nombre y avisá si venís.</p>
+    </div>
+    <form id="rsvp" novalidate>
+      <div class="field">
+        <label class="label" for="nombre">Nombre y apellido</label>
+        <input type="text" id="nombre" name="nombre" maxlength="60" autocomplete="name" placeholder="Escribí tu nombre" required>
+      </div>
+      <fieldset>
+        <legend class="label">¿Asistís?</legend>
+        <div class="choices">
+          <label class="choice"><input type="radio" id="asiste-si" name="asiste" value="si"><span>Sí, voy</span></label>
+          <label class="choice"><input type="radio" id="asiste-no" name="asiste" value="no"><span>No puedo ir</span></label>
+        </div>
+      </fieldset>
+      <button type="submit" id="enviar">Enviar confirmación</button>
+      <p class="status" id="status" role="status"></p>
+    </form>
+  </section>
+
+  <hr>
+
+  <section aria-labelledby="roster-title">
+    <div class="roster-head">
+      <span class="label" id="roster-title">Lista de convocados</span>
+      <span class="score" id="score"><span class="y">0 van</span> · <span class="n">0 no van</span></span>
+    </div>
+    <ol class="roster" id="roster"></ol>
+    <p class="empty" id="empty">Todavía nadie confirmó. Las respuestas aparecen acá apenas alguien envía el formulario.</p>
+  </section>
+
+  <section class="owner" id="owner" hidden aria-labelledby="owner-title">
+    <span class="label" id="owner-title">Solo vos ves esto · Datos de la invitación</span>
+    <div class="owner-grid">
+      <div class="field"><label class="label" for="e-nombre">Cumpleañero</label><input type="text" id="e-nombre" maxlength="40"></div>
+      <div class="field"><label class="label" for="e-edad">Años que cumple</label><input type="text" id="e-edad" maxlength="4"></div>
+      <div class="field"><label class="label" for="e-fecha">Fecha</label><input type="text" id="e-fecha" maxlength="60" placeholder="Sábado 15 de noviembre"></div>
+      <div class="field"><label class="label" for="e-hora">Hora</label><input type="text" id="e-hora" maxlength="40" placeholder="17:00 hs"></div>
+      <div class="field wide"><label class="label" for="e-lugar">Cancha</label><input type="text" id="e-lugar" maxlength="80" placeholder="Complejo El Potrero, cancha 3"></div>
+      <div class="field wide"><label class="label" for="e-direccion">Dirección</label><input type="text" id="e-direccion" maxlength="120"></div>
+      <div class="field wide"><label class="label" for="e-nota">Mensaje</label><input type="text" id="e-nota" maxlength="200"></div>
+    </div>
+    <button type="button" class="ghost" id="guardar">Guardar datos</button>
+    <p class="status" id="owner-status" role="status"></p>
+  </section>
+
+  <footer><span class="eyebrow">¡Te esperamos en la cancha!</span></footer>
+</main>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const FIELDS = ["nombre", "edad", "fecha", "hora", "lugar", "direccion", "nota"];
+  const DEFAULTS = {
+    nombre: "Agustín", edad: "", fecha: "A confirmar", hora: "A confirmar",
+    lugar: "A confirmar", direccion: "A confirmar",
+    nota: $("v-nota").textContent,
+  };
+  let evento = { ...DEFAULTS };
+  let db = null, myId = null;
+
+  function setStatus(el, text, kind) {
+    el.textContent = text;
+    el.className = "status" + (kind ? " " + kind : "");
+  }
+
+  function renderEvento() {
+    for (const f of FIELDS) {
+      const v = (evento[f] ?? "").toString().trim();
+      if (f === "edad") {
+        $("v-edad").textContent = v;
+        $("v-edad-wrap").hidden = !v;
+      } else {
+        $("v-" + f).textContent = v || DEFAULTS[f];
+      }
+    }
+  }
+
+  function renderRoster(docs) {
+    const rows = docs
+      .map((d) => d.data() || {})
+      .filter((r) => typeof r.nombre === "string" && r.nombre.trim())
+      .sort((a, b) => (a.asiste === b.asiste ? a.nombre.localeCompare(b.nombre, "es") : a.asiste === "si" ? -1 : 1));
+    const list = $("roster");
+    list.replaceChildren();
+    let si = 0, no = 0;
+    for (const r of rows) {
+      const li = document.createElement("li");
+      const who = document.createElement("span");
+      who.className = "who";
+      who.textContent = r.nombre;
+      const tag = document.createElement("span");
+      const yes = r.asiste === "si";
+      yes ? si++ : no++;
+      tag.className = "tag " + (yes ? "si" : "no");
+      tag.textContent = yes ? "Va" : "No va";
+      li.append(who, tag);
+      list.append(li);
+    }
+    $("empty").hidden = rows.length > 0;
+    $("score").innerHTML = "";
+    const y = document.createElement("span"); y.className = "y"; y.textContent = si + (si === 1 ? " va" : " van");
+    const n = document.createElement("span"); n.className = "n"; n.textContent = no + " no " + (no === 1 ? "va" : "van");
+    $("score").append(y, " · ", n);
+  }
+
+  renderEvento();
+
+  $("rsvp").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const status = $("status");
+    const nombre = $("nombre").value.trim();
+    const elegido = document.querySelector('input[name="asiste"]:checked');
+    if (!nombre) { setStatus(status, "Escribí tu nombre para confirmar.", "err"); $("nombre").focus(); return; }
+    if (!elegido) { setStatus(status, "Elegí si vas o no.", "err"); return; }
+    if (!db || !myId) {
+      setStatus(status, "Para confirmar, abrí la invitación desde el enlace de Claude con tu cuenta iniciada.", "err");
+      return;
+    }
+    $("enviar").disabled = true;
+    try {
+      await db.doc("rsvps/" + myId).set({ nombre, asiste: elegido.value, actualizado: new Date().toISOString() });
+      setStatus(status, elegido.value === "si" ? "¡Confirmado! Nos vemos en la cancha." : "Gracias por avisar. ¡Te vamos a extrañar!", "ok");
+    } catch (err) {
+      setStatus(status, "No se pudo guardar tu respuesta. Pedile al cumpleañero acceso de colaborador y volvé a intentar.", "err");
+    } finally {
+      $("enviar").disabled = false;
+    }
+  });
+
+  $("guardar").addEventListener("click", async () => {
+    const status = $("owner-status");
+    const data = {};
+    for (const f of FIELDS) data[f] = $("e-" + f).value.trim();
+    $("guardar").disabled = true;
+    try {
+      await db.doc("config/evento").set(data);
+      setStatus(status, "Datos guardados.", "ok");
+    } catch (err) {
+      setStatus(status, "No se pudieron guardar los datos. Probá de nuevo.", "err");
+    } finally {
+      $("guardar").disabled = false;
+    }
+  });
+
+  (async () => {
+    if (!window.claude?.use) return;
+    const [dbNs, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+    db = dbNs;
+    if (!db) return;
+    if (user) {
+      try { myId = await user.id(); } catch (_) { myId = null; }
+      const owner = await user.isOwner().catch(() => false);
+      if (owner) $("owner").hidden = false;
+    }
+
+    let ownerFilled = false;
+    db.doc("config/evento").onSnapshot((snap) => {
+      const d = snap.exists ? snap.data() || {} : {};
+      evento = { ...DEFAULTS };
+      for (const f of FIELDS) if (typeof d[f] === "string" && d[f].trim()) evento[f] = d[f];
+      if (!snap.exists) evento.edad = "";
+      renderEvento();
+      if (!ownerFilled) {
+        ownerFilled = true;
+        for (const f of FIELDS) {
+          const v = snap.exists ? (d[f] ?? "") : (f === "fecha" || f === "hora" || f === "lugar" || f === "direccion" ? "" : DEFAULTS[f]);
+          $("e-" + f).value = v;
+        }
+      }
+    }, () => {});
+
+    db.collection("rsvps").onSnapshot((snap) => {
+      renderRoster(snap.docs);
+      if (myId) {
+        const mine = snap.docs.find((d) => d.id === myId);
+        const m = mine && mine.data();
+        if (m && !$("nombre").value) {
+          $("nombre").value = m.nombre || "";
+          const r = document.querySelector('input[name="asiste"][value="' + (m.asiste === "no" ? "no" : "si") + '"]');
+          if (r) r.checked = true;
+          setStatus($("status"), "Ya respondiste. Podés cambiar tu respuesta y enviarla de nuevo.");
+        }
+      }
+    }, () => {});
+  })();
+})();
+</script>
