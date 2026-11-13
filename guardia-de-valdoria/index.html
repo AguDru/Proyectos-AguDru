@@ -44,7 +44,8 @@ h1 span { color: var(--nova); }
 #ovName { left: 56%; top: 26%; }
 #ovName .n1, #ovName .n2 { font-size: 6.4cqw; line-height: 1; }
 #ovName .n3 { font-size: 2cqw; font-weight: 500; color: #e8ecf4; margin-top: 1.2cqw; letter-spacing: .12em; }
-#ovGroup { left: 0; right: 0; top: 12%; text-align: center; font-size: 4.2cqw; }
+#ovGroup { left: 0; right: 0; top: 7%; text-align: center; font-size: 4.2cqw; }
+.tag { font-size: 1.45cqw; letter-spacing: .06em; white-space: nowrap; transform: translate(-50%, -100%); }
 #ovYear { left: 4.5%; top: 6%; }
 #ovYear .y1 { font-size: 3.6cqw; line-height: 1.1; }
 #ovYear .y2 { display: inline-block; font-size: 1.5cqw; font-weight: 500; color: var(--nova); letter-spacing: .12em; border-bottom: 0.25cqw solid var(--nova); padding-bottom: .6cqw; }
@@ -100,7 +101,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · 1 min 52 s</div>
+    <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · 1 min 58 s</div>
     <h1>La Guardia de <span>Valdoria</span></h1>
     <p class="logline">Año 2187. Malvor invade la ciudad de Valdoria con un ejército de drones. Capitán Relámpago, Guardián Cósmico y Sombra Dorada pelean contra él durante cinco años y cien batallas. Más de una vez están a punto de perder a uno de los suyos, hasta que descubren cómo derrotarlo.</p>
   </header>
@@ -111,6 +112,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
       <div class="ov" id="ovTitle"><div class="t1">LA GUARDIA</div><div class="t2">DE VALDORIA</div><div class="t3">AÑO 2187</div></div>
       <div class="ov" id="ovName"><div class="n1"></div><div class="n2"></div><div class="n3"></div></div>
       <div class="ov" id="ovGroup">LA GUARDIA DE VALDORIA</div>
+      <div class="ov tag" id="tag0"></div><div class="ov tag" id="tag1"></div><div class="ov tag" id="tag2"></div>
       <div class="ov" id="ovYear"><div class="y1"></div><div class="y2"></div></div>
       <div class="ov" id="ovFin">FIN</div>
       <div class="ov" id="flash"></div>
@@ -124,8 +126,8 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
     <div class="controls">
       <button class="btn" id="play">Reproducir</button>
       <button class="btn" id="restart">Desde el inicio</button>
-      <input type="range" id="scrub" min="0" max="112" step="0.01" value="0" aria-label="Posición en la película">
-      <span class="time" id="time">0:00 / 1:52</span>
+      <input type="range" id="scrub" min="0" max="118" step="0.01" value="0" aria-label="Posición en la película">
+      <span class="time" id="time">0:00 / 1:58</span>
       <button class="btn" id="sound" aria-pressed="true">Sonido: encendido</button>
     </div>
   </section>
@@ -156,7 +158,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 <script>
 (() => {
-const DUR = 112;
+const DUR = 118;
 const cv = document.getElementById('film');
 const subsEl = document.getElementById('subs'), scrub = document.getElementById('scrub');
 const timeEl = document.getElementById('time'), playBtn = document.getElementById('play');
@@ -191,7 +193,7 @@ function makeDrones(seed, n, t0, t1, gOff, tmax) {
     return d;
   });
 }
-const D_YEAR1 = makeDrones(21, 15, 0.2, 4.6, 34, 7.4);
+const D_YEAR1 = makeDrones(21, 12, 0.2, 3.4, 34, 6.2);
 const D_MONT = [0, 1, 2, 3].map(i => makeDrones(31 + i, 9, 0, 2.4, 46 + i * 4, 3.9));
 const INVADERS = (() => {
   const r = mkRand(9);
@@ -220,13 +222,13 @@ const WAVE2 = (() => {
 })();
 const FIREWORKS = (() => { const r = mkRand(55); return [1, 2.2, 3.1, 4.5, 5.4, 6.8, 7.6, 9, 10.2].map((t, i) => ({ t, x: -70 + r() * 140, y: 75 + r() * 40, z: -110 - r() * 40, c: HEROES[IDS[i % 3]].c })); })();
 FIREWORKS.forEach(f => SFX.push({ t: 100 + f.t, k: 'pop' }));
-SFX.push({ t: 41.5, k: 'big' }, { t: 95.6, k: 'beam' }, { t: 97.2, k: 'big' }, { t: 63.6, k: 'beam' }, { t: 63.9, k: 'boom' }, { t: 68.1, k: 'boom' }, { t: 69.1, k: 'whoosh' }, ...[64.6, 65.4, 66.1, 66.7, 67.2, 67.6].map(t => ({ t, k: 'heart' })), { t: 14, k: 'rumble' }, { t: 10.3, k: 'whistle' }, { t: 13, k: 'big' });
-const SHAKES = [[13, 1.6, 1.2], [14, 3, 0.15], [41.5, 1.2, 0.6], [95.6, 1.6, 0.3], [97.2, 2, 1.4], [63.8, 0.7, 0.5], [68.1, 0.6, 0.4]];
+SFX.push({ t: 23.2, k: 'whoosh' }, { t: 24.2, k: 'boom' }, { t: 24.4, k: 'whoosh' }, { t: 95.6, k: 'beam' }, { t: 97.2, k: 'big' }, { t: 63.6, k: 'beam' }, { t: 63.9, k: 'boom' }, { t: 68.1, k: 'boom' }, { t: 69.1, k: 'whoosh' }, ...[64.6, 65.4, 66.1, 66.7, 67.2, 67.6].map(t => ({ t, k: 'heart' })), { t: 14, k: 'rumble' }, { t: 10.3, k: 'whistle' }, { t: 13, k: 'big' });
+const SHAKES = [[24.2, 0.6, 0.3], [13, 1.6, 1.2], [14, 3, 0.15], [95.6, 1.6, 0.3], [97.2, 2, 1.4], [63.8, 0.7, 0.5], [68.1, 0.6, 0.4]];
 
 const SCENES = [
   { a: 0, b: 10, name: 'Prólogo' }, { a: 10, b: 22, name: 'La invasión' }, { a: 22, b: 34, name: 'Los héroes' },
-  { a: 34, b: 46, name: 'Año 1' }, { a: 46, b: 62, name: 'Cinco años de guerra' }, { a: 62, b: 74, name: 'Al borde' },
-  { a: 74, b: 84, name: 'El plan' }, { a: 84, b: 100, name: 'Batalla final' }, { a: 100, b: 112, name: 'Amanecer' }
+  { a: 34, b: 46, name: 'Año 1' }, { a: 46, b: 52, name: 'La guarida' }, { a: 52, b: 68, name: 'Cinco años de guerra' }, { a: 68, b: 80, name: 'Al borde' },
+  { a: 80, b: 90, name: 'El plan' }, { a: 90, b: 106, name: 'Batalla final' }, { a: 106, b: 118, name: 'Amanecer' }
 ];
 
 // ---------- 3D setup ----------
@@ -436,13 +438,13 @@ function poseHero(h, p, o = {}) {
   return { hand, chest };
 }
 
-function makeMalvor(holo) {
+function makeMalvor(holo, pal = {}) {
   const g = new THREE.Group(), mats = [];
   const M = o => { const m = holo ? new THREE.MeshBasicMaterial({ color: 0xff3b4e, wireframe: true, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }) : new THREE.MeshStandardMaterial(o); mats.push(m); return m; };
-  const armor = M({ color: 0x3c3f4e, metalness: 0.85, roughness: 0.32 });
+  const armor = M({ color: pal.armor ?? 0x3c3f4e, metalness: 0.85, roughness: 0.32 });
   const dark = M({ color: 0x1f2129, metalness: 0.7, roughness: 0.5 });
-  const capeM = M({ color: 0x5e0a18, roughness: 0.8, side: THREE.DoubleSide });
-  const red = M({ color: 0xff3b4e, emissive: 0xff2040, emissiveIntensity: 2.2 });
+  const capeM = M({ color: pal.cape ?? 0x5e0a18, roughness: 0.8, side: THREE.DoubleSide });
+  const red = M({ color: pal.eye ?? 0xff3b4e, emissive: pal.eye ?? 0xff2040, emissiveIntensity: 2.2 });
   for (const s of [1, -1]) { mesh(new THREE.CylinderGeometry(0.32, 0.27, 2.3, 10), dark, 0, 1.15, s * 0.42, g); mesh(new THREE.BoxGeometry(0.85, 0.42, 0.56), armor, 0.15, 0.21, s * 0.42, g); }
   mesh(new THREE.CylinderGeometry(1.0, 0.72, 2.0, 6), armor, 0, 3.25, 0, g);
   mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.26, 6), dark, 0, 2.25, 0, g);
@@ -465,13 +467,14 @@ function makeMalvor(holo) {
 function poseMalvor(m, p, o = {}) {
   const a = o.alpha ?? 1;
   if (a <= 0.01) { m.g.visible = false; return p.clone(); }
-  m.g.visible = true; m.g.position.copy(p); m.g.rotation.set(0, o.yaw ?? Math.PI, 0); m.g.scale.setScalar(o.s || 1);
+  m.g.visible = true; m.g.position.copy(p); m.g.rotation.set(0, o.yaw ?? Math.PI, o.tilt || 0); m.g.scale.setScalar(o.s || 1);
   m.cape.rotation.z = -0.12 - Math.sin((o.t || 0) * 1.5) * 0.06;
   for (const mt of m.mats) { if (m.holo) mt.opacity = 0.55 * a; else { mt.transparent = a < 0.999; mt.opacity = a; } }
   m.g.updateMatrixWorld(true);
   const c = m.core.getWorldPosition(V(0, 0, 0));
-  glow(c, (m.holo ? 6 : 2.4) * (o.s || 1) * (0.85 + 0.15 * Math.sin((o.t || 0) * 6)), RED, (m.holo ? 0.5 : 0.85) * a);
-  if (!m.holo) glow(V(p.x, p.y + 3 * (o.s || 1), p.z), 9 * (o.s || 1), RED, 0.12 * a + 0.3 * (o.hurt || 0));
+  const gc = o.col || RED;
+  glow(c, (m.holo ? 6 : 2.4) * (o.s || 1) * (0.85 + 0.15 * Math.sin((o.t || 0) * 6)) * (o.coreK ?? 1), gc, (m.holo ? 0.5 : 0.85) * a);
+  if (!m.holo) glow(V(p.x, p.y + 3 * (o.s || 1), p.z), 9 * (o.s || 1), gc, 0.12 * a + 0.3 * (o.hurt || 0));
   return c;
 }
 
@@ -504,6 +507,8 @@ function poseShip(sh, p, o = {}) {
 const H = { rayo: makeHero('rayo'), guardian: makeHero('guardian'), sombra: makeHero('sombra') };
 const GHOSTS = [makeHero('sombra', true), makeHero('sombra', true), makeHero('sombra', true)];
 const MALVOR = makeMalvor(false), MALHOLO = makeMalvor(true);
+const KROG = makeMalvor(false, { armor: 0x4d3a26, cape: 0x3a2008, eye: 0xff8a30 }), VEXA = makeMalvor(false, { armor: 0x3c3048, cape: 0x2a0838, eye: 0xd040ff });
+const ALLY = [[KROG, [255, 138, 48]], [VEXA, [208, 64, 255]]];
 const SHIP = makeShip(false), SHIPHOLO = makeShip(true);
 
 const bomb = new THREE.Group(); {
@@ -533,7 +538,7 @@ function setDome(c, R, a, t, stress = 0) {
 }
 
 // ---------- sets ----------
-const SETS = { city: new THREE.Group(), desert: new THREE.Group(), ice: new THREE.Group(), space: new THREE.Group(), roof: new THREE.Group(), rain: new THREE.Group() };
+const SETS = { moon: new THREE.Group(), city: new THREE.Group(), desert: new THREE.Group(), ice: new THREE.Group(), space: new THREE.Group(), roof: new THREE.Group(), rain: new THREE.Group() };
 Object.values(SETS).forEach(s => scene.add(s));
 // city
 mesh(new THREE.PlaneGeometry(1400, 1400), MAT.ground, 0, 0, 0, SETS.city).rotation.x = -Math.PI / 2;
@@ -644,6 +649,23 @@ function cityState(t, o) {
   const mm = new THREE.MeshStandardMaterial({ color: 0x8eaecc, roughness: 1, flatShading: true });
   for (let i = 0; i < 9; i++) mesh(new THREE.ConeGeometry(60 + r() * 40, 90 + r() * 80, 6), mm, -400 + i * 100 + r() * 40, 40, -420 - r() * 80, SETS.ice);
 }
+// red moon with Malvor's lair
+{
+  const geo = new THREE.PlaneGeometry(700, 700, 70, 70); geo.rotateX(-Math.PI / 2);
+  const p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i); p.setY(i, (Math.sin(x * 0.07) * Math.cos(z * 0.05) * 2.5 + Math.sin(x * 0.013 + z * 0.02) * 4) * ss(10, 40, Math.hypot(x, z - 10))); }
+  geo.computeVertexNormals();
+  mesh(geo, new THREE.MeshStandardMaterial({ color: 0x4a1c1e, roughness: 1, flatShading: true }), 0, 0, 0, SETS.moon);
+  const rock = new THREE.MeshStandardMaterial({ color: 0x2a1013, roughness: 1, flatShading: true });
+  mesh(new THREE.ConeGeometry(55, 70, 7), rock, -40, 33, -95, SETS.moon);
+  mesh(new THREE.ConeGeometry(45, 58, 6), rock, 45, 27, -100, SETS.moon);
+  mesh(new THREE.BoxGeometry(70, 34, 16), rock, 0, 17, -62, SETS.moon);
+  mesh(new THREE.BoxGeometry(14, 13, 1), new THREE.MeshBasicMaterial({ color: 0x050102 }), 0, 6.5, -53.9, SETS.moon);
+  for (const sx of [-1, 1]) { const t = mesh(new THREE.ConeGeometry(2, 18, 5), rock, sx * 11, 9, -53, SETS.moon); t.rotation.z = sx * 0.12; }
+  const r = mkRand(31);
+  for (let i = 0; i < 30; i++) { const s = 1 + r() * 4; const m = mesh(new THREE.DodecahedronGeometry(s, 0), rock, -70 + r() * 140, s * 0.3, -10 - r() * 50, SETS.moon); m.rotation.set(r(), r(), r()); }
+  mesh(new THREE.SphereGeometry(70, 40, 28), new THREE.MeshStandardMaterial({ color: 0x3f7fd0, emissive: 0x0c2244, roughness: 0.8 }), -150, 120, -380, SETS.moon);
+}
 // space
 const ASTEROIDS = [];
 {
@@ -711,6 +733,9 @@ function skirmish(lt, D, P, o = {}) {
 // ---------- scenes ----------
 const CARS = (() => { const r = mkRand(23); return Array.from({ length: 16 }, () => ({ y: 22 + r() * 30, z: -20 - r() * 80, v: 10 + r() * 14, x: r() * 300, d: r() < 0.5 ? 1 : -1 })); })();
 const NIGHT = { top: [6, 8, 30], bot: [70, 40, 110] };
+const TAGS = [];
+const TAG_EL = [0, 1, 2].map(i => document.getElementById('tag' + i));
+const TAG_NAME = { rayo: 'Capitán Relámpago', guardian: 'Guardián Cósmico', sombra: 'Sombra Dorada' };
 const DRAW = [
   function prologue(lt, t) {
     env({ ...NIGHT, fog: 0.0055, stars: 1, hemi: 0.45, sun: 0.5, sets: ['city'] });
@@ -748,59 +773,83 @@ const DRAW = [
     }
   },
   function heroes(lt, t) {
-    env({ top: [8, 6, 18], bot: [30, 16, 30], fog: 0.02, stars: 0.3, hemi: 0.12, sun: 0.08, sets: ['city'], bloom: 1.1 });
-    cityState(t, { lights: 0.06, ruined: true, fire: 0.35 });
-    const segs = [['rayo', 0, 3.5], ['guardian', 3.5, 7], ['sombra', 7, 10.5]];
-    let anyA = 0, cur = null;
-    for (const [id, s0, s1] of segs) {
-      const a = ss(s0, s0 + 0.5, lt) * (1 - ss(s1 - 0.4, s1, lt)); if (a <= 0) continue;
-      anyA = a; cur = id;
-      const l = lt - s0, c = HEROES[id].c, x = lerp(-3.5, 0, ss(0, 1.1, l));
-      const out = poseHero(H[id], V(x, 0, 0), { yaw: -0.65, aR: id === 'rayo' ? 1.9 : id === 'guardian' ? 2.6 : 0.3, aL: id === 'guardian' ? 2.6 : 0.2, alpha: a, aura: 1, t: lt, charge: id === 'rayo' ? 0.8 : 0, spread: 0.12 });
-      spot.color.copy(col(c)); spot.intensity = 4 * a; spot.position.set(0.5, 8, 2.5); spot.target.position.set(0, 0.5, 0);
-      glow(V(0, 0.05, 0), 4.5, c, 0.25 * a, 1.2);
-      if (id === 'rayo') for (let k = 0; k < 6; k++) { const an = lt * 3 + k * TAU / 6; glow(out.hand.clone().add(V(Math.cos(an) * 0.6, Math.sin(an) * 0.6, Math.sin(an * 0.5) * 0.4)), 0.7, c, a); }
-      if (id === 'guardian') setDome(V(0, 0, 0), 2.3 + 0.1 * Math.sin(lt * 4), a * ss(0.5, 1.2, l), lt);
-      if (id === 'sombra') {
-        GHOSTS.forEach((gh, k) => poseHero(gh, V(x - (k + 1) * (0.5 + 1.2 * (1 - ss(0, 1.2, l))), 0, 0), { yaw: -0.65, aR: 0.3, alpha: a * (1 - k * 0.25), t: lt }));
-        for (let k = 0; k < 6; k++) beam(V(x - 6 - k * 0.4, 0.3 + k * 0.28, -0.3 + k * 0.1), V(x - 1, 0.3 + k * 0.28, -0.3 + k * 0.1), 0.02, c, 0.6 * a);
-      }
+    // the three heroes arrive together and face Malvor in the street
+    env({ top: [16, 6, 16], bot: [80, 24, 34], fog: 0.012, stars: 0.3, hemi: 0.38, hemiT: [255, 150, 160], sun: 0.35, sunC: [255, 170, 160], sets: ['city'], bloom: 1.05 });
+    cityState(t, { lights: 0.06, ruined: true, fire: 0.6 });
+    poseMalvor(MALVOR, V(12, 0.3 + Math.sin(lt * 1.4) * 0.25, 0), { s: 1.6, t: lt });
+    const talk = ss(4.4, 5.2, lt);
+    const arr = [['rayo', V(-2.2, 0, -1.6), 0.4, 1.6], ['guardian', V(-3, 0, 0), 1.6, 2.2], ['sombra', V(-2.2, 0, 1.6), 2.2, 2.6]];
+    for (const [id, p, t0, t1] of arr) {
+      if (lt < t0) continue;
+      const k = ss(t0, t1, lt), pos = p.clone();
+      const o = { aura: 0.8 + 0.5 * talk, t: lt, spread: 0.2, aR: 0.25, aL: -0.15 };
+      if (id === 'rayo') { pos.y = lerp(28, 0, k); pos.x = lerp(-12, p.x, k); if (k < 1) { o.fly = true; o.aR = 2.8; } else o.aR = lerp(0.25, 1.55, talk); }
+      if (id === 'guardian') { pos.y = lerp(24, 0, k * k); o.aR = o.aL = lerp(0.3, 0.75, talk); }
+      if (id === 'sombra') { pos.x = lerp(-45, p.x, k); if (k < 1) { o.fly = true; beam(V(pos.x - 12, 1.1, p.z), V(pos.x, 1.1, p.z), 0.35, HEROES.sombra.c, 0.7); } else o.aR = lerp(0.25, 0.9, talk); }
+      const out = poseHero(H[id], pos, o);
+      if (k >= 1) TAGS.push([out.chest.clone().add(V(0, 0.75, 0)), id, ss(4.8, 5.4, lt) * (1 - ss(7.8, 8.1, lt))]);
     }
-    if (cur && OV.name.dataset.k !== cur) {
-      OV.name.dataset.k = cur; const h = HEROES[cur];
-      OV.name.querySelector('.n1').textContent = h.name[0]; OV.name.querySelector('.n2').textContent = h.name[1]; OV.name.querySelector('.n3').textContent = h.power;
-      OV.name.style.color = `rgb(${h.c.join(',')})`;
+    if (lt > 2.2 && lt < 3.3) {
+      const k = (lt - 2.2) / 1.1;
+      ring.visible = true; ring.position.set(-3, 0.15, 0); ring.rotation.set(Math.PI / 2, 0, 0); ring.scale.setScalar(1 + k * 14); ring.material.opacity = 1 - k; ring.material.color.setHex(0xa77bff);
+      for (let q = 0; q < 6; q++) smoke(V(-3 + Math.cos(q) * (1 + k * 5), 0.5, Math.sin(q) * (1 + k * 4)), 2 + k * 4, 0.4 * (1 - k));
     }
-    ov(OV.name, cur ? anyA : 0);
-    const ga = ss(10.5, 11, lt);
-    if (ga > 0) {
-      [['rayo', -1.9], ['guardian', 0], ['sombra', 1.9]].forEach(([id, x]) => poseHero(H[id], V(x, 0, 0), { yaw: -Math.PI / 2, alpha: ga, aura: 1, t: lt, aR: 0.2, aL: -0.2, spread: 0.12 }));
-      spot.color.setRGB(1, 1, 1); spot.intensity = 3 * ga; spot.position.set(0, 9, 4); spot.target.position.set(0, 0.5, 0);
-    }
-    ov(OV.group, ga);
-    if (lt < 10.5) { const ang = 0.35 + (lt % 3.5) * 0.07; camera.position.set(Math.sin(ang) * 5.2, 1.5, Math.cos(ang) * 5.2); camTarget.set(0, 1.1, 0); }
-    else { camera.position.set(0, 1.6, lerp(7.5, 6.8, ss(10.5, 12, lt))); camTarget.set(0, 1.15, 0); }
+    ov(OV.group, ss(5, 5.6, lt) * (1 - ss(7.8, 8.1, lt)));
+    camKeys(lt, [[0, [-2, 3.6, 16], [4, 3.5, 0]], [3.3, [0, 3, 15], [3, 2.4, 0]], [4.4, [5, 1.25, 1.2], [-2.6, 1.35, 0]], [8.35, [4.3, 1.2, 0.9], [-2.6, 1.4, 0]], [8.4, [-7.5, 2.3, 3.2], [12, 4.2, 0]], [12, [-6.6, 2, 2.6], [12, 4.6, 0]]]);
+    return lt > 8.1 && lt < 8.7 ? Math.min(ss(8.1, 8.35, lt), 1 - ss(8.4, 8.7, lt)) : 0;
   },
   function year1(lt, t) {
     env({ top: [14, 8, 22], bot: [80, 26, 42], fog: 0.012, stars: 0.3, hemi: 0.4, hemiT: [255, 150, 160], sun: 0.4, sets: ['city'] });
     cityState(t, { lights: 0.08, ruined: true, fire: 0.7 });
-    const knock = ss(7.8, 8.4, lt);
-    skirmish(lt, D_YEAR1, { rayo: [-8, 0, 1.5], guardian: [-6.5, 0, -0.8], sombra: [-5, 0, 2.2] }, { knock });
-    const mx = lerp(45, 16, ss(5.4, 7, lt));
-    if (lt > 5.2) {
-      const core = poseMalvor(MALVOR, V(mx, 0.3 + Math.sin(lt * 1.5) * 0.25, -1), { s: 1.5, t: lt });
-      if (lt > 7.5 && lt < 8.8) {
-        const k = (lt - 7.5) / 1.3;
-        ring.visible = true; ring.position.copy(core); ring.rotation.set(0, Math.PI / 2, 0); ring.scale.setScalar(k * 50); ring.material.opacity = 1 - k; ring.material.color.setHex(0xff3b4e);
-        ring2.visible = true; ring2.position.set(core.x, 0.5, core.z); ring2.rotation.set(Math.PI / 2, 0, 0); ring2.scale.setScalar(k * 50); ring2.material.opacity = 1 - k; ring2.material.color.setHex(0xff3b4e);
-        glow(core, 30 * (1 - k), RED, 0.6);
-      }
+    const P = { rayo: [-8, 0, 1.5], guardian: [-6.5, 0, -0.8], sombra: [-5, 0, 2.2] };
+    const out = skirmish(lt, D_YEAR1, P, {});
+    // Malvor arrives, the heroes beat him down
+    const atk = ss(6.1, 6.5, lt) * (1 - ss(8.5, 8.8, lt));
+    const kneel = ss(6.4, 8.2, lt) * (1 - ss(9.4, 10, lt));
+    const flee = ss(10.4, 12, lt);
+    const mx = lerp(45, 16, ss(4.4, 6, lt));
+    const mpos = V(mx + flee * 6, 0.3 + Math.sin(lt * 1.5) * 0.2 - 0.9 * kneel + flee * flee * 26, -1);
+    let mcore = V(mx, 7, -1);
+    if (lt > 4.2) mcore = poseMalvor(MALVOR, mpos, { s: 1.5, t: lt, hurt: kneel, tilt: 0.25 * kneel, coreK: 1 - 0.6 * kneel * (Math.sin(lt * 21) > 0 ? 1 : 0.3) });
+    if (atk > 0) {
+      const ph = lt * 3;
+      beam(out.rayo.hand, mcore, 0.22, HEROES.rayo.c, atk * (0.7 + 0.3 * Math.sin(ph * 5))); beam(out.rayo.hand, mcore, 0.07, [255, 255, 255], atk);
+      beam(out.sombra.hand, mcore, 0.14, HEROES.sombra.c, atk * (Math.sin(ph * 7) > 0 ? 1 : 0.3));
+      const k = (lt * 1.6) % 1; glow(out.guardian.hand.clone().lerp(mcore, k), 1.6, HEROES.guardian.c, atk);
+      glow(mcore, 5, [255, 255, 255], 0.6 * atk); boom(mcore, (lt * 1.3) % 1.1, 3, [255, 180, 120]);
     }
-    if (lt > 7.5 && lt < 8.1) { OV.flash.style.background = '#ff3b4e'; ov(OV.flash, 0.5 * (1 - (lt - 7.5) / 0.6)); }
-    camKeys(lt, [[0, [-17, 4, 15], [6, 3, 0]], [5, [-15, 4.5, 17], [8, 3.5, 0]], [8.2, [-13, 3, 15], [4, 2.5, 0]], [12, [-12, 2.6, 13], [0, 1.5, 0]]]);
+    // the allies drop in to save him
+    ALLY.forEach(([m, c], i) => {
+      if (lt < 8.4) return;
+      const z = i ? 3.6 : -5, k = ss(8.4, 9.1, lt);
+      const p = V(19 + flee * 6, lerp(30, 0, k) + flee * flee * 24 + Math.sin(lt * 1.6 + i) * 0.15, z);
+      const core = poseMalvor(m, p, { s: 1.05, t: lt, col: c });
+      if (lt > 9.4 && lt < 10.3) { const tgt = V(P.guardian[0] + 3.4, 1.4 + i, P.guardian[2] + (i ? 1 : -1)); if (Math.sin(lt * 14 + i * 2) > 0) { beam(core, tgt, 0.14, c, 0.9); glow(tgt, 1.8, c, 0.9); } }
+      if (flee > 0) for (let q = 1; q < 6; q++) glow(p.clone().add(V(-q * 0.3, -q * 1.5 * flee + 2, 0)), 2.4 - q * 0.3, c, 0.5 * flee);
+    });
+    if (lt > 9.1 && lt < 10) { const k = (lt - 9.1) / 0.9; ring.visible = true; ring.position.set(19, 0.2, -0.7); ring.rotation.set(Math.PI / 2, 0, 0); ring.scale.setScalar(1 + k * 20); ring.material.opacity = 1 - k; ring.material.color.setHex(0xff8a30); }
+    if (flee > 0) for (let q = 0; q < 10; q++) glow(mpos.clone().add(V(-q * 0.4, -q * 1.8 * flee + 3, 0)), 3 - q * 0.25, RED, 0.5 * flee);
+    // smoke bomb to cover the escape
+    if (lt > 10 && lt < 12) { const a = lt - 10, f = 1 - ss(1, 2, a); for (let q = 0; q < 8; q++) smoke(V(17 + Math.cos(q * 0.8) * (3 + a * 6), 2 + a * 3 + (q % 3) * 2, -0.5 + Math.sin(q * 0.8) * (2 + a * 3)), 9 + a * 6, 0.6 * f); }
+    camKeys(lt, [[0, [-17, 4, 15], [6, 3, 0]], [4.6, [-15, 4.5, 17], [8, 3.5, 0]], [6.6, [-5, 2.2, 10], [14, 3.4, -1]], [8.6, [-6, 3, 13], [16, 4, 0]], [10.3, [-8, 3, 15], [17, 7, 0]], [12, [-9, 2.6, 15], [22, 20, 0]]]);
     yearCard('AÑO 1', 'Calles de Valdoria', ss(0.4, 0.9, lt) * (1 - ss(4, 4.6, lt)));
   },
+  function lair(lt, t) {
+    env({ top: [10, 4, 14], bot: [70, 24, 30], fog: 0.006, stars: 1, hemi: 0.35, hemiT: [255, 140, 140], sun: 0.6, sunC: [255, 170, 150], sets: ['moon'], bloom: 1.05 });
+    sun.position.set(80, 60, 40);
+    for (let q = 0; q < 5; q++) glow(V(-4 + q * 2, 3 + Math.sin(lt * 3 + q) * 0.5, -53), 6, [255, 60, 70], 0.35);
+    glow(V(0, 6.5, -53), 26, [255, 50, 60], 0.25);
+    [[MALVOR, RED, 0], [KROG, [255, 138, 48], -6], [VEXA, [208, 64, 255], 6]].forEach(([m, c, dx], i) => {
+      const k = ss(0.4 + i * 0.25, 3.6 + i * 0.25, lt);
+      if (k >= 1) return;
+      const p = V(lerp(-60 + dx, dx * 0.3, k), lerp(55, 2, k), lerp(20, -52, k));
+      poseMalvor(m, p, { s: m === MALVOR ? 1.2 : 0.9, t: lt, yaw: -Math.PI / 2 - 0.4, col: c });
+      for (let q = 1; q < 7; q++) glow(V(p.x - q * 2, p.y + 3 + q * 1.4, p.z + q * 2.4), 3 - q * 0.35, c, 0.5);
+    });
+    camKeys(lt, [[0, [-6, 6, 26], [0, 12, -50]], [6, [5, 5, 22], [0, 8, -52]]]);
+  },
   function montage(lt, t) {
+    // (draw order matches SCENES)
     const i = Math.min(3, Math.floor(lt / 4)), sl = lt - i * 4;
     const ground = { rayo: [-8, 0, 1.5], guardian: [-6.5, 0, -0.8], sombra: [-5, 0, 2.2] };
     if (i === 0) {
@@ -974,18 +1023,28 @@ draw = function (t) {
   const sc = SCENES[idx], lt = t - sc.a, len = sc.b - sc.a;
   POOLS.forEach(p => p.reset()); gpN = 0;
   [H.rayo, H.guardian, H.sombra, ...GHOSTS].forEach(h => h.g.visible = false);
-  [MALVOR, MALHOLO].forEach(m => m.g.visible = false);
+  [MALVOR, MALHOLO, KROG, VEXA].forEach(m => m.g.visible = false);
   [SHIP, SHIPHOLO].forEach(s => s.g.visible = false);
   bomb.visible = domeClip.visible = domeWire.visible = shieldArc.visible = ring.visible = ring2.visible = false;
   spot.intensity = 0; sun.position.copy(sun.userData.base);
   OV.flash.style.background = '#fff';
   [OV.title, OV.name, OV.group, OV.year, OV.fin, OV.flash].forEach(e => ov(e, 0));
+  TAGS.length = 0;
   const extraFade = DRAW[idx](lt, t) || 0;
   POOLS.forEach(p => p.hide()); flushGlows();
   let sh = 0; for (const [t0, d, amp] of SHAKES) if (t >= t0 && t < t0 + d) sh += amp * (1 - (t - t0) / d);
   camera.position.x += Math.sin(t * 90) * sh; camera.position.y += Math.cos(t * 77) * sh;
   camera.lookAt(camTarget);
   sky.position.copy(camera.position); stars.position.copy(camera.position);
+  camera.updateMatrixWorld();
+  TAG_EL.forEach((el, i) => {
+    const tg = TAGS[i];
+    if (!tg) { ov(el, 0); return; }
+    const v = tg[0].clone().project(camera);
+    if (el.dataset.k !== tg[1]) { el.dataset.k = tg[1]; el.textContent = TAG_NAME[tg[1]]; el.style.color = `rgb(${HEROES[tg[1]].c.join(',')})`; }
+    el.style.left = ((v.x + 1) / 2 * 100).toFixed(2) + '%'; el.style.top = ((1 - v.y) / 2 * 100).toFixed(2) + '%';
+    ov(el, tg[2]);
+  });
   let f = extraFade;
   if (sc.a > 0) f = Math.max(f, 1 - ss(0, 0.45, lt));
   if (sc.b < DUR) f = Math.max(f, ss(len - 0.35, len, lt));
@@ -1016,14 +1075,14 @@ const SUBS = [
   [10.3, 13.2, 'narrador', 'De pronto, algo cayó del cielo.'],
   [13.4, 17.5, 'narrador', 'La bomba derrumbó los edificios del centro.'],
   [17.6, 22, 'malvor', 'Soy Malvor. Este planeta va a ser mío.'],
-  [22.3, 25.5, 'rayo', '¡Soy el Capitán Relámpago!'],
-  [25.5, 29, 'guardian', 'Guardián Cósmico. Nadie atraviesa mis escudos.'],
-  [29, 32.5, 'sombra', 'Sombra Dorada. Nadie corre más rápido que yo.'],
-  [32.5, 34.2, 'todos', '¡Somos la Guardia de Valdoria!'],
+  [22.3, 26.4, 'narrador', 'Pero tres héroes salieron a enfrentarlo.'],
+  [26.6, 30.2, 'todos', '¡No nos vas a quitar nuestro planeta!'],
+  [30.4, 34, 'malvor', 'Eso ya lo veremos.'],
   [34.4, 37.2, 'rayo', '¡Guardia, al ataque!'],
   [37.2, 40, 'guardian', '¡Cuidado, son demasiados drones!'],
-  [40, 43.2, 'malvor', 'Ustedes no pueden vencerme.'],
-  [43.2, 46, 'narrador', 'Esa noche, los héroes perdieron.'],
+  [40.2, 42.4, 'sombra', '¡Lo tenemos! ¡Está cayendo!'],
+  [42.5, 44.2, 'malvor', '¡Aliados, ayúdenme!'],
+  [44.3, 46, 'rayo', '¡Se escapan!'],
   [46.3, 50, 'narrador', 'Durante cinco años pelearon por toda la galaxia.'],
   [50, 54, 'sombra', '¡Destruimos mil drones y manda mil más!'],
   [54, 58, 'guardian', 'Estoy cansado... pero no me voy a rendir, porque voy a defender a mi gente.'],
@@ -1044,6 +1103,17 @@ const SUBS = [
   [105, 109.5, 'rayo', 'Y la Guardia de Valdoria siempre la va a cuidar.']
 ];
 
+// the lair scene was inserted at 46 s: push every later moment 6 s forward
+{
+  const S = (t, end) => (end ? t > 46 : t >= 46) ? t + 6 : t;
+  SUBS.forEach(l => { l[0] = S(l[0]); l[1] = S(l[1], true); });
+  SFX.forEach(e => { e.t = S(e.t); });
+  SHAKES.forEach(x => { x[0] = S(x[0]); });
+  SUBS.push([46.4, 50, 'narrador', 'Malvor y sus aliados huyeron a su guarida, en la luna roja.'], [50.1, 52, 'malvor', 'Volveremos más fuertes.']);
+  SUBS.sort((a, b) => a[0] - b[0]);
+  SFX.push({ t: 42.5, k: 'boom' }, { t: 43.1, k: 'boom' }, { t: 44.2, k: 'whoosh' }, { t: 44.4, k: 'rumble' }, { t: 46.6, k: 'whoosh' });
+  SHAKES.push([43.1, 0.7, 0.35]);
+}
 // ---------- playback ----------
 let T = 0, playing = false, last = 0;
 const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
