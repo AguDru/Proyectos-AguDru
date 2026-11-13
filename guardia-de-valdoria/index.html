@@ -1364,7 +1364,7 @@ const SUBS = [
   const W = 67.5;
   SUBS.push(
     [W + 0.3, W + 4, 'narrador', 'Durante cinco años pelearon por toda la galaxia.'],
-    [W + 5.6, W + 8, 'sombra', '¡Guardián, levantate!'],
+    [W + 5.6, W + 8, 'sombra', '¡Guardián, levantate!', '¡Guardián, levantáte!'],
     [W + 8.3, W + 11.8, 'sombra', 'Miren, este dron tiene un chip.'],
     [W + 12, W + 16, 'guardian', 'Las órdenes vienen de la luna roja. Ahí se esconde Malvor.'],
     [W + 16.3, W + 19, 'rayo', '¡Cuidado arriba!'],
@@ -1372,7 +1372,6 @@ const SUBS = [
     [W + 24.3, W + 28, 'narrador', 'En el hielo encontraron un archivo muy antiguo.'],
     [W + 28.2, W + 32, 'sombra', 'Malvor era un científico de Valdoria. Por eso conoce nuestra ciudad.'],
     [W + 33.3, W + 34.8, 'guardian', '¡Asteroide!'],
-    [W + 35, W + 36.3, 'rayo', '¡Me caigo!'],
     [W + 36.4, W + 38, 'sombra', '¡Te tengo, Capitán!'],
     [W + 38.1, W + 40, 'rayo', '¡Miren! ¡Ahí hay una base!'],
     [W + 40.3, W + 44, 'narrador', 'Así descubrieron la base secreta de Malvor.'],
@@ -1506,7 +1505,8 @@ function say(line, retry) {
   // if someone is still talking, let this line wait its turn; only clear a longer backlog
   const busy = retry || TTS.pending;
   if (busy) { stopRobot(); try { TTS.cancel(); } catch (e) {} }
-  const u = new SpeechSynthesisUtterance(line[3].replace(/\.\.\./g, ', '));
+  // the 5th field, when present, is how the voice should say it (to fix the stress of Argentine verbs)
+  const u = new SpeechSynthesisUtterance((line[4] || line[3]).replace(/\.\.\./g, ', '));
   const v = voiceFor(line[2]);
   if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'es-ES';
   const sharing = sp.shared && VOICES.length < 4;
