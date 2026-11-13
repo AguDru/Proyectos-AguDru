@@ -790,6 +790,12 @@ function skirmish(lt, D, P, o = {}) {
   const hh = o.hurtHero, hk = hh ? ss(hh.t0, hh.t0 + 0.3, lt) * (1 - ss(hh.t0 + 1.7, hh.t0 + 2.3, lt)) : 0;
   IDS.forEach((id, i) => {
     const p = P[id], bob = o.fly ? Math.sin(lt * 2 + i * 2) * 0.4 : 0;
+    const ovr = o.overrides ? o.overrides(id) : null;
+    if (ovr) {
+      out[id] = poseHero(H[id], ovr.pos, { aR: ovr.aR ?? 0.4, aL: 0.3, fly: ovr.fly, aura: 0.8, t: lt, rot: ovr.rot || 0, glowK: ovr.glowK ?? 1, fulgor: ovr.glowK ?? 1, spread: 0.12 });
+      if (ovr.trail) glow(out[id].chest, 3, HEROES[id].c, 0.7);
+      return;
+    }
     const mine = hh && hh.id === id ? hk : 0, k2 = Math.max(knock, mine);
     const weak = mine ? lerp(1, 0.2 + 0.25 * (Math.sin(lt * 23) > 0 ? 1 : 0), mine) : 1;
     out[id] = poseHero(H[id], V(p[0] - 3 * knock - 0.6 * mine, p[1] + bob - (o.fly ? 2.5 * mine : 0), p[2]), { aR: lerp(1.5 + Math.sin(lt * 3 + i) * 0.12, 0.4, k2), aL: 0.35, fly: o.fly, aura: 0.9 * (1 - k2), t: lt, rot: 1.45 * k2, alpha: 1 - 0.3 * knock, spread: 0.12, glowK: weak, fulgor: weak });
@@ -823,7 +829,7 @@ function skirmish(lt, D, P, o = {}) {
       const lf = d.spawn + (d.td - d.spawn) * 0.45;
       if (d.fire && !knock && lt > lf && lt < lf + 0.14) { const a = pos(lf); laser(a, V(kx, lerp(a.y, out.guardian.chest.y, 0.6), lerp(a.z, P.guardian[2], 0.75))); }
     } else boom(pos(d.td), lt - d.td, 3.4);
-    if (!knock && lt > d.td - 0.3 && lt < d.td) {
+    if (!knock && !(o.overrides && o.overrides(IDS[d.killer])) && lt > d.td - 0.3 && lt < d.td) {
       const k = (lt - (d.td - 0.3)) / 0.3, id = IDS[d.killer], from = out[id].hand, to = pos(d.td), p = from.clone().lerp(to, k), c = HEROES[id].c;
       if (id === 'rayo') { glow(p, 2.2, c, 1); glow(p, 0.7, [255, 255, 255], 1); beam(from, p, 0.06, c, 0.5); }
       else if (id === 'guardian') { glow(p, 1 + 2.5 * k, c, 0.9); glow(p, 0.6, [255, 255, 255], 0.8); }
@@ -1002,12 +1008,34 @@ const DRAW = [
     envs[bi]();
     if (i % 2 === 0) {
       // battle
-      const HURTS = [{ id: 'guardian', t0: 4.6, kind: 'rock' }, { id: 'sombra', t0: 3.2, kind: 'ice' }, { id: 'rayo', t0: 4.6, kind: 'asteroid' }, { id: 'rayo', t0: 4.5, kind: 'debris' }];
-      skirmish(sl, D_WAR[bi], bi === 2 ? { rayo: [-8, 5, 1.5], guardian: [-6.5, 7.5, -1], sombra: [-5, 3.5, 2.2] } : ground, { fly: bi === 2, hurtHero: HURTS[bi] });
+      const HURTS = [{ id: 'guardian', t0: 4.6, kind: 'rock' }, { id: 'sombra', t0: 3.2, kind: 'ice' }, { id: 'rayo', t0: 2.6, kind: 'asteroid' }, { id: 'rayo', t0: 4.5, kind: 'debris' }];
+      let overrides = null;
+      if (bi === 2) {
+        const T0 = 2.6, TC = 4.4, TB = 5.8, rBase = V(-8, 5, 1.5), sBase = V(-5, 3.5, 2.2);
+        const fallPos = tt => { const f = tt - T0; return V(-8 - 2.2 * f, 5 - 4.2 * f * f, 1.5 + 1.2 * f); };
+        const catchP = fallPos(TC);
+        overrides = id => {
+          if (id === 'rayo' && sl > T0) {
+            if (sl < TC) return { pos: fallPos(sl), rot: (sl - T0) * 5, aR: 2.6, glowK: 0.3 };
+            const k = ss(TC, TB, sl);
+            return { pos: catchP.clone().lerp(rBase, k).add(V(0.3, 0.5 * (1 - k), 0)), rot: lerp(1.4, 0, ss(TB - 0.3, TB + 0.4, sl)), fly: true, aR: 0.4, glowK: lerp(0.3, 0.9, k) };
+          }
+          if (id === 'sombra' && sl > 3.6 && sl < TB + 0.2) {
+            const hold = catchP.clone().add(V(0.4, -0.6, 0));
+            if (sl < TC) return { pos: sBase.clone().lerp(hold, ss(3.6, TC, sl)), fly: true, aR: 1.4, trail: true };
+            return { pos: hold.lerp(sBase, ss(TC, TB, sl)), fly: true, aR: 1.0, trail: true };
+          }
+          return null;
+        };
+        // the secret base appears beyond the asteroids
+        const rv = ss(5.6, 7.2, sl);
+        if (rv > 0) { REDMOON.visible = true; poseShip(SHIP, V(52, 18, -95), { s: 0.3, t: lt, alpha: rv }); glow(V(50, 6, -88), 14, RED, 0.6 * rv); }
+      }
+      skirmish(sl, D_WAR[bi], bi === 2 ? { rayo: [-8, 5, 1.5], guardian: [-6.5, 7.5, -1], sombra: [-5, 3.5, 2.2] } : ground, { fly: bi === 2, hurtHero: HURTS[bi], overrides });
       const cams = [
         [[0, [-16, 3.2, 14], [6, 3, 0]], [4, [-12, 2.6, 11], [2, 2, 0]], [8, [-15, 3.8, 15], [6, 3, 0]]],
         [[0, [-6, 2.2, 16], [4, 3, 0]], [3, [-8, 2, 11], [-4, 1.5, 1]], [8, [-3, 2.6, 16], [4, 3, 0]]],
-        [[0, [-19, 9, 12], [6, 6, 0]], [4, [-14, 7, 10], [0, 5, 0]], [8, [-16, 7, 15], [6, 6, 0]]],
+        [[0, [-19, 9, 12], [6, 6, 0]], [2.6, [-17, 7, 13], [-7, 4, 1]], [4.4, [-16, -3, 12], [-11, -6.5, 3]], [5.8, [-13, 4, 11], [-7, 5, 1]], [8, [-12, 6, 9], [50, 8, -88]]],
         [[0, [-14, 6, 13], [5, 2, 0]], [4, [-12, 3, 10], [-2, 1.5, 0]], [8, [-11, 5, 14], [5, 2, 0]]]
       ];
       camKeys(sl, cams[bi]);
@@ -1331,7 +1359,8 @@ const SUBS = [
   SFX.forEach(e => { e.t = S4(e.t); });
   SHAKES.forEach(x => { x[0] = S4(x[0]); });
   D_WAR = [0, 1, 2, 3].map(i => makeDrones(31 + i, 16, 0, 5.6, 67.5 + i * 16, 7.8));
-  [[0, 4.6], [1, 3.2], [2, 4.6], [3, 4.5]].forEach(([i, t0]) => { const t = 67.5 + i * 16 + t0; SFX.push({ t, k: 'hit' }); SHAKES.push([t, 0.4, 0.3]); });
+  [[0, 4.6], [1, 3.2], [2, 2.6], [3, 4.5]].forEach(([i, t0]) => { const t = 67.5 + i * 16 + t0; SFX.push({ t, k: 'hit' }); SHAKES.push([t, 0.4, 0.3]); });
+  SFX.push({ t: 67.5 + 32 + 3.6, k: 'whoosh' });
   const W = 67.5;
   SUBS.push(
     [W + 0.3, W + 4, 'narrador', 'Durante cinco años pelearon por toda la galaxia.'],
@@ -1342,11 +1371,13 @@ const SUBS = [
     [W + 20.4, W + 24, 'sombra', 'Estoy bien... ¡sigamos peleando!'],
     [W + 24.3, W + 28, 'narrador', 'En el hielo encontraron un archivo muy antiguo.'],
     [W + 28.2, W + 32, 'sombra', 'Malvor era un científico de Valdoria. Por eso conoce nuestra ciudad.'],
-    [W + 32.3, W + 37, 'guardian', 'Estoy cansado... pero no me voy a rendir, porque voy a defender a mi gente.'],
-    [W + 37.2, W + 40, 'rayo', '¡Ese asteroide casi me mata!'],
-    [W + 40.3, W + 44, 'narrador', 'Desde un asteroide espiaron la guarida de Malvor.'],
+    [W + 33.3, W + 34.8, 'guardian', '¡Asteroide!'],
+    [W + 35, W + 36.3, 'rayo', '¡Me caigo!'],
+    [W + 36.4, W + 38, 'sombra', '¡Te tengo, Capitán!'],
+    [W + 38.1, W + 40, 'rayo', '¡Miren! ¡Ahí hay una base!'],
+    [W + 40.3, W + 44, 'narrador', 'Así descubrieron la base secreta de Malvor.'],
     [W + 44.2, W + 48, 'guardian', 'Su armadura se carga con la energía de la nave.'],
-    [W + 48.3, W + 52, 'narrador', 'Hasta que volvieron a casa, a Valdoria.'],
+    [W + 48.3, W + 53, 'guardian', 'Estoy cansado... pero no me voy a rendir, porque voy a defender a mi gente.'],
     [W + 53.2, W + 56, 'rayo', '¡No vamos a perder nuestra ciudad!']
   );
   SUBS.sort((a, b) => a[0] - b[0]);
