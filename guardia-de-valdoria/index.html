@@ -175,7 +175,7 @@ const SFX = [];
 const HEROES = {
   rayo: { c: [79, 227, 255], suit: [26, 44, 82], name: ['CAPITÁN', 'RELÁMPAGO'], power: 'RAYOS DE ENERGÍA' },
   guardian: { c: [167, 123, 255], suit: [46, 32, 82], bulk: 1.22, name: ['GUARDIÁN', 'CÓSMICO'], power: 'GRAVEDAD Y ESCUDOS' },
-  sombra: { c: [255, 181, 71], suit: [70, 44, 22], name: ['SOMBRA', 'DORADA'], power: 'SUPERVELOCIDAD' }
+  sombra: { c: [255, 190, 80], suit: [118, 84, 28], name: ['SOMBRA', 'DORADA'], power: 'SUPERVELOCIDAD' }
 };
 const RED = [255, 59, 78];
 const IDS = ['rayo', 'guardian', 'sombra'];
@@ -416,12 +416,22 @@ function poseHero(h, p, o = {}) {
   if (o.fly) { h.legR.rotation.set(0, 0, -0.95); h.legL.rotation.set(0, 0, -0.6); }
   else { const sp = o.spread ?? 0.05; h.legR.rotation.set(sp, 0, 0); h.legL.rotation.set(-sp, 0, 0); }
   if (h.cape) h.cape.rotation.z = -(0.18 + Math.sin((o.t || 0) * 3) * 0.08 + (o.fly ? 0.9 : 0));
-  h.acc.emissiveIntensity = 0.9 * (o.glowK ?? 1);
+  h.acc.emissiveIntensity = (h.id === 'sombra' ? 1.7 : 0.9) * (o.glowK ?? 1);
   const op = a * (h.ghost ? 0.28 : 1);
   for (const m of h.mats) { m.transparent = op < 0.999; m.opacity = op; m.depthWrite = op > 0.98; }
   g.updateMatrixWorld(true);
   const hand = h.handR.getWorldPosition(V(0, 0, 0)), chest = h.chest.getWorldPosition(V(0, 0, 0));
   if (o.aura && !h.ghost) glow(chest, 3.4 * (o.s || 1), HEROES[h.id].c, 0.2 * o.aura * a * (o.glowK ?? 1));
+  if (h.id === 'sombra' && !h.ghost) {
+    // fulgor dorado: halo, brillo en el casco y chispas que suben alrededor
+    const tt = o.t || 0, sc = o.s || 1, gk = (o.glowK ?? 1) * a;
+    glow(chest, 6 * sc, [255, 200, 90], 0.2 * gk, 6.5 * sc);
+    glow(chest.clone().add(V(0, 0.36 * sc, 0)), 1.5 * sc, [255, 232, 160], 0.55 * gk);
+    for (let i = 0; i < 12; i++) {
+      const an = tt * 2.2 + i * TAU / 12, rr = (0.5 + 0.18 * Math.sin(tt * 3 + i)) * sc, up = ((i * 0.37 + tt * 0.7) % 1);
+      glow(V(chest.x + Math.cos(an) * rr, chest.y - 0.75 * sc + up * 1.9 * sc, chest.z + Math.sin(an) * rr), 0.3 * sc, [255, 215, 120], gk * (1 - up) * (0.6 + 0.4 * Math.sin(tt * 9 + i)));
+    }
+  }
   if (o.charge) glow(hand, 1.6 * o.charge, HEROES[h.id].c, 0.9);
   return { hand, chest };
 }
