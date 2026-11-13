@@ -101,7 +101,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · 2 min 19 s</div>
+    <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · casi 3 minutos</div>
     <h1>La Guardia de <span>Valdoria</span></h1>
     <p class="logline">Año 2187. Malvor invade la ciudad de Valdoria con un ejército de drones. Capitán Relámpago, Guardián Cósmico y Sombra Dorada pelean contra él durante cinco años y cien batallas. Más de una vez están a punto de perder a uno de los suyos, hasta que descubren cómo derrotarlo.</p>
   </header>
@@ -126,8 +126,8 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
     <div class="controls">
       <button class="btn" id="play">Reproducir</button>
       <button class="btn" id="restart">Desde el inicio</button>
-      <input type="range" id="scrub" min="0" max="139.5" step="0.01" value="0" aria-label="Posición en la película">
-      <span class="time" id="time">0:00 / 2:19</span>
+      <input type="range" id="scrub" min="0" max="179.5" step="0.01" value="0" aria-label="Posición en la película">
+      <span class="time" id="time">0:00 / 2:59</span>
       <button class="btn" id="sound" aria-pressed="true">Sonido: encendido</button>
     </div>
   </section>
@@ -158,7 +158,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 <script>
 (() => {
-const DUR = 139.5;
+const DUR = 179.5;
 const cv = document.getElementById('film');
 const subsEl = document.getElementById('subs'), scrub = document.getElementById('scrub');
 const timeEl = document.getElementById('time'), playBtn = document.getElementById('play');
@@ -194,7 +194,8 @@ function makeDrones(seed, n, t0, t1, gOff, tmax) {
   });
 }
 const D_YEAR1 = makeDrones(21, 12, 0.2, 3.4, 34, 6.2);
-const D_MONT = [0, 1, 2, 3].map(i => makeDrones(31 + i, 9, 0, 2.4, 46 + i * 4, 3.9));
+const D_MONT = [];
+let D_WAR = [];
 const INVADERS = (() => {
   const r = mkRand(9);
   return Array.from({ length: 32 }, (_, i) => {
@@ -227,8 +228,8 @@ const SHAKES = [[24.2, 0.6, 0.3], [13, 1.6, 1.2], [14, 3, 0.15], [95.6, 1.6, 0.3
 
 const SCENES = [
   { a: 0, b: 10, name: 'Prólogo' }, { a: 10, b: 22, name: 'La invasión' }, { a: 22, b: 41.5, name: 'Los héroes' },
-  { a: 41.5, b: 53.5, name: 'Año 1' }, { a: 53.5, b: 59.5, name: 'La guarida' }, { a: 59.5, b: 67.5, name: 'El cuartel' }, { a: 67.5, b: 83.5, name: 'Cinco años de guerra' }, { a: 83.5, b: 95.5, name: 'Al borde' },
-  { a: 95.5, b: 105.5, name: 'El plan' }, { a: 105.5, b: 121.5, name: 'Batalla final' }, { a: 121.5, b: 139.5, name: 'Amanecer' }
+  { a: 41.5, b: 53.5, name: 'Año 1' }, { a: 53.5, b: 59.5, name: 'La guarida' }, { a: 59.5, b: 67.5, name: 'El cuartel' }, { a: 67.5, b: 123.5, name: 'Cinco años de guerra' }, { a: 123.5, b: 135.5, name: 'Al borde' },
+  { a: 135.5, b: 145.5, name: 'El plan' }, { a: 145.5, b: 161.5, name: 'Batalla final' }, { a: 161.5, b: 179.5, name: 'Amanecer' }
 ];
 
 // ---------- 3D setup ----------
@@ -676,7 +677,10 @@ function cityState(t, o) {
   mesh(new THREE.BoxGeometry(24, 72, 26), hq, 78, 36, 0, SETS.hq);
   mesh(new THREE.CylinderGeometry(9, 12, 10, 8), hq, 78, 77, 0, SETS.hq);
   const em = c => new THREE.MeshStandardMaterial({ color: col(c), emissive: col(c), emissiveIntensity: 1.3 });
-  [['rayo', -6], ['guardian', 0], ['sombra', 6]].forEach(([id, z]) => mesh(new THREE.BoxGeometry(0.4, 52, 1.2), em(HEROES[id].c), 65.9, 42, z, SETS.hq));
+  // wide glowing stripes in the three heroes' colors, on the front and wrapping around the sides
+  [['rayo', -7.5], ['guardian', 0], ['sombra', 7.5]].forEach(([id, z]) => { const m = new THREE.MeshBasicMaterial({ color: col(HEROES[id].c) }); mesh(new THREE.BoxGeometry(0.6, 62, 4), m, 65.9, 39, z, SETS.hq); });
+  [['rayo', 70.5], ['guardian', 78], ['sombra', 85.5]].forEach(([id, x]) => { const m = new THREE.MeshBasicMaterial({ color: col(HEROES[id].c) }); mesh(new THREE.BoxGeometry(4, 62, 26.8), m, x, 39, 0, SETS.hq); });
+  [['rayo', 70.5], ['guardian', 72.5], ['sombra', 74.5]].forEach(([id, y]) => { const m = new THREE.MeshBasicMaterial({ color: col(HEROES[id].c) }); mesh(new THREE.BoxGeometry(24.6, 0.8, 26.6), m, 78, y, 0, SETS.hq); });
   [['rayo', 0], ['guardian', 0.7], ['sombra', -0.7]].forEach(([id, rx]) => { const t = mesh(new THREE.TorusGeometry(5, 0.35, 10, 48), em(HEROES[id].c), 65.2, 60, 0, SETS.hq); t.rotation.set(rx, Math.PI / 2, 0, 'YXZ'); });
   mesh(new THREE.BoxGeometry(0.4, 4.2, 4.2), new THREE.MeshBasicMaterial({ color: 0x5fa8c8 }), 65.7, 2.1, 0, SETS.hq);
   mesh(new THREE.BoxGeometry(4, 0.4, 10), MAT.metal, 64, 0.2, 0, SETS.hq);
@@ -723,6 +727,26 @@ function updateCrowd(lt, hx) {
   });
   crowdIM.body.instanceMatrix.needsUpdate = crowdIM.head.instanceMatrix.needsUpdate = crowdIM.arm.instanceMatrix.needsUpdate = true;
 }
+// discoveries: an ancient archive stone in the ice, a hologram of Malvor before the armor
+const ARCH = new THREE.Group(); SETS.ice.add(ARCH); ARCH.position.set(-16, 0, -9);
+{
+  const st = new THREE.MeshStandardMaterial({ color: 0x5a6a7a, roughness: 0.9, flatShading: true });
+  mesh(new THREE.BoxGeometry(3, 6, 1.2), st, 0, 3, 0, ARCH);
+  const gl = new THREE.MeshBasicMaterial({ color: 0x7fe8ff });
+  for (let i = 0; i < 6; i++) mesh(new THREE.BoxGeometry(0.2 + (i % 3) * 0.3, 0.12, 0.05), gl, -0.6 + (i % 2) * 1.1, 1.8 + i * 0.6, 0.62, ARCH);
+}
+const SCIENTIST = new THREE.Group(); scene.add(SCIENTIST); SCIENTIST.visible = false;
+{
+  const hm = new THREE.MeshBasicMaterial({ color: 0x7fe8ff, wireframe: true, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
+  SCIENTIST.userData.m = hm;
+  mesh(new THREE.CylinderGeometry(0.25, 0.32, 1.3, 10), hm, 0, 0.65, 0, SCIENTIST);
+  mesh(new THREE.SphereGeometry(0.2, 10, 8), hm, 0, 1.55, 0, SCIENTIST);
+  mesh(new THREE.ConeGeometry(0.45, 1.1, 10, 1, true), hm, 0, 0.55, 0, SCIENTIST);
+}
+const BIGROCK = mesh(new THREE.IcosahedronGeometry(4, 0), new THREE.MeshStandardMaterial({ color: 0x6a6070, roughness: 1, flatShading: true }), -4, -4.2, 1, SETS.space);
+BIGROCK.scale.set(1.6, 0.7, 1.2); BIGROCK.visible = false;
+const REDMOON = mesh(new THREE.SphereGeometry(26, 40, 28), new THREE.MeshStandardMaterial({ color: 0x9a2e2a, emissive: 0x2a0806, roughness: 1 }), 70, 6, -140, SETS.space);
+REDMOON.visible = false;
 // space
 const ASTEROIDS = [];
 {
@@ -966,33 +990,68 @@ const DRAW = [
     yearCard('AÑO 1', 'Cuartel de la Guardia', ss(0.4, 0.9, lt) * (1 - ss(4, 4.6, lt)));
   },
   function montage(lt, t) {
-    // (draw order matches SCENES)
-    const i = Math.min(3, Math.floor(lt / 4)), sl = lt - i * 4;
+    // five years of war: four long battles, with a discovery about Malvor between each one
+    const SEG = 8, i = Math.min(6, Math.floor(lt / SEG)), sl = lt - i * SEG, bi = [0, 0, 1, 1, 2, 2, 3][i];
     const ground = { rayo: [-8, 0, 1.5], guardian: [-6.5, 0, -0.8], sombra: [-5, 0, 2.2] };
-    if (i === 0) {
-      env({ top: [90, 50, 100], bot: [235, 150, 105], fogC: [190, 120, 90], fog: 0.0045, hemi: 0.55, hemiT: [255, 210, 180], hemiB: [90, 50, 30], sun: 0.8, sunC: [255, 200, 150], sets: ['desert'], bloom: 0.35 });
-      glow(V(-150, 140, -690), 200, [255, 220, 170], 0.45); glow(V(120, 110, -690), 100, [255, 200, 160], 0.3);
-      camKeys(sl, [[0, [-16, 3.2, 14], [6, 3, 0]], [4, [-13, 3.6, 15], [6, 3, 0]]]);
-    } else if (i === 1) {
-      env({ top: [8, 16, 44], bot: [70, 110, 150], fogC: [60, 95, 130], fog: 0.006, stars: 0.6, hemi: 0.45, hemiT: [170, 210, 255], hemiB: [40, 60, 90], sun: 0.5, sunC: [190, 220, 255], sets: ['ice'], bloom: 0.4 });
-      for (let k = 0; k < 4; k++) glow(V(-120 + k * 80, 120 + Math.sin(lt + k) * 10, -400), 260, [80, 255, 180], 0.12, 70);
-      camKeys(sl, [[0, [-6, 2.2, 16], [4, 3, 0]], [4, [-3, 2.6, 16], [4, 3, 0]]]);
-    } else if (i === 2) {
-      env({ top: [4, 5, 14], bot: [16, 10, 30], fog: 0.0015, stars: 1, hemi: 0.5, hemiT: [180, 150, 255], hemiB: [40, 20, 50], sun: 1, sunC: [255, 200, 180], sets: ['space'] });
-      glow(V(80, 60, -400), 520, [130, 60, 200], 0.4); glow(V(-160, -30, -400), 400, [30, 140, 170], 0.3);
-      for (const a of ASTEROIDS) { a.m.rotation.set(t * a.v + a.ph, t * a.v * 0.7, 0); a.m.position.x = ((a.x0 - lt * 3 * (1 + a.v) + 100) % 200 + 200) % 200 - 80; }
-      camKeys(sl, [[0, [-19, 9, 12], [6, 6, 0]], [4, [-16, 7, 15], [6, 6, 0]]]);
+    const envs = [
+      () => { env({ top: [90, 50, 100], bot: [235, 150, 105], fogC: [190, 120, 90], fog: 0.0045, hemi: 0.55, hemiT: [255, 210, 180], hemiB: [90, 50, 30], sun: 0.8, sunC: [255, 200, 150], sets: ['desert'], bloom: 0.35 }); glow(V(-150, 140, -690), 200, [255, 220, 170], 0.45); glow(V(120, 110, -690), 100, [255, 200, 160], 0.3); },
+      () => { env({ top: [8, 16, 44], bot: [70, 110, 150], fogC: [60, 95, 130], fog: 0.006, stars: 0.6, hemi: 0.45, hemiT: [170, 210, 255], hemiB: [40, 60, 90], sun: 0.5, sunC: [190, 220, 255], sets: ['ice'], bloom: 0.4 }); for (let k = 0; k < 4; k++) glow(V(-120 + k * 80, 120 + Math.sin(lt + k) * 10, -400), 260, [80, 255, 180], 0.12, 70); },
+      () => { env({ top: [4, 5, 14], bot: [16, 10, 30], fog: 0.0015, stars: 1, hemi: 0.5, hemiT: [180, 150, 255], hemiB: [40, 20, 50], sun: 1, sunC: [255, 200, 180], sets: ['space'] }); glow(V(80, 60, -400), 520, [130, 60, 200], 0.4); glow(V(-160, -30, -400), 400, [30, 140, 170], 0.3); for (const a of ASTEROIDS) { a.m.rotation.set(t * a.v + a.ph, t * a.v * 0.7, 0); a.m.position.x = ((a.x0 - lt * 3 * (1 + a.v) + 100) % 200 + 200) % 200 - 80; } },
+      () => { env({ top: [40, 6, 10], bot: [140, 36, 26], fog: 0.014, hemi: 0.45, hemiT: [255, 140, 120], sun: 0.4, sunC: [255, 160, 140], sets: ['city', 'rain'] }); cityState(t, { lights: 0, ruined: true, fire: 1 }); SETS.rain.position.set(-6, -((t * 32) % 40), 0); }
+    ];
+    envs[bi]();
+    if (i % 2 === 0) {
+      // battle
+      const HURTS = [{ id: 'guardian', t0: 4.6, kind: 'rock' }, { id: 'sombra', t0: 3.2, kind: 'ice' }, { id: 'rayo', t0: 4.6, kind: 'asteroid' }, { id: 'rayo', t0: 4.5, kind: 'debris' }];
+      skirmish(sl, D_WAR[bi], bi === 2 ? { rayo: [-8, 5, 1.5], guardian: [-6.5, 7.5, -1], sombra: [-5, 3.5, 2.2] } : ground, { fly: bi === 2, hurtHero: HURTS[bi] });
+      const cams = [
+        [[0, [-16, 3.2, 14], [6, 3, 0]], [4, [-12, 2.6, 11], [2, 2, 0]], [8, [-15, 3.8, 15], [6, 3, 0]]],
+        [[0, [-6, 2.2, 16], [4, 3, 0]], [3, [-8, 2, 11], [-4, 1.5, 1]], [8, [-3, 2.6, 16], [4, 3, 0]]],
+        [[0, [-19, 9, 12], [6, 6, 0]], [4, [-14, 7, 10], [0, 5, 0]], [8, [-16, 7, 15], [6, 6, 0]]],
+        [[0, [-14, 6, 13], [5, 2, 0]], [4, [-12, 3, 10], [-2, 1.5, 0]], [8, [-11, 5, 14], [5, 2, 0]]]
+      ];
+      camKeys(sl, cams[bi]);
+      const labels = [['AÑO 2', 'Desiertos de Ceres'], ['AÑO 3', 'Lunas de hielo de Tauro'], ['AÑO 4', 'Cinturón de asteroides'], ['AÑO 5', 'De vuelta en Valdoria']];
+      yearCard(labels[bi][0], labels[bi][1], ss(0.2, 0.6, sl) * (1 - ss(3.3, 3.8, sl)));
+    } else if (bi === 0) {
+      // discovery 1: a fallen drone carries a chip; the orders come from the red moon
+      const dp = V(-3, 0.35, 0.3);
+      drone(dp, 0, 1.2, 1.3);
+      for (let q = 0; q < 4; q++) smoke(dp.clone().add(V(Math.sin(q) * 0.5, 0.8 + ((sl * 0.5 + q * 0.3) % 1.5), Math.cos(q) * 0.4)), 1.6, 0.25);
+      const holo = ss(2.5, 3.2, sl);
+      if (holo > 0) {
+        beam(dp, dp.clone().add(V(0, 2.8, 0)), 0.9, RED, 0.12 * holo);
+        const c = dp.clone().add(V(0, 2.6, 0)); glow(c, 1.6, [255, 90, 80], 0.9 * holo);
+        for (let q = 0; q < 30; q++) { const a = q / 30 * TAU; glow(c.clone().add(V(Math.cos(a) * 0.8, Math.sin(a) * 0.8, 0)), 0.12, [255, 120, 110], holo); }
+        for (let q = 0; q < 8; q++) { const k = ((sl * 0.6 + q / 8) % 1); glow(dp.clone().lerp(c, k), 0.18, [255, 120, 110], holo); }
+      }
+      [['rayo', V(-4.6, 0, 1.2), 0.5], ['guardian', V(-3.2, 0, -1.4), 1.6], ['sombra', V(-1.6, 0, 1.4), 2.6]].forEach(([id, p]) => poseHero(H[id], p, { yaw: -Math.atan2(dp.z - p.z, dp.x - p.x), aR: id === 'sombra' ? 1.2 : 0.3, aL: 0.1, aura: 0.6, t: lt, spread: 0.18 }));
+      camKeys(sl, [[0, [-6.5, 2.2, 6.5], [-3, 0.9, 0.3]], [8, [-1, 2.6, 6], [-3, 1.6, 0.3]]]);
+      yearCard('AÑO 2', 'Un descubrimiento', ss(0.2, 0.6, sl) * (1 - ss(3, 3.5, sl)));
+    } else if (bi === 1) {
+      // discovery 2: an ancient archive; Malvor was a scientist of Valdoria
+      env({ top: [4, 8, 22], bot: [30, 50, 80], fogC: [20, 35, 55], fog: 0.02, stars: 0.6, hemi: 0.3, hemiT: [150, 200, 255], sun: 0.25, sets: ['ice'], bloom: 0.9 });
+      const hp = V(-16, 0, -7.4), morph = ss(4.2, 5.2, sl), on = ss(1.2, 2, sl);
+      SCIENTIST.visible = on > 0.01 && morph < 0.99; SCIENTIST.position.copy(hp).add(V(0, 0.2, 0)); SCIENTIST.scale.setScalar(1.3); SCIENTIST.rotation.y = sl * 0.8;
+      SCIENTIST.userData.m.opacity = 0.6 * on * (1 - morph);
+      if (morph > 0) poseMalvor(MALHOLO, hp.clone().add(V(0, 0.2, 0)), { s: 0.42, yaw: sl * 0.8, alpha: morph * 0.8, t: lt });
+      glow(hp.clone().add(V(0, 1.2, 0)), 3.5, [127, 232, 255], 0.25 * on);
+      [['rayo', V(-13.4, 0, -5.4), 0], ['guardian', V(-15.6, 0, -4.6), 0], ['sombra', V(-17.8, 0, -5.2), 0]].forEach(([id, p]) => poseHero(H[id], p, { yaw: -Math.atan2(hp.z - p.z, hp.x - p.x), aR: id === 'rayo' ? 0.9 : 0.25, aL: 0.1, aura: 0.6, t: lt, spread: 0.15 }));
+      camKeys(sl, [[0, [-11, 2.2, 1], [-16, 2.4, -8.5]], [8, [-13, 1.8, -0.5], [-16, 2.2, -8.5]]]);
+      yearCard('AÑO 3', 'El archivo de hielo', ss(0.2, 0.6, sl) * (1 - ss(3, 3.5, sl)));
     } else {
-      env({ top: [40, 6, 10], bot: [140, 36, 26], fog: 0.014, hemi: 0.45, hemiT: [255, 140, 120], sun: 0.4, sunC: [255, 160, 140], sets: ['city', 'rain'] });
-      cityState(t, { lights: 0, ruined: true, fire: 1 });
-      SETS.rain.position.set(-6, -((t * 32) % 40), 0);
-      camKeys(sl, [[0, [-14, 6, 13], [5, 2, 0]], [4, [-11, 5, 14], [5, 2, 0]]]);
+      // discovery 3: spying the lair from an asteroid; Malvor's armor charges from the ship
+      BIGROCK.visible = REDMOON.visible = true;
+      const sc = poseShip(SHIP, V(52, 18, -95), { s: 0.3, t: lt });
+      const mp = V(50, 6, -88), mcore = poseMalvor(MALVOR, mp, { s: 1.4, yaw: -Math.PI / 2 - 0.5, t: lt });
+      const pulse = 0.6 + 0.4 * Math.sin(sl * 5);
+      beam(sc, mcore, 0.5, RED, 0.7 * pulse); beam(sc, mcore, 0.15, [255, 220, 220], pulse);
+      glow(mcore, 4 * pulse, RED, 0.9);
+      [['rayo', V(-5.5, -1.3, 0.6), 0.6], ['guardian', V(-4.2, -1.3, 1.9), 0.3], ['sombra', V(-2.8, -1.3, 0.4), 1.3]].forEach(([id, p, aR]) => poseHero(H[id], p, { yaw: -Math.atan2(mp.z - p.z, mp.x - p.x), aR, aL: 0.1, aura: 0.4, t: lt, spread: 0.18 }));
+      camKeys(sl, [[0, [-11, 0.4, 5.5], [20, 4, -40]], [4, [-9, 0.8, 4.6], [40, 6, -70]], [8, [-8, 1.4, 4.2], [50, 8, -88]]]);
+      yearCard('AÑO 4', 'La guarida de Malvor', ss(0.2, 0.6, sl) * (1 - ss(3, 3.5, sl)));
     }
-    const HURTS = [{ id: 'guardian', t0: 1.6, kind: 'rock' }, { id: 'sombra', t0: 1.5, kind: 'ice' }, { id: 'rayo', t0: 1.6, kind: 'asteroid' }, { id: 'rayo', t0: 1.6, kind: 'debris' }];
-    skirmish(sl, D_MONT[i], i === 2 ? { rayo: [-8, 5, 1.5], guardian: [-6.5, 7.5, -1], sombra: [-5, 3.5, 2.2] } : ground, { fly: i === 2, hurtHero: HURTS[i] });
-    const labels = [['AÑO 2', 'Desiertos de Ceres'], ['AÑO 3', 'Lunas de hielo de Tauro'], ['AÑO 4', 'Cinturón de asteroides'], ['AÑO 5', 'De vuelta en Valdoria']];
-    yearCard(labels[i][0], labels[i][1], ss(0.2, 0.6, sl) * (1 - ss(3.3, 3.8, sl)));
-    return Math.max(i > 0 ? 1 - ss(0, 0.3, sl) : 0, i < 3 ? ss(3.7, 4, sl) : 0);
+    return Math.max(i > 0 ? 1 - ss(0, 0.3, sl) : 0, i < 6 ? ss(7.7, 8, sl) : 0);
   },
   function brink(lt, t) {
     env({ top: [30, 6, 12], bot: [125, 30, 26], fog: 0.014, hemi: 0.42, hemiT: [255, 140, 120], sun: 0.4, sunC: [255, 160, 140], sets: ['city', 'rain'], bloom: 1.05 });
@@ -1156,7 +1215,7 @@ draw = function (t) {
   [H.rayo, H.guardian, H.sombra, ...GHOSTS].forEach(h => h.g.visible = false);
   [MALVOR, MALHOLO, KROG, VEXA].forEach(m => m.g.visible = false);
   [SHIP, SHIPHOLO].forEach(s => s.g.visible = false);
-  hurtRock.visible = hurtShard.visible = false;
+  hurtRock.visible = hurtShard.visible = false; SCIENTIST.visible = false; BIGROCK.visible = REDMOON.visible = false;
   bomb.visible = domeClip.visible = domeWire.visible = shieldArc.visible = ring.visible = ring2.visible = false;
   spot.intensity = 0; sun.position.copy(sun.userData.base);
   OV.flash.style.background = '#fff';
@@ -1263,8 +1322,34 @@ const SUBS = [
   SHAKES.forEach(x => { x[0] = S3(x[0]); });
   SUBS.push([22.3, 25.5, 'narrador', 'Pero tres héroes salieron a enfrentarlo.'], [25.7, 28.1, 'sombra', '¡Yo soy Sombra Dorada!'], [28.2, 30.6, 'rayo', '¡Yo soy el Capitán Relámpago!'], [30.7, 33.1, 'guardian', '¡Yo soy Guardián Cósmico!'], [33.4, 37.4, 'todos', '¡No nos vas a quitar nuestro planeta!'], [37.8, 41.3, 'malvor', 'Eso ya lo veremos.']);
   SUBS.sort((a, b) => a[0] - b[0]);
-  [44.5, 69.1, 73, 77.1, 81.1].forEach(t => SFX.push({ t, k: 'hit' }));
-  SHAKES.push([44.5, 0.4, 0.25], [69.1, 0.4, 0.25], [73, 0.4, 0.25], [77.1, 0.4, 0.25], [81.1, 0.4, 0.25]);
+  SFX.push({ t: 44.5, k: 'hit' }); SHAKES.push([44.5, 0.4, 0.25]);
+  // the war grew from 16 s to 56 s (67.5 to 123.5)
+  for (let i = SUBS.length - 1; i >= 0; i--) if (SUBS[i][0] >= 67.5 && SUBS[i][0] < 83.5) SUBS.splice(i, 1);
+  for (let i = SFX.length - 1; i >= 0; i--) if (SFX[i].t >= 67.5 && SFX[i].t < 83.5) SFX.splice(i, 1);
+  const S4 = (t, end) => (end ? t > 83.5 : t >= 83.5) ? t + 40 : t;
+  SUBS.forEach(l => { l[0] = S4(l[0]); l[1] = S4(l[1], true); });
+  SFX.forEach(e => { e.t = S4(e.t); });
+  SHAKES.forEach(x => { x[0] = S4(x[0]); });
+  D_WAR = [0, 1, 2, 3].map(i => makeDrones(31 + i, 16, 0, 5.6, 67.5 + i * 16, 7.8));
+  [[0, 4.6], [1, 3.2], [2, 4.6], [3, 4.5]].forEach(([i, t0]) => { const t = 67.5 + i * 16 + t0; SFX.push({ t, k: 'hit' }); SHAKES.push([t, 0.4, 0.3]); });
+  const W = 67.5;
+  SUBS.push(
+    [W + 0.3, W + 4, 'narrador', 'Durante cinco años pelearon por toda la galaxia.'],
+    [W + 5.6, W + 8, 'sombra', '¡Guardián, levantate!'],
+    [W + 8.3, W + 11.8, 'sombra', 'Miren, este dron tiene un chip.'],
+    [W + 12, W + 16, 'guardian', 'Las órdenes vienen de la luna roja. Ahí se esconde Malvor.'],
+    [W + 16.3, W + 19, 'rayo', '¡Cuidado arriba!'],
+    [W + 20.4, W + 24, 'sombra', 'Estoy bien... ¡sigamos peleando!'],
+    [W + 24.3, W + 28, 'narrador', 'En el hielo encontraron un archivo muy antiguo.'],
+    [W + 28.2, W + 32, 'sombra', 'Malvor era un científico de Valdoria. Por eso conoce nuestra ciudad.'],
+    [W + 32.3, W + 37, 'guardian', 'Estoy cansado... pero no me voy a rendir, porque voy a defender a mi gente.'],
+    [W + 37.2, W + 40, 'rayo', '¡Ese asteroide casi me mata!'],
+    [W + 40.3, W + 44, 'narrador', 'Desde un asteroide espiaron la guarida de Malvor.'],
+    [W + 44.2, W + 48, 'guardian', 'Su armadura se carga con la energía de la nave.'],
+    [W + 48.3, W + 52, 'narrador', 'Hasta que volvieron a casa, a Valdoria.'],
+    [W + 53.2, W + 56, 'rayo', '¡No vamos a perder nuestra ciudad!']
+  );
+  SUBS.sort((a, b) => a[0] - b[0]);
 }
 // ---------- playback ----------
 let T = 0, playing = false, last = 0;
