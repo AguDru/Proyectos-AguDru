@@ -51,6 +51,9 @@ h1 span { color: var(--nova); }
 #ovYear .y2 { display: inline-block; font-size: 1.5cqw; font-weight: 500; color: var(--nova); letter-spacing: .12em; border-bottom: 0.25cqw solid var(--nova); padding-bottom: .6cqw; }
 #ovFin { left: 0; right: 0; top: 20%; text-align: center; font-size: 9cqw; }
 #flash, #fade { inset: 0; }
+#ovChap { inset: 0; background: #000; display: grid; place-content: center; text-align: center; gap: 1.2cqw; }
+#ovChap .c1 { font-size: 8cqw; line-height: 1; }
+#ovChap .c2 { font-size: 2.6cqw; font-weight: 500; color: var(--nova); letter-spacing: .08em; text-transform: uppercase; }
 #flash { background: #fff; }
 #fade { background: #000; }
 #nogl { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 8%; color: var(--ink); background: #06070c; font-size: 15px; }
@@ -116,6 +119,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
       <div class="ov" id="ovYear"><div class="y1"></div><div class="y2"></div></div>
       <div class="ov" id="ovFin">FIN</div>
       <div class="ov" id="flash"></div>
+      <div class="ov" id="ovChap"><div class="c1"></div><div class="c2"></div></div>
       <div class="ov" id="fade"></div>
       <div id="nogl" hidden>Este dispositivo no pudo cargar el 3D. Probá abrir la película en otro navegador o en una computadora.</div>
       <div class="subs" id="subs" aria-live="polite"></div>
@@ -165,7 +169,7 @@ const timeEl = document.getElementById('time'), playBtn = document.getElementByI
 const bigPlay = document.getElementById('bigplay'), soundBtn = document.getElementById('sound');
 const OV = {
   title: document.getElementById('ovTitle'), name: document.getElementById('ovName'), group: document.getElementById('ovGroup'),
-  year: document.getElementById('ovYear'), fin: document.getElementById('ovFin'), flash: document.getElementById('flash'), fade: document.getElementById('fade')
+  year: document.getElementById('ovYear'), chap: document.getElementById('ovChap'), fin: document.getElementById('ovFin'), flash: document.getElementById('flash'), fade: document.getElementById('fade')
 };
 const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 const ss = (a, b, t) => { const x = clamp((t - a) / (b - a)); return x * x * (3 - 2 * x); };
@@ -782,12 +786,17 @@ function camKeys(lt, keys) {
   camera.position.set(lerp(a[1][0], b[1][0], k), lerp(a[1][1], b[1][1], k), lerp(a[1][2], b[1][2], k));
   camTarget.set(lerp(a[2][0], b[2][0], k), lerp(a[2][1], b[2][1], k), lerp(a[2][2], b[2][2], k));
 }
+function chapterCard(y, war, a) {
+  if (OV.chap.dataset.k !== y + war) { OV.chap.dataset.k = y + war; OV.chap.querySelector('.c1').textContent = y; OV.chap.querySelector('.c2').textContent = war; }
+  ov(OV.chap, a);
+}
 function yearCard(y, place, a) { if (OV.year.dataset.k !== y + place) { OV.year.dataset.k = y + place; OV.year.querySelector('.y1').textContent = y; OV.year.querySelector('.y2').textContent = place.toUpperCase(); } ov(OV.year, a); }
 
 // ---------- shared battle ----------
 function skirmish(lt, D, P, o = {}) {
   const knock = o.knock || 0, out = {};
-  const hh = o.hurtHero, hk = hh ? ss(hh.t0, hh.t0 + 0.3, lt) * (1 - ss(hh.t0 + 1.7, hh.t0 + 2.3, lt)) : 0;
+  const hh = o.hurtHero, down = hh ? (hh.down ?? 2.8) : 0, hk = hh ? ss(hh.t0, hh.t0 + 0.3, lt) * (1 - ss(hh.t0 + down, hh.t0 + down + 0.7, lt)) : 0;
+  const outOfFight = id => (hh && hh.id === id && hk > 0.03) || (o.overrides && o.overrides(id));
   IDS.forEach((id, i) => {
     const p = P[id], bob = o.fly ? Math.sin(lt * 2 + i * 2) * 0.4 : 0;
     const ovr = o.overrides ? o.overrides(id) : null;
@@ -829,8 +838,11 @@ function skirmish(lt, D, P, o = {}) {
       const lf = d.spawn + (d.td - d.spawn) * 0.45;
       if (d.fire && !knock && lt > lf && lt < lf + 0.14) { const a = pos(lf); laser(a, V(kx, lerp(a.y, out.guardian.chest.y, 0.6), lerp(a.z, P.guardian[2], 0.75))); }
     } else boom(pos(d.td), lt - d.td, 3.4);
-    if (!knock && !(o.overrides && o.overrides(IDS[d.killer])) && lt > d.td - 0.3 && lt < d.td) {
-      const k = (lt - (d.td - 0.3)) / 0.3, id = IDS[d.killer], from = out[id].hand, to = pos(d.td), p = from.clone().lerp(to, k), c = HEROES[id].c;
+    if (!knock && lt > d.td - 0.3 && lt < d.td) {
+      // a hero who is down does not shoot: one of the others takes the shot
+      let id = IDS[d.killer];
+      for (let q = 1; q < 3 && outOfFight(id); q++) id = IDS[(d.killer + q) % 3];
+      const k = (lt - (d.td - 0.3)) / 0.3, from = out[id].hand, to = pos(d.td), p = from.clone().lerp(to, k), c = HEROES[id].c;
       if (id === 'rayo') { glow(p, 2.2, c, 1); glow(p, 0.7, [255, 255, 255], 1); beam(from, p, 0.06, c, 0.5); }
       else if (id === 'guardian') { glow(p, 1 + 2.5 * k, c, 0.9); glow(p, 0.6, [255, 255, 255], 0.8); }
       else { beam(from, p, 0.14, c, 0.9); glow(p, 1.6, c, 1); }
@@ -930,7 +942,7 @@ const DRAW = [
     env({ top: [14, 8, 22], bot: [80, 26, 42], fog: 0.012, stars: 0.3, hemi: 0.4, hemiT: [255, 150, 160], sun: 0.4, sets: ['city'] });
     cityState(t, { lights: 0.08, ruined: true, fire: 0.7 });
     const P = { rayo: [-8, 0, 1.5], guardian: [-6.5, 0, -0.8], sombra: [-5, 0, 2.2] };
-    const out = skirmish(lt, D_YEAR1, P, { hurtHero: { id: 'sombra', t0: 3, kind: 'blast' } });
+    const out = skirmish(lt, D_YEAR1, P, { hurtHero: { id: 'sombra', t0: 3, kind: 'blast', down: 2.3 } });
     // Malvor arrives, the heroes beat him down
     const atk = ss(6.1, 6.5, lt) * (1 - ss(8.5, 8.8, lt));
     const kneel = ss(6.4, 8.2, lt) * (1 - ss(9.4, 10, lt));
@@ -960,7 +972,7 @@ const DRAW = [
     // smoke bomb to cover the escape
     if (lt > 10 && lt < 12) { const a = lt - 10, f = 1 - ss(1, 2, a); for (let q = 0; q < 8; q++) smoke(V(17 + Math.cos(q * 0.8) * (3 + a * 6), 2 + a * 3 + (q % 3) * 2, -0.5 + Math.sin(q * 0.8) * (2 + a * 3)), 9 + a * 6, 0.6 * f); }
     camKeys(lt, [[0, [-17, 4, 15], [6, 3, 0]], [4.6, [-15, 4.5, 17], [8, 3.5, 0]], [6.6, [-5, 2.2, 10], [14, 3.4, -1]], [8.6, [-6, 3, 13], [16, 4, 0]], [10.3, [-8, 3, 15], [17, 7, 0]], [12, [-9, 2.6, 15], [22, 20, 0]]]);
-    yearCard('AÑO 1', 'Calles de Valdoria', ss(0.4, 0.9, lt) * (1 - ss(4, 4.6, lt)));
+    chapterCard('AÑO 1', 'La batalla de Valdoria', 1 - ss(1.6, 2.2, lt));
   },
   function lair(lt, t) {
     env({ top: [10, 4, 14], bot: [70, 24, 30], fog: 0.006, stars: 1, hemi: 0.35, hemiT: [255, 140, 140], sun: 0.6, sunC: [255, 170, 150], sets: ['moon'], bloom: 1.05 });
@@ -1040,7 +1052,8 @@ const DRAW = [
       ];
       camKeys(sl, cams[bi]);
       const labels = [['AÑO 2', 'Desiertos de Ceres'], ['AÑO 3', 'Lunas de hielo de Tauro'], ['AÑO 4', 'Cinturón de asteroides'], ['AÑO 5', 'De vuelta en Valdoria']];
-      yearCard(labels[bi][0], labels[bi][1], ss(0.2, 0.6, sl) * (1 - ss(3.3, 3.8, sl)));
+      const wars = ['La guerra de Ceres', 'La guerra de las lunas de hielo', 'La guerra de los asteroides', 'La guerra de Valdoria'];
+      chapterCard(labels[bi][0], wars[bi], 1 - ss(1.6, 2.2, sl));
     } else if (bi === 0) {
       // discovery 1: a fallen drone carries a chip; the orders come from the red moon
       const dp = V(-3, 0.35, 0.3);
@@ -1198,7 +1211,7 @@ const DRAW = [
     OV.flash.style.background = '#fff';
     ov(OV.flash, lt > 13.2 ? 1 - ss(13.2, 14.4, lt) : 0);
     camKeys(lt, [[0, [-27, 7, 25], [6, 7, -2]], [4, [-22, 5, 21], [6, 6, 0]], [8.2, [-18, 2.4, 7.5], [14, 4.5, -1]], [13.2, [-18.5, 2.6, 8], [14, 5, -1]], [16, [-36, 14, 40], [18, 20, -20]]]);
-    yearCard('AÑO 5', 'La batalla final', ss(0.4, 0.9, lt) * (1 - ss(3.3, 3.9, lt)));
+    chapterCard('AÑO 5', 'La batalla final', 1 - ss(1.6, 2.2, lt));
   },
   function dawn(lt, t) {
     const day = ss(0, 10, lt);
@@ -1247,7 +1260,7 @@ draw = function (t) {
   bomb.visible = domeClip.visible = domeWire.visible = shieldArc.visible = ring.visible = ring2.visible = false;
   spot.intensity = 0; sun.position.copy(sun.userData.base);
   OV.flash.style.background = '#fff';
-  [OV.title, OV.name, OV.group, OV.year, OV.fin, OV.flash].forEach(e => ov(e, 0));
+  [OV.title, OV.name, OV.group, OV.year, OV.fin, OV.flash, OV.chap].forEach(e => ov(e, 0));
   TAGS.length = 0;
   const extraFade = DRAW[idx](lt, t) || 0;
   POOLS.forEach(p => p.hide()); flushGlows();
@@ -1368,7 +1381,7 @@ const SUBS = [
     [W + 8.3, W + 11.8, 'sombra', 'Miren, este dron tiene un chip.'],
     [W + 12, W + 16, 'guardian', 'Las órdenes vienen de la luna roja. Ahí se esconde Malvor.'],
     [W + 16.3, W + 19, 'rayo', '¡Cuidado arriba!'],
-    [W + 20.4, W + 24, 'sombra', 'Estoy bien... ¡sigamos peleando!'],
+    [W + 20.4, W + 24, 'sombra', 'Estoy bien... pero me dolió un poco.'],
     [W + 24.3, W + 28, 'narrador', 'En el hielo encontraron un archivo muy antiguo.'],
     [W + 28.2, W + 32, 'sombra', 'Malvor era un científico de Valdoria. Por eso conoce nuestra ciudad.'],
     [W + 33.3, W + 34.8, 'guardian', '¡Asteroide!'],
