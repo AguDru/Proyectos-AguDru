@@ -1,6 +1,6 @@
 # La Guardia de Valdoria
 
-Cortometraje animado en 3D de ciencia ficción (casi 3 minutos).
+Cortometraje animado en 3D de ciencia ficción (3 min 16 s).
 
 Capitán Relámpago, Guardián Cósmico y Sombra Dorada pelean durante cinco años contra Malvor y su ejército de drones hasta salvar la ciudad de Valdoria.
 

@@ -104,7 +104,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · casi 3 minutos</div>
+    <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · 3 min 16 s</div>
     <h1>La Guardia de <span>Valdoria</span></h1>
     <p class="logline">Año 2187. Malvor invade la ciudad de Valdoria con un ejército de drones. Capitán Relámpago, Guardián Cósmico y Sombra Dorada pelean contra él durante cinco años y cien batallas. Más de una vez están a punto de perder a uno de los suyos, hasta que descubren cómo derrotarlo.</p>
   </header>
@@ -130,8 +130,8 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
     <div class="controls">
       <button class="btn" id="play">Reproducir</button>
       <button class="btn" id="restart">Desde el inicio</button>
-      <input type="range" id="scrub" min="0" max="179.5" step="0.01" value="0" aria-label="Posición en la película">
-      <span class="time" id="time">0:00 / 2:59</span>
+      <input type="range" id="scrub" min="0" max="196.9" step="0.01" value="0" aria-label="Posición en la película">
+      <span class="time" id="time">0:00 / 3:16</span>
       <button class="btn" id="sound" aria-pressed="true">Sonido: encendido</button>
     </div>
   </section>
@@ -162,7 +162,8 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 <script>
 (() => {
-const DUR = 179.5;
+const DUR = 196.9;
+const CARD = 2.9; // seconds a black year card stays on screen while the battle waits
 const cv = document.getElementById('film');
 const subsEl = document.getElementById('subs'), scrub = document.getElementById('scrub');
 const timeEl = document.getElementById('time'), playBtn = document.getElementById('play');
@@ -232,8 +233,8 @@ const SHAKES = [[24.2, 0.6, 0.3], [13, 1.6, 1.2], [14, 3, 0.15], [95.6, 1.6, 0.3
 
 const SCENES = [
   { a: 0, b: 10, name: 'Prólogo' }, { a: 10, b: 22, name: 'La invasión' }, { a: 22, b: 41.5, name: 'Los héroes' },
-  { a: 41.5, b: 53.5, name: 'Año 1' }, { a: 53.5, b: 59.5, name: 'La guarida' }, { a: 59.5, b: 67.5, name: 'El cuartel' }, { a: 67.5, b: 123.5, name: 'Cinco años de guerra' }, { a: 123.5, b: 135.5, name: 'Al borde' },
-  { a: 135.5, b: 145.5, name: 'El plan' }, { a: 145.5, b: 161.5, name: 'Batalla final' }, { a: 161.5, b: 179.5, name: 'Amanecer' }
+  { a: 41.5, b: 56.4, name: 'Año 1' }, { a: 56.4, b: 62.4, name: 'La guarida' }, { a: 62.4, b: 70.4, name: 'El cuartel' }, { a: 70.4, b: 138, name: 'Cinco años de guerra' }, { a: 138, b: 150, name: 'Al borde' },
+  { a: 150, b: 160, name: 'El plan' }, { a: 160, b: 178.9, name: 'Batalla final' }, { a: 178.9, b: 196.9, name: 'Amanecer' }
 ];
 
 // ---------- 3D setup ----------
@@ -939,6 +940,7 @@ const DRAW = [
     return clamp(f);
   },
   function year1(lt, t) {
+    const cardA = 1 - ss(CARD - 0.6, CARD, lt); lt = Math.max(0, lt - CARD);
     env({ top: [14, 8, 22], bot: [80, 26, 42], fog: 0.012, stars: 0.3, hemi: 0.4, hemiT: [255, 150, 160], sun: 0.4, sets: ['city'] });
     cityState(t, { lights: 0.08, ruined: true, fire: 0.7 });
     const P = { rayo: [-8, 0, 1.5], guardian: [-6.5, 0, -0.8], sombra: [-5, 0, 2.2] };
@@ -972,7 +974,7 @@ const DRAW = [
     // smoke bomb to cover the escape
     if (lt > 10 && lt < 12) { const a = lt - 10, f = 1 - ss(1, 2, a); for (let q = 0; q < 8; q++) smoke(V(17 + Math.cos(q * 0.8) * (3 + a * 6), 2 + a * 3 + (q % 3) * 2, -0.5 + Math.sin(q * 0.8) * (2 + a * 3)), 9 + a * 6, 0.6 * f); }
     camKeys(lt, [[0, [-17, 4, 15], [6, 3, 0]], [4.6, [-15, 4.5, 17], [8, 3.5, 0]], [6.6, [-5, 2.2, 10], [14, 3.4, -1]], [8.6, [-6, 3, 13], [16, 4, 0]], [10.3, [-8, 3, 15], [17, 7, 0]], [12, [-9, 2.6, 15], [22, 20, 0]]]);
-    chapterCard('AÑO 1', 'La batalla de Valdoria', 1 - ss(2.3, 2.9, lt));
+    chapterCard('AÑO 1', 'La batalla de Valdoria', cardA);
   },
   function lair(lt, t) {
     env({ top: [10, 4, 14], bot: [70, 24, 30], fog: 0.006, stars: 1, hemi: 0.35, hemiT: [255, 140, 140], sun: 0.6, sunC: [255, 170, 150], sets: ['moon'], bloom: 1.05 });
@@ -1009,7 +1011,13 @@ const DRAW = [
   },
   function montage(lt, t) {
     // five years of war: four long battles, with a discovery about Malvor between each one
-    const SEG = 8, i = Math.min(6, Math.floor(lt / SEG)), sl = lt - i * SEG, bi = [0, 0, 1, 1, 2, 2, 3][i];
+    const PARTS = [['c', 0], ['b', 0], ['d', 0], ['c', 2], ['b', 2], ['d', 3], ['c', 4], ['b', 4], ['d', 5], ['c', 6], ['b', 6]];
+    let rest = lt, part = PARTS[PARTS.length - 1];
+    for (const pt of PARTS) { const len = pt[0] === 'c' ? CARD : 8; if (rest < len) { part = pt; break; } rest -= len; }
+    if (part === PARTS[PARTS.length - 1] && rest > 8) rest = 8;
+    const i = part[0] === 'd' ? [1, 3, 5][[2, 5, 8].indexOf(PARTS.indexOf(part))] : part[1];
+    const inCard = part[0] === 'c', sl = inCard ? 0 : rest, cardA = inCard ? 1 - ss(CARD - 0.6, CARD, rest) : 0;
+    const bi = [0, 0, 1, 1, 2, 2, 3][i];
     const ground = { rayo: [-8, 0, 1.5], guardian: [-6.5, 0, -0.8], sombra: [-5, 0, 2.2] };
     const envs = [
       () => { env({ top: [90, 50, 100], bot: [235, 150, 105], fogC: [190, 120, 90], fog: 0.0045, hemi: 0.55, hemiT: [255, 210, 180], hemiB: [90, 50, 30], sun: 0.8, sunC: [255, 200, 150], sets: ['desert'], bloom: 0.35 }); glow(V(-150, 140, -690), 200, [255, 220, 170], 0.45); glow(V(120, 110, -690), 100, [255, 200, 160], 0.3); },
@@ -1053,7 +1061,7 @@ const DRAW = [
       camKeys(sl, cams[bi]);
       const labels = [['AÑO 2', 'Desiertos de Ceres'], ['AÑO 3', 'Lunas de hielo de Tauro'], ['AÑO 4', 'Cinturón de asteroides'], ['AÑO 5', 'De vuelta en Valdoria']];
       const wars = ['La guerra de Ceres', 'La guerra de las lunas de hielo', 'La guerra de los asteroides', 'La guerra de Valdoria'];
-      chapterCard(labels[bi][0], wars[bi], 1 - ss(2.3, 2.9, sl));
+      chapterCard(labels[bi][0], wars[bi], cardA);
     } else if (bi === 0) {
       // discovery 1: a fallen drone carries a chip; the orders come from the red moon
       const dp = V(-3, 0.35, 0.3);
@@ -1092,7 +1100,8 @@ const DRAW = [
       camKeys(sl, [[0, [-11, 0.4, 5.5], [20, 4, -40]], [4, [-9, 0.8, 4.6], [40, 6, -70]], [8, [-8, 1.4, 4.2], [50, 8, -88]]]);
       yearCard('AÑO 4', 'La guarida de Malvor', ss(0.2, 0.6, sl) * (1 - ss(3, 3.5, sl)));
     }
-    return Math.max(i > 0 ? 1 - ss(0, 0.3, sl) : 0, i < 6 ? ss(7.7, 8, sl) : 0);
+    if (inCard) return 0;
+    return Math.max(i % 2 === 1 ? 1 - ss(0, 0.3, sl) : 0, i < 6 ? ss(7.7, 8, sl) : 0);
   },
   function brink(lt, t) {
     env({ top: [30, 6, 12], bot: [125, 30, 26], fog: 0.014, hemi: 0.42, hemiT: [255, 140, 120], sun: 0.4, sunC: [255, 160, 140], sets: ['city', 'rain'], bloom: 1.05 });
@@ -1156,6 +1165,7 @@ const DRAW = [
     camKeys(lt, [[0, [-2.5, 42.6, 18.5], [0, 41.8, 10]], [10, [2.5, 42.2, 17], [0, 41.8, 10]]]);
   },
   function finale(lt, t) {
+    const cardA = 1 - ss(CARD - 0.6, CARD, lt); lt = Math.max(0, lt - CARD);
     env({ top: [20, 4, 14], bot: [110, 30, 38], fog: 0.009, stars: 0.4, hemi: 0.45, hemiT: [255, 150, 160], sun: 0.45, sunC: [255, 170, 160], sets: ['city'], bloom: 1.05 });
     cityState(t, { lights: 0, ruined: true, fire: 0.6 });
     const fall = Math.max(0, lt - 13.2);
@@ -1211,7 +1221,7 @@ const DRAW = [
     OV.flash.style.background = '#fff';
     ov(OV.flash, lt > 13.2 ? 1 - ss(13.2, 14.4, lt) : 0);
     camKeys(lt, [[0, [-27, 7, 25], [6, 7, -2]], [4, [-22, 5, 21], [6, 6, 0]], [8.2, [-18, 2.4, 7.5], [14, 4.5, -1]], [13.2, [-18.5, 2.6, 8], [14, 5, -1]], [16, [-36, 14, 40], [18, 20, -20]]]);
-    chapterCard('AÑO 5', 'La batalla final', 1 - ss(2.3, 2.9, lt));
+    chapterCard('AÑO 5', 'La batalla final', cardA);
   },
   function dawn(lt, t) {
     const day = ss(0, 10, lt);
@@ -1392,15 +1402,6 @@ const SUBS = [
     [W + 48.3, W + 53, 'guardian', 'Estoy cansado... pero no me voy a rendir, porque voy a defender a mi gente.'],
     [W + 53.2, W + 56, 'rayo', '¡No vamos a perder nuestra ciudad!']
   );
-  // the narrator reads each year and war while the black card is on screen; the lines that were there move a little later
-  const move = (txt, a, b) => { const l = SUBS.find(x => x[3] === txt); if (l) { l[0] = a; l[1] = b; } };
-  move('¡Guardia, al ataque!', 44.1, 46); move('¡Cuidado, son demasiados drones!', 46.1, 47.6);
-  move('Durante cinco años pelearon por toda la galaxia.', W + 2.5, W + 5.1);
-  move('¡Cuidado arriba!', W + 18.7, W + 19.6);
-  move('¡Asteroide!', W + 34.5, W + 35.3);
-  move('Estoy cansado... pero no me voy a rendir, porque voy a defender a mi gente.', W + 50.5, W + 55);
-  move('¡No vamos a perder nuestra ciudad!', W + 55.1, W + 56);
-  move('¡Ejército, destrúyanlos!', 147.7, 148.9);
   SUBS.push(
     [41.6, 44, 'narrador', 'Año 1. La batalla de Valdoria.'],
     [W + 0.1, W + 2.4, 'narrador', 'Año 2. La guerra de Ceres.'],
@@ -1409,6 +1410,14 @@ const SUBS = [
     [W + 48.1, W + 50.4, 'narrador', 'Año 5. La guerra de Valdoria.'],
     [145.6, 147.6, 'narrador', 'Año 5. La batalla final.']
   );
+  // each year card pauses the story: everything from the start of that battle waits CARD seconds,
+  // except the narrator reading the card, which plays during the pause
+  [145.5, 115.5, 99.5, 83.5, 67.5, 41.5].forEach(P => {
+    const isCard = l => l[2] === 'narrador' && l[3].startsWith('Año ') && l[0] >= P && l[0] < P + 0.3;
+    SUBS.forEach(l => { if (isCard(l)) return; if (l[0] >= P) { l[0] += CARD; l[1] += CARD; } });
+    SFX.forEach(e => { if (e.t >= P) e.t += CARD; });
+    SHAKES.forEach(x => { if (x[0] >= P) x[0] += CARD; });
+  });
   SUBS.sort((a, b) => a[0] - b[0]);
 }
 // ---------- playback ----------
