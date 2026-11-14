@@ -104,7 +104,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · 3 min 16 s</div>
+    <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · 3 min 40 s</div>
     <h1>La Guardia de <span>Valdoria</span></h1>
     <p class="logline">Año 2187. Malvor invade la ciudad de Valdoria con un ejército de drones. Capitán Relámpago, Guardián Cósmico y Sombra Dorada pelean contra él durante cinco años y cien batallas. Más de una vez están a punto de perder a uno de los suyos, hasta que descubren cómo derrotarlo.</p>
   </header>
@@ -130,8 +130,8 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
     <div class="controls">
       <button class="btn" id="play">Reproducir</button>
       <button class="btn" id="restart">Desde el inicio</button>
-      <input type="range" id="scrub" min="0" max="196.9" step="0.01" value="0" aria-label="Posición en la película">
-      <span class="time" id="time">0:00 / 3:16</span>
+      <input type="range" id="scrub" min="0" max="220.6" step="0.01" value="0" aria-label="Posición en la película">
+      <span class="time" id="time">0:00 / 3:40</span>
       <button class="btn" id="sound" aria-pressed="true">Sonido: encendido</button>
     </div>
   </section>
@@ -162,8 +162,8 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 <script>
 (() => {
-const DUR = 196.9;
-const CARD = 2.9; // seconds a black year card stays on screen while the battle waits
+const DUR = 220.6;
+const CARD = 3.6; // seconds a black year card stays on screen while the battle waits
 const cv = document.getElementById('film');
 const subsEl = document.getElementById('subs'), scrub = document.getElementById('scrub');
 const timeEl = document.getElementById('time'), playBtn = document.getElementById('play');
@@ -233,8 +233,8 @@ const SHAKES = [[24.2, 0.6, 0.3], [13, 1.6, 1.2], [14, 3, 0.15], [95.6, 1.6, 0.3
 
 const SCENES = [
   { a: 0, b: 10, name: 'Prólogo' }, { a: 10, b: 22, name: 'La invasión' }, { a: 22, b: 41.5, name: 'Los héroes' },
-  { a: 41.5, b: 56.4, name: 'Año 1' }, { a: 56.4, b: 62.4, name: 'La guarida' }, { a: 62.4, b: 70.4, name: 'El cuartel' }, { a: 70.4, b: 138, name: 'Cinco años de guerra' }, { a: 138, b: 150, name: 'Al borde' },
-  { a: 150, b: 160, name: 'El plan' }, { a: 160, b: 178.9, name: 'Batalla final' }, { a: 178.9, b: 196.9, name: 'Amanecer' }
+  { a: 41.5, b: 57.1, name: 'Año 1' }, { a: 57.1, b: 67.1, name: 'La guarida' }, { a: 67.1, b: 80.1, name: 'El cuartel' }, { a: 80.1, b: 161, name: 'Cinco años de guerra' }, { a: 161, b: 173, name: 'Al borde' },
+  { a: 173, b: 183, name: 'El plan' }, { a: 183, b: 202.6, name: 'Batalla final' }, { a: 202.6, b: 220.6, name: 'Amanecer' }
 ];
 
 // ---------- 3D setup ----------
@@ -461,6 +461,16 @@ function makeMalvor(holo, pal = {}) {
     const sp = mesh(new THREE.ConeGeometry(0.18, 0.95, 6), dark, 0, 4.75, s * 1.18, g); sp.rotation.x = s * 0.45;
     mesh(new THREE.CylinderGeometry(0.27, 0.22, 1.9, 10), dark, 0.1, 3.05, s * 1.22, g);
     mesh(new THREE.SphereGeometry(0.34, 12, 10), armor, 0.15, 2.0, s * 1.24, g);
+    if (pal.sword && s > 0) {
+      // a long dark sword with a glowing red edge, held in the right hand and pointing forward
+      const sw = new THREE.Group(); sw.position.set(0.2, 2.0, 1.24); sw.rotation.z = -1.05; g.add(sw);
+      mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.7, 8), dark, 0, 0, 0, sw);
+      mesh(new THREE.BoxGeometry(0.22, 0.14, 0.95), armor, 0, 0.38, 0, sw);
+      mesh(new THREE.BoxGeometry(0.1, 3.4, 0.3), armor, 0, 2.15, 0, sw);
+      mesh(new THREE.BoxGeometry(0.05, 3.3, 0.06), red, 0, 2.15, 0.16, sw);
+      mesh(new THREE.BoxGeometry(0.05, 3.3, 0.06), red, 0, 2.15, -0.16, sw);
+      const tip = mesh(new THREE.ConeGeometry(0.17, 0.5, 4), armor, 0, 4.05, 0, sw); tip.rotation.y = Math.PI / 4;
+    }
     const horn = mesh(new THREE.ConeGeometry(0.11, 1.15, 8), armor, 0, 5.4, s * 0.42, g); horn.rotation.x = s * 0.5;
     mesh(new THREE.BoxGeometry(0.07, 0.08, 0.17), red, 0.53, 4.82, s * 0.15, g);
   }
@@ -513,7 +523,7 @@ function poseShip(sh, p, o = {}) {
 
 const H = { rayo: makeHero('rayo'), guardian: makeHero('guardian'), sombra: makeHero('sombra') };
 const GHOSTS = [makeHero('sombra', true), makeHero('sombra', true), makeHero('sombra', true)];
-const MALVOR = makeMalvor(false), MALHOLO = makeMalvor(true);
+const MALVOR = makeMalvor(false, { sword: true }), MALHOLO = makeMalvor(true, { sword: true });
 const KROG = makeMalvor(false, { armor: 0x4d3a26, cape: 0x3a2008, eye: 0xff8a30 }), VEXA = makeMalvor(false, { armor: 0x3c3048, cape: 0x2a0838, eye: 0xd040ff });
 const ALLY = [[KROG, [255, 138, 48]], [VEXA, [208, 64, 255]]];
 const SHIP = makeShip(false), SHIPHOLO = makeShip(true);
@@ -988,7 +998,7 @@ const DRAW = [
       poseMalvor(m, p, { s: m === MALVOR ? 1.2 : 0.9, t: lt, yaw: -Math.PI / 2 - 0.4, col: c });
       for (let q = 1; q < 7; q++) glow(V(p.x - q * 2, p.y + 3 + q * 1.4, p.z + q * 2.4), 3 - q * 0.35, c, 0.5);
     });
-    camKeys(lt, [[0, [-6, 6, 26], [0, 12, -50]], [6, [5, 5, 22], [0, 8, -52]]]);
+    camKeys(lt, [[0, [-6, 6, 26], [0, 12, -50]], [10, [6, 4.5, 20], [0, 8, -52]]]);
   },
   function room(lt, t) {
     env({ top: [6, 8, 18], bot: [12, 14, 26], fog: 0.012, hemi: 0.55, hemiT: [160, 190, 255], hemiB: [20, 20, 30], sun: 0.3, sets: ['room'], bloom: 1.05 });
@@ -1012,9 +1022,11 @@ const DRAW = [
   function montage(lt, t) {
     // five years of war: four long battles, with a discovery about Malvor between each one
     const PARTS = [['c', 0], ['b', 0], ['d', 0], ['c', 2], ['b', 2], ['d', 3], ['c', 4], ['b', 4], ['d', 5], ['c', 6], ['b', 6]];
-    let rest = lt, part = PARTS[PARTS.length - 1];
-    for (const pt of PARTS) { const len = pt[0] === 'c' ? CARD : 8; if (rest < len) { part = pt; break; } rest -= len; }
-    if (part === PARTS[PARTS.length - 1] && rest > 8) rest = 8;
+    const LAST = PARTS[PARTS.length - 1], lenOf = pt => pt[0] === 'c' ? CARD : pt[0] === 'd' ? 11 : pt === LAST ? 9.5 : 8;
+    let rest = lt, part = LAST;
+    for (const pt of PARTS) { const len = lenOf(pt); if (rest < len) { part = pt; break; } rest -= len; }
+    const plen = lenOf(part);
+    if (part === LAST && rest > plen) rest = plen;
     const i = part[0] === 'd' ? [1, 3, 5][[2, 5, 8].indexOf(PARTS.indexOf(part))] : part[1];
     const inCard = part[0] === 'c', sl = inCard ? 0 : rest, cardA = inCard ? 1 - ss(CARD - 0.6, CARD, rest) : 0;
     const bi = [0, 0, 1, 1, 2, 2, 3][i];
@@ -1101,7 +1113,7 @@ const DRAW = [
       yearCard('AÑO 4', 'La guarida de Malvor', ss(0.2, 0.6, sl) * (1 - ss(3, 3.5, sl)));
     }
     if (inCard) return 0;
-    return Math.max(i % 2 === 1 ? 1 - ss(0, 0.3, sl) : 0, i < 6 ? ss(7.7, 8, sl) : 0);
+    return Math.max(i % 2 === 1 ? 1 - ss(0, 0.3, sl) : 0, i < 6 ? ss(plen - 0.3, plen, sl) : 0);
   },
   function brink(lt, t) {
     env({ top: [30, 6, 12], bot: [125, 30, 26], fog: 0.014, hemi: 0.42, hemiT: [255, 140, 120], sun: 0.4, sunC: [255, 160, 140], sets: ['city', 'rain'], bloom: 1.05 });
@@ -1414,10 +1426,36 @@ const SUBS = [
   // except the narrator reading the card, which plays during the pause
   [145.5, 115.5, 99.5, 83.5, 67.5, 41.5].forEach(P => {
     const isCard = l => l[2] === 'narrador' && l[3].startsWith('Año ') && l[0] >= P && l[0] < P + 0.3;
-    SUBS.forEach(l => { if (isCard(l)) return; if (l[0] >= P) { l[0] += CARD; l[1] += CARD; } });
-    SFX.forEach(e => { if (e.t >= P) e.t += CARD; });
-    SHAKES.forEach(x => { if (x[0] >= P) x[0] += CARD; });
+    SUBS.forEach(l => { if (isCard(l)) return; if (l[0] >= P) { l[0] += 2.9; l[1] += 2.9; } });
+    SFX.forEach(e => { if (e.t >= P) e.t += 2.9; });
+    SHAKES.forEach(x => { if (x[0] >= P) x[0] += 2.9; });
   });
+  // more time so every line can be said in full: longer cards, lair, headquarters, discoveries and last battle
+  [[162.9, 0.7], [138, 1.5], [130, 0.7], [127.1, 3], [111.1, 0.7], [108.2, 3], [92.2, 0.7], [89.3, 3], [73.3, 0.7], [70.4, 5], [62.4, 4], [44.4, 0.7]].forEach(([P, d]) => {
+    SUBS.forEach(l => { if (l[0] >= P) { l[0] += d; l[1] += d; } });
+    SFX.forEach(e => { if (e.t >= P) e.t += d; });
+    SHAKES.forEach(x => { if (x[0] >= P) x[0] += d; });
+  });
+  const place = (txt, a, len) => { const l = SUBS.find(x => x[3] === txt); if (l) { l[0] = a; l[1] = a + len; } };
+  place('Nadie imaginaba lo que venía desde las estrellas.', 5.7, 4.2);
+  place('Malvor y sus aliados huyeron a su guarida, en la luna roja.', 57.4, 5);
+  place('Volveremos más fuertes.', 62.6, 2.6);
+  place('Malvor va a volver. Tenemos que estar listos.', 67.4, 4);
+  place('Vamos a entrenar y a proteger la ciudad.', 71.6, 3.6);
+  place('Y yo voy a buscar su punto débil.', 75.4, 3);
+  place('Miren, este dron tiene un chip.', 91.7 + 0.3, 3.4);
+  place('Las órdenes vienen de la luna roja. Ahí se esconde Malvor.', 91.7 + 4.5, 5.2);
+  place('En el hielo encontraron un archivo muy antiguo.', 114.3 + 0.3, 4.4);
+  place('Malvor era un científico de Valdoria. Por eso conoce nuestra ciudad.', 114.3 + 5, 5.6);
+  place('Así descubrieron la base secreta de Malvor.', 136.9 + 0.3, 4.2);
+  place('Su armadura se carga con la energía de la nave.', 136.9 + 5, 4.6);
+  place('Estoy cansado... pero no me voy a rendir, porque voy a defender a mi gente.', 151.5 + 0.2, 6);
+  place('¡No vamos a perder nuestra ciudad!', 151.5 + 6.4, 3);
+  place('¡Aguantá, Guardián! ¡Ahí voy!', 192.3, 3);
+  place('¡Energía de los tres... ahora!', 195.4, 2.6);
+  place('Después de cinco años y cien batallas, Valdoria volvió a brillar.', 206.2, 5.6);
+  place('¡Viva la Guardia de Valdoria!', 211.9, 3);
+  place('Y la Guardia de Valdoria siempre la va a cuidar.', 215.3, 4.2);
   SUBS.sort((a, b) => a[0] - b[0]);
 }
 // ---------- playback ----------
