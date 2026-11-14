@@ -972,7 +972,7 @@ const DRAW = [
     // smoke bomb to cover the escape
     if (lt > 10 && lt < 12) { const a = lt - 10, f = 1 - ss(1, 2, a); for (let q = 0; q < 8; q++) smoke(V(17 + Math.cos(q * 0.8) * (3 + a * 6), 2 + a * 3 + (q % 3) * 2, -0.5 + Math.sin(q * 0.8) * (2 + a * 3)), 9 + a * 6, 0.6 * f); }
     camKeys(lt, [[0, [-17, 4, 15], [6, 3, 0]], [4.6, [-15, 4.5, 17], [8, 3.5, 0]], [6.6, [-5, 2.2, 10], [14, 3.4, -1]], [8.6, [-6, 3, 13], [16, 4, 0]], [10.3, [-8, 3, 15], [17, 7, 0]], [12, [-9, 2.6, 15], [22, 20, 0]]]);
-    chapterCard('AÑO 1', 'La batalla de Valdoria', 1 - ss(1.6, 2.2, lt));
+    chapterCard('AÑO 1', 'La batalla de Valdoria', 1 - ss(2.3, 2.9, lt));
   },
   function lair(lt, t) {
     env({ top: [10, 4, 14], bot: [70, 24, 30], fog: 0.006, stars: 1, hemi: 0.35, hemiT: [255, 140, 140], sun: 0.6, sunC: [255, 170, 150], sets: ['moon'], bloom: 1.05 });
@@ -1053,7 +1053,7 @@ const DRAW = [
       camKeys(sl, cams[bi]);
       const labels = [['AÑO 2', 'Desiertos de Ceres'], ['AÑO 3', 'Lunas de hielo de Tauro'], ['AÑO 4', 'Cinturón de asteroides'], ['AÑO 5', 'De vuelta en Valdoria']];
       const wars = ['La guerra de Ceres', 'La guerra de las lunas de hielo', 'La guerra de los asteroides', 'La guerra de Valdoria'];
-      chapterCard(labels[bi][0], wars[bi], 1 - ss(1.6, 2.2, sl));
+      chapterCard(labels[bi][0], wars[bi], 1 - ss(2.3, 2.9, sl));
     } else if (bi === 0) {
       // discovery 1: a fallen drone carries a chip; the orders come from the red moon
       const dp = V(-3, 0.35, 0.3);
@@ -1211,7 +1211,7 @@ const DRAW = [
     OV.flash.style.background = '#fff';
     ov(OV.flash, lt > 13.2 ? 1 - ss(13.2, 14.4, lt) : 0);
     camKeys(lt, [[0, [-27, 7, 25], [6, 7, -2]], [4, [-22, 5, 21], [6, 6, 0]], [8.2, [-18, 2.4, 7.5], [14, 4.5, -1]], [13.2, [-18.5, 2.6, 8], [14, 5, -1]], [16, [-36, 14, 40], [18, 20, -20]]]);
-    chapterCard('AÑO 5', 'La batalla final', 1 - ss(1.6, 2.2, lt));
+    chapterCard('AÑO 5', 'La batalla final', 1 - ss(2.3, 2.9, lt));
   },
   function dawn(lt, t) {
     const day = ss(0, 10, lt);
@@ -1391,6 +1391,23 @@ const SUBS = [
     [W + 44.2, W + 48, 'guardian', 'Su armadura se carga con la energía de la nave.'],
     [W + 48.3, W + 53, 'guardian', 'Estoy cansado... pero no me voy a rendir, porque voy a defender a mi gente.'],
     [W + 53.2, W + 56, 'rayo', '¡No vamos a perder nuestra ciudad!']
+  );
+  // the narrator reads each year and war while the black card is on screen; the lines that were there move a little later
+  const move = (txt, a, b) => { const l = SUBS.find(x => x[3] === txt); if (l) { l[0] = a; l[1] = b; } };
+  move('¡Guardia, al ataque!', 44.1, 46); move('¡Cuidado, son demasiados drones!', 46.1, 47.6);
+  move('Durante cinco años pelearon por toda la galaxia.', W + 2.5, W + 5.1);
+  move('¡Cuidado arriba!', W + 18.7, W + 19.6);
+  move('¡Asteroide!', W + 34.5, W + 35.3);
+  move('Estoy cansado... pero no me voy a rendir, porque voy a defender a mi gente.', W + 50.5, W + 55);
+  move('¡No vamos a perder nuestra ciudad!', W + 55.1, W + 56);
+  move('¡Ejército, destrúyanlos!', 147.7, 148.9);
+  SUBS.push(
+    [41.6, 44, 'narrador', 'Año 1. La batalla de Valdoria.'],
+    [W + 0.1, W + 2.4, 'narrador', 'Año 2. La guerra de Ceres.'],
+    [W + 16.1, W + 18.6, 'narrador', 'Año 3. La guerra de las lunas de hielo.'],
+    [W + 32.1, W + 34.4, 'narrador', 'Año 4. La guerra de los asteroides.'],
+    [W + 48.1, W + 50.4, 'narrador', 'Año 5. La guerra de Valdoria.'],
+    [145.6, 147.6, 'narrador', 'Año 5. La batalla final.']
   );
   SUBS.sort((a, b) => a[0] - b[0]);
 }
