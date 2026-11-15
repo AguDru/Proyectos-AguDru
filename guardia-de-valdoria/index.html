@@ -748,6 +748,16 @@ function ruinOf(b, age, ruined) {
   return { sy, rx, rz, dead };
 }
 const CITYM = {}, HELI = [], LAMPS = [];
+function rubbleGeo(b) {
+  const r = mkRand(Math.abs(Math.round(b.x * 37 + b.z * 11)) + 7), parts = [], R = Math.max(b.w, b.d) * 0.75 + 2;
+  for (let i = 0; i < 18; i++) {
+    const an = r() * TAU, dd = Math.sqrt(r()) * R, sz = 0.8 + r() * 2.2;
+    const g = new THREE.BoxGeometry(sz * (0.6 + r()), sz * (0.4 + r() * 0.6), sz * (0.6 + r())); cityPart(g, false);
+    g.rotateX(r() * 1.2); g.rotateY(r() * 3); g.rotateZ(r() * 1.2);
+    g.translate(Math.cos(an) * dd, Math.max(0, (1 - dd / R) * 3.5) + sz * 0.2, Math.sin(an) * dd); parts.push(g);
+  }
+  return mergeGeos(parts);
+}
 function stumpMatrix(b) { return new THREE.Matrix4().compose(V(b.x, 0, b.z), new THREE.Quaternion(), V(1, b.frac, 1)); }
 function pieceMatrix(b, ang, k) {
   // k = 0: the top still sits on the stump; k = 1: it lies on the ground beside it
@@ -831,13 +841,16 @@ function mergeColored(geos) { const m = mergeGeos(geos); const cols = []; for (c
     if (b.z > -40) dz = Math.min(dz, -0.4 * Math.abs(dx || 1));
     const L = Math.hypot(dx, dz) || 1; b.dir = V(dx / L, 0, dz / L);
   });
+  // destroyed buildings collapse straight down: a short broken stump is left, sitting in a pile of rubble
+  CITY.forEach(b => { b.stumpH = b.h * (0.12 + 0.14 * b.f2); b.rubble = rubbleGeo(b); });
   CITYM.dead = [new THREE.Mesh(mergeGeos(CITY.filter(b => b.ruin.dead).flatMap(b => {
-    const st = b.geo.clone(); st.applyMatrix4(stumpMatrix(b)); const pc = b.geo.clone(); pc.applyMatrix4(pieceMatrix(b, 1.42, 1)); return [st, pc];
+    const st = b.geo.clone(); st.applyMatrix4(new THREE.Matrix4().makeTranslation(b.x, -(b.h - b.stumpH), b.z));
+    const rb = b.rubble.clone(); rb.applyMatrix4(new THREE.Matrix4().makeTranslation(b.x, 0, b.z)); return [st, rb];
   })), MAT.dead)];
   const signsOf = list => { const gs = []; list.forEach(b => b.signs.forEach(sg => gs.push(placedG(sg, b, NONE)))); return gs.length ? new THREE.Mesh(mergeColored(gs), MAT.neon) : new THREE.Group(); };
   CITYM.signsAll = [signsOf(CITY)]; CITYM.signsFar = [signsOf(CITY.filter(b => !b.near))]; CITYM.signsRuin = [signsOf(CITY.filter(b => !b.near && !b.ruin.dead))];
   for (const k in CITYM) CITYM[k].forEach(m => SETS.city.add(m));
-  CITY.filter(b => b.near).forEach(b => { b.mesh = new THREE.Mesh(b.geo, mats[b.style]); b.mesh.position.set(b.x, 0, b.z); SETS.city.add(b.mesh); b.piece = new THREE.Mesh(b.geo, MAT.dead); b.piece.matrixAutoUpdate = false; b.piece.visible = false; SETS.city.add(b.piece); });
+  CITY.filter(b => b.near).forEach(b => { b.mesh = new THREE.Mesh(b.geo, mats[b.style]); b.mesh.position.set(b.x, 0, b.z); SETS.city.add(b.mesh); b.piece = new THREE.Mesh(b.rubble, MAT.dead); b.piece.position.set(b.x, 0, b.z); b.piece.visible = false; SETS.city.add(b.piece); });
   // the needle tower: a landmark on the skyline
   const nt = [cylAt(6, 7, 40, 0, 0, 0, 16), cylAt(4, 6, 50, 0, 40, 0, 16), cylAt(1.2, 4, 40, 0, 90, 0, 16), cylAt(0.25, 0.4, 25, 0, 130, 0, 6)];
   nt.slice(0, 3).forEach(g => { const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, i / uv.count * 6, (g.attributes.position.getY(i)) / 14); });
@@ -868,17 +881,20 @@ function cityState(t, o) {
   for (const b of CITY) {
     if (b.mesh) b.mesh.visible = anim;
     if (b.piece) b.piece.visible = false;
-    if (o.ruined) { b.dead = b.ruin.dead; b.top = b.dead ? b.h * b.frac : b.h; }
+    if (o.ruined) { b.dead = b.ruin.dead; b.top = b.dead ? b.stumpH : b.h; }
     else if (anim && b.near) {
       const del = Math.hypot(b.x - IMP.x, b.z - IMP.z) / 50, tau = o.impactAge - del;
-      if (tau <= 0) { b.mesh.scale.y = 1; b.mesh.material = BSTYLE()[b.style]; b.dead = false; b.top = b.h; }
+      if (tau <= 0) { b.mesh.position.y = 0; b.mesh.rotation.set(0, 0, 0); b.mesh.material = BSTYLE()[b.style]; b.dead = false; b.top = b.h; }
       else {
-        // the top breaks off, tips over faster and faster, and crashes down beside the stump
-        const ang = Math.min(1.42, 1.5 * tau * tau), k = ang / 1.42;
-        b.mesh.scale.y = b.frac; b.mesh.material = MAT.dead; b.dead = true; b.top = b.h * b.frac;
-        b.piece.visible = true; b.piece.matrix.copy(pieceMatrix(b, ang, k * k)); b.piece.matrixWorldNeedsUpdate = true;
-        if (tau < 0.6) for (let q = 0; q < 4; q++) glow(V(b.x + (q - 1.5) * 1.5, b.h * b.frac + 0.5, b.z), 3, [255, 160, 90], 0.8 * (1 - tau / 0.6));
-        if (k > 0.9 && tau < 3.5) { const e = pieceMatrix(b, 1.42, 1), ep = V().setFromMatrixPosition(e); for (let q = 0; q < 3; q++) smoke(ep.clone().addScaledVector(b.dir, b.h * (1 - b.frac) * (0.3 + q * 0.3)).add(V(0, 2 + (tau - 1) * 2, 0)), 10 + tau * 4, 0.5 * (1 - ss(1.5, 3.5, tau))); }
+        // the whole building drops into its own dust: slow at first, then faster, leaving a stump in a pile of rubble
+        const k = Math.pow(clamp(tau / 2.4), 1.7), drop = (b.h - b.stumpH) * k;
+        b.mesh.position.y = -drop; b.mesh.rotation.set(Math.sin(tau * 11) * 0.012 * (1 - k), 0, Math.sin(tau * 9) * 0.015 * (1 - k));
+        b.mesh.material = tau > 0.25 ? MAT.dead : BSTYLE()[b.style]; b.dead = true; b.top = b.h - drop;
+        b.piece.visible = true; b.piece.scale.set(1, Math.max(0.05, k), 1);
+        const topY = b.h - drop, dustA = 1 - ss(2.4, 6, tau);
+        if (tau < 2.6) for (let q = 0; q < 5; q++) { const an = q * 1.26 + b.x; smoke(V(b.x + Math.cos(an) * b.w * 0.5, topY + (q % 2) * 2, b.z + Math.sin(an) * b.d * 0.5), 7 + tau * 3, 0.55); }
+        for (let q = 0; q < 6; q++) { const an = q * 1.05 + b.z, R = b.w * 0.6 + tau * 5; smoke(V(b.x + Math.cos(an) * R, 2 + tau * 1.5 + (q % 3), b.z + Math.sin(an) * R), 9 + tau * 4, 0.5 * dustA); }
+        if (tau < 2.4) for (let q = 0; q < 6; q++) { const fy = topY - ((tau * 9 + q * 2.3) % Math.max(2, topY)); glow(V(b.x + (q - 2.5) * b.w * 0.18, fy, b.z + b.d * 0.5), 0.6, [255, 150, 80], 0.8); }
       }
     } else { b.dead = false; b.top = b.h; }
   }
