@@ -409,6 +409,18 @@ function beam(a, b, w, c, al) {
   m.position.copy(a).addScaledVector(d, 0.5); m.scale.set(w, L, w); m.quaternion.setFromUnitVectors(UP, d.normalize());
   m.material.color.setRGB(c[0] / 255 * al, c[1] / 255 * al, c[2] / 255 * al);
 }
+// a jagged lightning bolt that flickers every frame
+function bolt(a, b, c, al = 1, w = 0.16) {
+  if (al <= 0.003) return;
+  const L = a.distanceTo(b), n = Math.max(3, Math.min(9, Math.round(L / 2)));
+  let prev = a;
+  for (let i = 1; i <= n; i++) {
+    const k = i / n, p = a.clone().lerp(b, k);
+    if (i < n) { const j = L * 0.07; p.add(V(Math.sin(T * 97 + i * 13.1) * j, Math.sin(T * 83 + i * 7.7) * j, Math.sin(T * 71 + i * 5.3) * j)); }
+    beam(prev, p, w * 2.2, c, 0.55 * al); beam(prev, p, w * 0.6, [235, 250, 255], al); prev = p;
+  }
+  glow(b, 2.4, c, al); glow(a, 1.4, [220, 245, 255], al);
+}
 function laser(a, b) { beam(a, b, 0.14, RED, 0.8); beam(a, b, 0.05, [255, 220, 220], 1); glow(b, 1.8, RED, 0.9); }
 function boom(p, age, size, c = [255, 150, 60]) {
   if (age < 0 || age > 1.2) return;
@@ -444,7 +456,7 @@ function makeHero(id, ghost) {
   const visorM = M({ color: c.clone().lerp(new THREE.Color(1, 1, 1), 0.45), emissive: c, emissiveIntensity: 1.4, roughness: 0.1, metalness: 0.2 });
   const ell = (r, sx, sy, sz, mat, x, y, z, parent) => { const m = mesh(new THREE.SphereGeometry(r, 20, 14), mat, x, y, z, parent); m.scale.set(sx, sy, sz); return m; };
   const ring = (r, tube, mat, x, y, z, parent) => { const m = mesh(new THREE.TorusGeometry(r, tube, 6, 24), mat, x, y, z, parent); m.rotation.x = Math.PI / 2; return m; };
-  const legs = [], knees = [], arms = [], elbows = [];
+  const legs = [], knees = [], arms = [], elbows = []; let hammerTip = null;
   for (const s of [1, -1]) {
     const hip = new THREE.Group(); hip.position.set(0, 0.96, s * 0.115 * W); g.add(hip);
     mesh(new THREE.CylinderGeometry(0.1 * W, 0.074 * W, 0.46, 20), s > 0 ? suit : dark, 0, -0.23, 0, hip);
@@ -491,6 +503,16 @@ function makeHero(id, ghost) {
     mesh(new THREE.BoxGeometry(0.05, 0.03, 0.09), acc, 0.05, -0.31, 0, el);
     const hand = new THREE.Object3D(); hand.position.set(0, -0.36, 0); el.add(hand);
     arms.push({ p, hand }); elbows.push(el);
+    if (id === 'rayo' && s > 0) {
+      // Thunderbolt's hammer: a long grip and a hexagonal head with glowing blue bands
+      const hm = new THREE.Group(); hm.position.set(0, -0.31, 0); el.add(hm);
+      mesh(new THREE.CylinderGeometry(0.024, 0.027, 0.62, 12), dark, 0, -0.2, 0, hm);
+      for (const y of [-0.02, -0.12, -0.42]) ring(0.03, 0.008, acc, 0, y, 0, hm);
+      const hd = mesh(new THREE.CylinderGeometry(0.115, 0.115, 0.36, 6), plate, 0, -0.56, 0, hm); hd.rotation.z = Math.PI / 2;
+      for (const x of [-0.19, 0.19]) { const cap = mesh(new THREE.CylinderGeometry(0.085, 0.1, 0.04, 6), acc, x, -0.56, 0, hm); cap.rotation.z = Math.PI / 2; }
+      const band = mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.05, 6), acc, 0, -0.56, 0, hm); band.rotation.z = Math.PI / 2;
+      hammerTip = new THREE.Object3D(); hammerTip.position.set(0, -0.56, 0); hm.add(hammerTip);
+    }
   }
   // cloth that moves: a cape for Thunderbolt, a scarf for Mangar
   const cloth = [];
@@ -506,11 +528,11 @@ function makeHero(id, ghost) {
   if (id === 'sombra') cape = addCloth(0.1, 0.85, M({ color: col(h.c).multiplyScalar(0.55), emissive: col(h.c), emissiveIntensity: 0.15, roughness: 0.6, side: THREE.DoubleSide }), -0.12, 1.66, 1.6);
   g.traverse(o => { if (o.isMesh) o.castShadow = true; });
   g.visible = false; scene.add(g);
-  return { id, acc, g, mats, armR: arms[0].p, armL: arms[1].p, handR: arms[0].hand, elbowR: elbows[0], elbowL: elbows[1], legR: legs[0], legL: legs[1], kneeR: knees[0], kneeL: knees[1], chest, cape, cloth, ghost };
+  return { id, acc, hammerTip, g, mats, armR: arms[0].p, armL: arms[1].p, handR: arms[0].hand, elbowR: elbows[0], elbowL: elbows[1], legR: legs[0], legL: legs[1], kneeR: knees[0], kneeL: knees[1], chest, cape, cloth, ghost };
 }
 function poseHero(h, p, o = {}) {
   const a = o.alpha ?? 1;
-  if (a <= 0.01) { h.g.visible = false; return { hand: p.clone(), chest: p.clone() }; }
+  if (a <= 0.01) { h.g.visible = false; return { hand: p.clone(), chest: p.clone(), hammer: p.clone() }; }
   const g = h.g; g.visible = true;
   g.position.copy(p); g.rotation.set(0, o.yaw || 0, o.rot || 0); g.scale.setScalar(o.s || 1);
   const aR = o.aR ?? 0.12, aL = o.aL ?? -0.08, tt = o.t || 0;
@@ -532,7 +554,7 @@ function poseHero(h, p, o = {}) {
   const op = a * (h.ghost ? 0.28 : 1);
   for (const m of h.mats) { m.transparent = op < 0.999; m.opacity = op; m.depthWrite = op > 0.98; }
   g.updateMatrixWorld(true);
-  const hand = h.handR.getWorldPosition(V(0, 0, 0)), chest = h.chest.getWorldPosition(V(0, 0, 0));
+  const hand = h.handR.getWorldPosition(V(0, 0, 0)), chest = h.chest.getWorldPosition(V(0, 0, 0)), hammer = h.hammerTip ? h.hammerTip.getWorldPosition(V(0, 0, 0)) : hand;
   if (o.aura && !h.ghost) glow(chest, 3.4 * (o.s || 1), HEROES[h.id].c, 0.2 * o.aura * a * (o.glowK ?? 1));
   if (h.id === 'sombra' && !h.ghost) {
     // fulgor dorado: halo, brillo en el casco y chispas que suben alrededor
@@ -545,7 +567,7 @@ function poseHero(h, p, o = {}) {
     }
   }
   if (o.charge) glow(hand, 1.6 * o.charge, HEROES[h.id].c, 0.9);
-  return { hand, chest };
+  return { hand, chest, hammer };
 }
 
 function makeMalvor(holo, pal = {}) {
@@ -1094,7 +1116,9 @@ function skirmish(lt, D, P, o = {}) {
     }
     const mine = hh && hh.id === id ? hk : 0, k2 = Math.max(knock, mine);
     const weak = mine ? lerp(1, 0.2 + 0.25 * (Math.sin(lt * 23) > 0 ? 1 : 0), mine) : 1;
-    out[id] = poseHero(H[id], V(p[0] - 3 * knock - 0.6 * mine, p[1] + bob - (o.fly ? 2.5 * mine : 0), p[2]), { aR: lerp(1.5 + Math.sin(lt * 3 + i) * 0.12, 0.4, k2), aL: 0.35, fly: o.fly, aura: 0.9 * (1 - k2), t: lt, rot: 1.45 * k2, alpha: 1 - 0.3 * knock, spread: 0.12, glowK: weak, fulgor: weak });
+    const raise = id === 'rayo' ? Math.max(o.raise || 0, lt > 1 ? ss(0, 0.2, lt % 3.2) * (1 - ss(0.5, 0.7, lt % 3.2)) : 0) * (1 - k2) : 0;
+    out[id] = poseHero(H[id], V(p[0] - 3 * knock - 0.6 * mine, p[1] + bob - (o.fly ? 2.5 * mine : 0), p[2]), { aR: lerp(lerp(1.5 + Math.sin(lt * 3 + i) * 0.12, 2.95, raise), 0.4, k2), aL: 0.35, fly: o.fly, aura: 0.9 * (1 - k2), t: lt, rot: 1.45 * k2, alpha: 1 - 0.3 * knock, spread: 0.12, glowK: weak, fulgor: weak });
+    if (raise > 0.6) { const hmr = out[id].hammer; bolt(hmr.clone().add(V(2, 30, -1)), hmr, HEROES.rayo.c, raise); glow(hmr, 3, HEROES.rayo.c, raise); }
     if (mine > 0.5) for (let q = 0; q < 3; q++) glow(out[id].chest.clone().add(V(Math.sin(lt * 9 + q) * 0.4, 0.2 + q * 0.2, Math.cos(lt * 7 + q) * 0.3)), 0.3, HEROES[id].c, Math.sin(lt * 31 + q) > 0.5 ? 1 : 0);
   });
   if (hh) {
@@ -1130,7 +1154,7 @@ function skirmish(lt, D, P, o = {}) {
       let id = IDS[d.killer];
       for (let q = 1; q < 3 && outOfFight(id); q++) id = IDS[(d.killer + q) % 3];
       const k = (lt - (d.td - 0.3)) / 0.3, from = out[id].hand, to = pos(d.td), p = from.clone().lerp(to, k), c = HEROES[id].c;
-      if (id === 'rayo') { glow(p, 2.2, c, 1); glow(p, 0.7, [255, 255, 255], 1); beam(from, p, 0.06, c, 0.5); }
+      if (id === 'rayo') bolt(out.rayo.hammer, to, c, 1);
       else if (id === 'guardian') { glow(p, 1 + 2.5 * k, c, 0.9); glow(p, 0.6, [255, 255, 255], 0.8); }
       else { beam(from, p, 0.14, c, 0.9); glow(p, 1.6, c, 1); }
     }
@@ -1174,7 +1198,9 @@ function baseAssault(a, lt, t) {
     if (a > kt) { boom(mp.clone().add(V(0, 1.3, 0)), a - kt, 2.4, [255, 120, 80]); return; }
     const mc = poseMalvor(mn, mp, { s: 0.55, t: lt, col: [255, 90, 70], yaw: face(mp) });
     if (Math.sin(a * 7 + i * 2) > 0.9) { const tg = out.guardian.chest.clone().add(V((i % 3) - 1, 0, -2.5)); beam(mc, tg, 0.08, RED, 0.8); glow(tg, 1.1, RED, 0.8); }
-    if (a > kt - 0.3) { const id = IDS[i % 3], from = out[id].hand, k = (a - (kt - 0.3)) / 0.3, pp = from.clone().lerp(mc, k); beam(from, pp, 0.12, HEROES[id].c, 0.9); glow(pp, 1.6, HEROES[id].c, 1); }
+    if (a > kt - 0.3) { const id = IDS[i % 3], from = id === 'rayo' ? out[id].hammer : out[id].hand;
+      if (id === 'rayo') { bolt(from, mc, HEROES.rayo.c, 1); return; }
+      const k = (a - (kt - 0.3)) / 0.3, pp = from.clone().lerp(mc, k); beam(from, pp, 0.12, HEROES[id].c, 0.9); glow(pp, 1.6, HEROES[id].c, 1); }
   });
   // Krog and Vexa drop in and hit hard; Sky Warrior's shield takes it until it almost breaks
   const allyIn = ss(6, 6.8, a), dome = ss(6.8, 7.2, a) * (1 - ss(9, 9.4, a));
@@ -1305,7 +1331,7 @@ const DRAW = [
     if (lt > 4.2) mcore = poseMalvor(MALVOR, mpos, { s: 1.5, t: lt, hurt: kneel, tilt: 0.25 * kneel, coreK: 1 - 0.6 * kneel * (Math.sin(lt * 21) > 0 ? 1 : 0.3) });
     if (atk > 0) {
       const ph = lt * 3;
-      beam(out.rayo.hand, mcore, 0.22, HEROES.rayo.c, atk * (0.7 + 0.3 * Math.sin(ph * 5))); beam(out.rayo.hand, mcore, 0.07, [255, 255, 255], atk);
+      bolt(out.rayo.hammer, mcore, HEROES.rayo.c, atk, 0.2);
       beam(out.sombra.hand, mcore, 0.14, HEROES.sombra.c, atk * (Math.sin(ph * 7) > 0 ? 1 : 0.3));
       const k = (lt * 1.6) % 1; glow(out.guardian.hand.clone().lerp(mcore, k), 1.6, HEROES.guardian.c, atk);
       glow(mcore, 5, [255, 255, 255], 0.6 * atk); boom(mcore, (lt * 1.3) % 1.1, 3, [255, 180, 120]);
@@ -1438,7 +1464,7 @@ const DRAW = [
         if (sl > 1.5 && sl < 2.3) { const q = (sl - 1.5) / 0.8; ring.visible = true; ring.position.set(ap.x, 0.2, ap.z); ring.rotation.set(Math.PI / 2, 0, 0); ring.scale.setScalar(1 + q * 16); ring.material.opacity = 1 - q; ring.material.color.setRGB(ac2[0] / 255, ac2[1] / 255, ac2[2] / 255); }
         if (bi === 0) HURTS[0].from = acore.clone().add(V(0, 3.1, 0));
       }
-      const outW = skirmish(sl, D_WAR[bi], bi === 2 ? { rayo: [-8, 5, 1.5], guardian: [-6.5, 7.5, -1], sombra: [-5, 3.5, 2.2] } : ground, { fly: bi === 2, hurtHero: HURTS[bi], overrides });
+      const outW = skirmish(sl, D_WAR[bi], bi === 2 ? { rayo: [-8, 5, 1.5], guardian: [-6.5, 7.5, -1], sombra: [-5, 3.5, 2.2] } : ground, { fly: bi === 2, hurtHero: HURTS[bi], overrides, raise: ss(10.4, 10.7, sl) * (1 - ss(11.3, 11.5, sl)) });
       if (ally) {
         // heavy blasts at the heroes: some hit the shield, others blow up the ground right next to them
         for (let n = 0; n < 5; n++) {
@@ -1451,7 +1477,7 @@ const DRAW = [
         // the heroes fire back at the ally
         if (sl > 3 && sl < 12.6 && Math.sin(sl * 9) > 0.6) {
           // he is hard to beat: the shots bounce off an energy barrier
-          const hit = ally.acore.clone().add(V(-1.6, Math.sin(sl * 5), 0)); beam(outW.rayo.hand, hit, 0.12, HEROES.rayo.c, 0.8); glow(hit, 2, HEROES.rayo.c, 0.8);
+          const hit = ally.acore.clone().add(V(-1.6, Math.sin(sl * 5), 0)); bolt(outW.rayo.hammer, hit, HEROES.rayo.c, 0.9); glow(hit, 2, HEROES.rayo.c, 0.8);
           domeWire.visible = true; domeWire.position.copy(ally.acore); domeWire.scale.setScalar(2.4); domeWire.material.color.setRGB(ally.c[0] / 255, ally.c[1] / 255, ally.c[2] / 255); domeWire.material.opacity = 0.5;
         }
       }
@@ -1467,12 +1493,12 @@ const DRAW = [
           const mc = poseMalvor(mn, mp, { s: 0.55, t: lt, col: [255, 90, 70] });
           if (p2 > 1 && Math.sin(p2 * 6 + i * 1.7) > 0.93) { const tg = outW.guardian.chest.clone().add(V(3.2, (i % 3) * 0.4 - 0.3, (i % 2) - 0.5)); beam(mc, tg, 0.08, RED, 0.8); glow(tg, 1.2, RED, 0.8); }
           // Thunderbolt calls lightning down on each one
-          if (p2 > kt - 0.3 && p2 < kt) { const top = mp.clone().add(V(0, 24, 0)); let a = top; for (let q = 1; q <= 4; q++) { const b2 = top.clone().lerp(mc, q / 4).add(V((q % 2 ? 1 : -1) * 0.8 * (q < 4), 0, 0)); beam(a, b2, 0.18, HEROES.rayo.c, 1); beam(a, b2, 0.06, [255, 255, 255], 1); a = b2; } glow(mc, 4, HEROES.rayo.c, 1); }
+          if (p2 > kt - 0.3 && p2 < kt) { bolt(outW.rayo.hammer, mc, HEROES.rayo.c, 1, 0.2); glow(mc, 4, HEROES.rayo.c, 1); }
         });
         // Mangar races through them, Sky Warrior sends a shock wave along the ground
         if (p2 > 3 && p2 < 4.8) { const fa = 1 - ss(4.2, 4.8, p2); for (let q = 0; q < pts.length - 1; q++) { beam(pts[q], pts[q + 1], 0.3, HEROES.sombra.c, 0.6 * fa); beam(pts[q], pts[q + 1], 0.08, [255, 240, 200], fa); } }
         if (p2 > 3.1 && p2 < 4.3) { const q = (p2 - 3.1) / 1.2; ring2.visible = true; ring2.position.set(-6.5, base + 0.3, -0.8); ring2.rotation.set(Math.PI / 2, 0, 0); ring2.scale.setScalar(1 + q * 22); ring2.material.opacity = 1 - q; ring2.material.color.setHex(0xa77bff); }
-        if (p2 > 2.6 && p2 < 3.4) glow(outW.rayo.hand, 3 * ss(2.6, 3.3, p2), HEROES.rayo.c, 1);
+        if (p2 > 2.6 && p2 < 3.4) glow(outW.rayo.hammer, 4 * ss(2.6, 3.3, p2), HEROES.rayo.c, 1);
       }
       const cams = [
         [[0, [-16, 3.2, 14], [6, 3, 0]], [4, [-12, 2.6, 11], [2, 2, 0]], [8, [-15, 3.8, 15], [6, 3, 0]], [9.5, [-15, 4, 15], [8, 3, 0]], [11.3, [-11, 3, 11], [8, 2.5, 0]], [14, [-17, 6, 16], [10, 8, 0]]],
@@ -1626,7 +1652,7 @@ const DRAW = [
       glow(pos, 3, HEROES.sombra.c, 0.9);
     } else so = poseHero(H.sombra, V(-7, 0, 1.5), { aR: 1.4, aura: 1, t: lt, alpha: lt < 4 ? 1 : ss(8, 8.3, lt) });
     setDome(V(DOME.x, DOME.y, DOME.z), DOME.R, ss(0.3, 1, lt) * (1 - ss(8.5, 9.2, lt)), lt, stress);
-    const ball = ro.hand.clone().add(V(0.9, 0.2, 0));
+    const ball = ro.hammer.clone().add(V(0.3, 0.1, 0));
     if (charge > 0 && lt < 13.6) {
       if (lt < 11.6) { beam(go.chest, ball, 0.08, HEROES.guardian.c, charge); beam(so.chest, ball, 0.08, HEROES.sombra.c, charge * ss(8.3, 9, lt)); }
       glow(ball, 1 + 4 * charge, HEROES.rayo.c, 0.9); glow(ball, 0.5 + 1.5 * charge, [255, 255, 255], 1);
