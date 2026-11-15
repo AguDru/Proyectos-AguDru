@@ -1000,7 +1000,7 @@ function skirmish(lt, D, P, o = {}) {
     const p = P[id], bob = o.fly ? Math.sin(lt * 2 + i * 2) * 0.4 : 0;
     const ovr = o.overrides ? o.overrides(id) : null;
     if (ovr) {
-      out[id] = poseHero(H[id], ovr.pos, { aR: ovr.aR ?? 0.4, aL: 0.3, fly: ovr.fly, aura: 0.8, t: lt, rot: ovr.rot || 0, glowK: ovr.glowK ?? 1, fulgor: ovr.glowK ?? 1, spread: 0.12 });
+      out[id] = poseHero(H[id], ovr.pos, { yaw: ovr.yaw || 0, aR: ovr.aR ?? 0.4, aL: ovr.aL ?? 0.3, fly: ovr.fly, aura: 0.8, t: lt, rot: ovr.rot || 0, glowK: ovr.glowK ?? 1, fulgor: ovr.glowK ?? 1, spread: 0.12 });
       if (ovr.trail) glow(out[id].chest, 3, HEROES[id].c, 0.7);
       return;
     }
@@ -1234,16 +1234,25 @@ const DRAW = [
         const T0 = 2.6, TC = 4.4, TB = 5.8, rBase = V(-8, 5, 1.5), sBase = V(-5, 3.5, 2.2);
         const fallPos = tt => { const f = tt - T0; return V(-8 - 2.2 * f, 5 - 4.2 * f * f, 1.5 + 1.2 * f); };
         const catchP = fallPos(TC);
+        // Mangar flies to him, catches him in her arms and carries him back
+        const yawTo = (p0, p1) => -Math.atan2(p1.z - p0.z, p1.x - p0.x);
+        const sPos = () => { const hold = catchP.clone().add(V(0.3, -1.2, 0)); return sl < TC ? sBase.clone().lerp(hold, ss(3.6, TC, sl)) : hold.lerp(rBase.clone().add(V(0.8, -1.1, 0)), ss(TC, TB, sl)); };
         overrides = id => {
+          const carrying = sl >= TC && sl < TB;
+          if (id === 'sombra' && sl > 3.6 && sl < TB + 0.2) {
+            const p = sPos();
+            return { pos: p, yaw: yawTo(p, sl < TC ? catchP : rBase), fly: true, aR: carrying ? 1.5 : 1.4, aL: carrying ? 1.5 : 0.6, trail: !carrying };
+          }
           if (id === 'rayo' && sl > T0) {
             if (sl < TC) return { pos: fallPos(sl), rot: (sl - T0) * 5, aR: 2.6, glowK: 0.3 };
-            const k = ss(TC, TB, sl);
-            return { pos: catchP.clone().lerp(rBase, k).add(V(0.3, 0.5 * (1 - k), 0)), rot: lerp(1.4, 0, ss(TB - 0.3, TB + 0.4, sl)), fly: true, aR: 0.4, glowK: lerp(0.3, 0.9, k) };
-          }
-          if (id === 'sombra' && sl > 3.6 && sl < TB + 0.2) {
-            const hold = catchP.clone().add(V(0.4, -0.6, 0));
-            if (sl < TC) return { pos: sBase.clone().lerp(hold, ss(3.6, TC, sl)), fly: true, aR: 1.4, trail: true };
-            return { pos: hold.lerp(sBase, ss(TC, TB, sl)), fly: true, aR: 1.0, trail: true };
+            if (carrying) {
+              const p = sPos(), yS = yawTo(p, rBase), fwd = V(Math.cos(yS), 0, -Math.sin(yS));
+              const C = p.clone().add(V(0, 1.12, 0)).addScaledVector(fwd, 0.5);
+              const yR = yS + Math.PI / 2, dirX = V(Math.cos(yR), 0, -Math.sin(yR));
+              return { pos: C.addScaledVector(dirX, 0.9).add(V(0, -0.08, 0)), yaw: yR, rot: 1.5, aR: 0.3, aL: 1.3, glowK: lerp(0.3, 0.8, ss(TC, TB, sl)) };
+            }
+            const k = ss(TB, TB + 0.6, sl);
+            return { pos: rBase.clone(), rot: lerp(1.2, 0, k), fly: true, aR: 0.4, glowK: lerp(0.8, 1, k) };
           }
           return null;
         };
@@ -1747,14 +1756,23 @@ function loadVoices() {
     .map(v => { const li = pref.indexOf(v.lang); return { v, sc: (v.localService === false ? 40 : 0) + (/natural|neural|premium|enhanced|siri/i.test(v.name) ? -5 : 0) + (li < 0 ? 9 : li) }; })
     .sort((a, b) => a.sc - b.sc).map(x => x.v);
 }
-// the narrator gets the most natural voice on the device, all to itself;
-// heroes and Malvor share the other voices, so the narrator never sounds like a hero
+// voices by gender: Thunderbolt a man's voice, Sky Warrior and Mangar women's voices.
+// The speech API does not say a voice's gender, so it is read from the voice's name.
+const FEM = /(female|mujer|woman|google|m[oó]nica|paulina|marisol|helena|laura|sabina|elvira|dalia|ximena|luc[ií]a|conchita|pen[eé]lope|\bmia\b|elena|paloma|isabel|francisca|catalina|valeria|esperanza|lupe|camila|sof[ií]a|renata|ang[eé]lica|soledad|marta|carmen|ana\b|flo\b|sandy|shelley|grandma)/i;
+const MASC = /(\bmale|hombre|\bman\b|jorge|diego|juan|carlos|pablo|enrique|[aá]lvaro|ra[uú]l|alonso|jaime|tom[aá]s|andr[eé]s|ricardo|gonzalo|miguel|javier|alejandro|antonio|lorenzo|rodrigo|gerardo|reed|eddy|rocko|grandpa)/i;
 function voiceFor(who) {
-  if (!VOICES.length) return null;
-  if (who === 'narrador') return VOICES[0];
-  const rest = VOICES.length > 1 ? VOICES.slice(1) : VOICES;
-  const order = { rayo: 0, todos: 0, guardian: 1, sombra: 2, malvor: 3, gente: 3 };
-  return rest[(order[who] ?? 0) % rest.length];
+  if (!VOICES.length) return { v: null, pitch: who === 'rayo' || who === 'todos' ? 0.82 : who === 'guardian' || who === 'sombra' ? 1.3 : null };
+  const fem = VOICES.filter(v => FEM.test(v.name)), masc = VOICES.filter(v => !FEM.test(v.name) && MASC.test(v.name));
+  const other = VOICES.filter(v => !fem.includes(v) && !masc.includes(v));
+  if (who === 'rayo' || who === 'todos') return masc.length ? { v: masc[0], pitch: null } : { v: other[0] || VOICES[0], pitch: 0.82 };
+  if (who === 'guardian' || who === 'sombra') {
+    if (fem.length) { const v = who === 'sombra' ? fem[1 % fem.length] : fem[0]; return { v, pitch: fem.length > 1 ? null : (who === 'sombra' ? 1.12 : 0.97) }; }
+    return { v: other[who === 'sombra' ? 1 % Math.max(1, other.length) : 0] || VOICES[0], pitch: who === 'sombra' ? 1.35 : 1.25 };
+  }
+  if (who === 'malvor') return { v: masc[1] || masc[0] || VOICES[0], pitch: null };
+  const used = new Set([voiceFor('rayo').v, voiceFor('guardian').v, voiceFor('sombra').v]);
+  if (who === 'narrador') return { v: VOICES.find(v => !used.has(v)) || VOICES[0], pitch: null };
+  return { v: VOICES.find(v => !used.has(v)) || VOICES[VOICES.length - 1], pitch: null };
 }
 if (TTS) { loadVoices(); TTS.addEventListener?.('voiceschanged', loadVoices); }
 function initAudio() {
@@ -1807,10 +1825,9 @@ function say(line, retry) {
   // the 5th field, when present, is how the voice should say it (to fix the stress of Argentine verbs)
   // English names, written the way a Spanish voice should say them
   const u = new SpeechSynthesisUtterance((line[4] || line[3]).replace(/\.\.\./g, ', ').replace(/Thunderbolt/g, 'Tánderbolt').replace(/Sky Warrior/g, 'Skái Uórrior'));
-  const v = voiceFor(line[2]);
+  const pick = voiceFor(line[2]), v = pick.v;
   if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'es-ES';
-  const sharing = sp.shared && VOICES.length < 4;
-  u.pitch = sharing ? sp.shared : sp.pitch; u.rate = sp.rate; u.volume = 1;
+  u.pitch = sp.robot ? sp.pitch : (pick.pitch ?? sp.pitch); u.rate = sp.rate; u.volume = 1;
   let started = false;
   const done = () => { if (sp.robot) stopRobot(); if (speakingLine === line) speakingLine = null; if (current === u) voiceBusy = false; };
   u.onend = done; u.onerror = done;
