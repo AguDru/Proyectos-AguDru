@@ -2066,7 +2066,7 @@ function tick(now) {
   const dt = Math.min(0.25, (now - last) / 1000); last = now;
   const prev = T; let next = Math.min(DUR, T + dt);
   let held = false;
-  if (soundOn && voiceBusy && TTS && (TTS.speaking || TTS.pending) && holdT < 6) {
+  if (soundOn && voiceBusy && TTS && (TTS.speaking || TTS.pending) && holdT < 1) {
     const hp = HOLDS.find(x => prev <= x && next > x);
     if (hp !== undefined) { next = hp; holdT += dt; held = true; }
   }
@@ -2176,6 +2176,12 @@ function say(line, retry) {
   const pick = voiceFor(line[2]), v = pick.v;
   if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'es-ES';
   u.pitch = sp.robot ? sp.pitch : (pick.pitch ?? sp.pitch); u.rate = sp.rate; u.volume = 1;
+  // if the line would not fit before the next cut, say it a little faster instead of stopping the picture
+  if (!sp.robot) {
+    const nb = HOLDS.find(x => x > T + 0.2) ?? DUR, avail = Math.max(1, nb - T + 0.6);
+    const est = (line[4] || line[3]).length / (12.5 * u.rate) + 0.3;
+    if (est > avail) u.rate = Math.min(1.35, u.rate * est / avail);
+  }
   let started = false;
   const done = () => { if (sp.robot) stopRobot(); if (speakingLine === line) speakingLine = null; if (current === u) voiceBusy = false; };
   u.onend = done; u.onerror = done;
