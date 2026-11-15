@@ -1100,7 +1100,7 @@ function skirmish(lt, D, P, o = {}) {
     const tgt = out[hh.id].chest;
     if (lt > hh.t0 - 0.7 && lt < hh.t0) {
       const k = (lt - (hh.t0 - 0.7)) / 0.7;
-      const from = hh.kind === 'ice' || hh.kind === 'debris' ? tgt.clone().add(V(0.6, 10, 0.3)) : hh.kind === 'asteroid' ? tgt.clone().add(V(16, 5, -4)) : tgt.clone().add(V(15, hh.kind === 'rock' ? 2 : 0.5, 0));
+      const from = hh.from ? hh.from.clone() : hh.kind === 'ice' || hh.kind === 'debris' ? tgt.clone().add(V(0.6, 10, 0.3)) : hh.kind === 'asteroid' ? tgt.clone().add(V(16, 5, -4)) : tgt.clone().add(V(15, hh.kind === 'rock' ? 2 : 0.5, 0));
       const pos = from.clone().lerp(tgt, hh.kind === 'ice' || hh.kind === 'debris' ? k * k : k);
       if (hh.kind === 'rock') pos.y += Math.sin(k * Math.PI) * 3;
       if (hh.kind === 'blast') { glow(pos, 2, RED, 1); glow(pos, 0.7, [255, 230, 230], 1); beam(pos.clone().add(V(3, 0, 0)), pos, 0.3, RED, 0.6); }
@@ -1347,7 +1347,29 @@ const DRAW = [
         const rv = ss(5.6, 7.2, sl);
         if (rv > 0) { REDMOON.visible = true; poseShip(SHIP, V(52, 18, -95), { s: 0.3, t: lt, alpha: rv }); glow(V(50, 6, -88), 14, RED, 0.6 * rv); }
       }
-      skirmish(sl, D_WAR[bi], bi === 2 ? { rayo: [-8, 5, 1.5], guardian: [-6.5, 7.5, -1], sombra: [-5, 3.5, 2.2] } : ground, { fly: bi === 2, hurtHero: HURTS[bi], overrides });
+      // in the wars of Ceres and of the ice moons, one of Malvor's allies joins the fight
+      let ally = null;
+      if (bi < 2) {
+        const [am, ac2] = ALLY[bi], k = ss(0.8, 1.5, sl);
+        const ap = V(bi ? 14 : 16, lerp(26, 0, k) + Math.sin(sl * 1.6) * 0.12, bi ? 3 : -2);
+        const acore = poseMalvor(am, ap, { s: 1.15, t: lt, col: ac2 });
+        ally = { ap, acore, c: ac2 };
+        if (sl > 1.5 && sl < 2.3) { const q = (sl - 1.5) / 0.8; ring.visible = true; ring.position.set(ap.x, 0.2, ap.z); ring.rotation.set(Math.PI / 2, 0, 0); ring.scale.setScalar(1 + q * 16); ring.material.opacity = 1 - q; ring.material.color.setRGB(ac2[0] / 255, ac2[1] / 255, ac2[2] / 255); }
+        if (bi === 0) HURTS[0].from = acore.clone().add(V(-1, 1.2, 0));
+      }
+      const outW = skirmish(sl, D_WAR[bi], bi === 2 ? { rayo: [-8, 5, 1.5], guardian: [-6.5, 7.5, -1], sombra: [-5, 3.5, 2.2] } : ground, { fly: bi === 2, hurtHero: HURTS[bi], overrides });
+      if (ally) {
+        // heavy blasts at the heroes: some hit the shield, others blow up the ground right next to them
+        for (let n = 0; n < 5; n++) {
+          const st = 1.8 + n * 1.1, tg = n % 2 ? V(-3.4 + (n % 3) * 0.3, 1.3 + n * 0.2, (n % 3) - 1) : V(-6 + n * 0.6, 0.2, n % 4 < 2 ? 3.2 : -3.4);
+          if (sl > st && sl < st + 0.18) { beam(ally.acore, tg, 0.35, ally.c, 0.9); beam(ally.acore, tg, 0.1, [255, 240, 220], 1); }
+          boom(tg, sl - st - 0.18, (n % 2 ? 2.4 : 3.6) * (bi === 1 ? 0.65 : 1), ally.c);
+        }
+        // Vexa shoots the ice above Mangar, and the shard falls on her
+        if (bi === 1 && sl > 2.1 && sl < 2.5) { const top = outW.sombra.chest.clone().add(V(0.6, 10, 0.3)); beam(ally.acore, top, 0.3, ally.c, 0.9); glow(top, 4, ally.c, 0.9); }
+        // the heroes fire back at the ally
+        if (sl > 3 && Math.sin(sl * 9) > 0.6) { const hit = ally.acore.clone().add(V(0, Math.sin(sl * 5), 0)); beam(outW.rayo.hand, hit, 0.12, HEROES.rayo.c, 0.8); glow(hit, 2, HEROES.rayo.c, 0.8); }
+      }
       const cams = [
         [[0, [-16, 3.2, 14], [6, 3, 0]], [4, [-12, 2.6, 11], [2, 2, 0]], [8, [-15, 3.8, 15], [6, 3, 0]]],
         [[0, [-6, 2.2, 16], [4, 3, 0]], [3, [-8, 2, 11], [-4, 1.5, 1]], [8, [-3, 2.6, 16], [4, 3, 0]]],
@@ -1767,6 +1789,14 @@ const SUBS = [
   place('¡Se escapan!', B1 + 13.9, 1.3);
   SFX.push({ t: B1 + 11.8, k: 'boom' }, { t: B1 + 12.2, k: 'pew' }, { t: B1 + 12.8, k: 'boom' }, { t: B1 + 13.3, k: 'whoosh' }, { t: B1 + 13.5, k: 'rumble' });
   SHAKES.push([B1 + 11.8, 0.7, 0.35]);
+  // the allies' attacks in the wars of Ceres and of the ice moons
+  {
+    const war = SCENES.find(x => x.name === 'Cinco años de guerra').a, starts = [war + CARD, war + CARD + 8 + 11 + CARD];
+    starts.forEach(b0 => {
+      SFX.push({ t: b0 + 1.5, k: 'boom' }, { t: b0 + 1.0, k: 'whoosh' }); SHAKES.push([b0 + 1.5, 0.5, 0.3]);
+      for (let n = 0; n < 5; n++) { const st = b0 + 1.8 + n * 1.1; SFX.push({ t: st, k: 'pew' }, { t: st + 0.18, k: 'boom' }); }
+    });
+  }
   SUBS.sort((a, b) => a[0] - b[0]);
 }
 // ---------- playback ----------
@@ -1979,21 +2009,21 @@ let tension = null;
 function startTension() {
   if (!ac || tension) return;
   const now = ac.currentTime, out = ac.createGain();
-  out.gain.setValueAtTime(0, now); out.gain.linearRampToValueAtTime(0.24, now + 0.6); out.connect(master);
+  out.gain.setValueAtTime(0, now); out.gain.linearRampToValueAtTime(0.11, now + 0.6); out.connect(master);
   const trem = ac.createGain(); trem.gain.value = 0.75; trem.connect(out);
   const lfo = ac.createOscillator(), lfoG = ac.createGain(); lfo.frequency.value = 5.5; lfoG.gain.value = 0.25; lfo.connect(lfoG); lfoG.connect(trem.gain); lfo.start();
   const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 5; lp.frequency.setValueAtTime(450, now); lp.frequency.linearRampToValueAtTime(1900, now + 3.6); lp.connect(trem);
   const oscs = [110, 116.54, 164.81, 233.08].map((f, i) => { const o = ac.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = (i - 1.5) * 6; o.connect(lp); o.start(); return o; });
   const nz = ac.createBufferSource(); nz.buffer = noise; nz.loop = true;
   const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 3; bp.frequency.setValueAtTime(400, now); bp.frequency.exponentialRampToValueAtTime(3200, now + 3.6);
-  const ng = ac.createGain(); ng.gain.setValueAtTime(0, now); ng.gain.linearRampToValueAtTime(0.12, now + 3.4);
+  const ng = ac.createGain(); ng.gain.setValueAtTime(0, now); ng.gain.linearRampToValueAtTime(0.05, now + 3.4);
   nz.connect(bp); bp.connect(ng); ng.connect(out); nz.start();
   let beat = 0;
   const iv = setInterval(() => {
     if (!ac) return;
     beat++;
-    noiseHit(5000, 0.18, 0.04);
-    if (beat % 2 === 0) { tone(98, 'sine', 0.5, 0.28, 60); tone(196, 'triangle', 0.18, 0.2); }
+    noiseHit(5000, 0.08, 0.04);
+    if (beat % 2 === 0) { tone(98, 'sine', 0.24, 0.28, 60); tone(196, 'triangle', 0.08, 0.2); }
   }, Math.max(220, 420 - 0));
   tension = { out, oscs, lfo, nz, iv };
 }
