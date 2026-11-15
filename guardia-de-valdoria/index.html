@@ -130,7 +130,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
     <div class="controls">
       <button class="btn" id="play">Reproducir</button>
       <button class="btn" id="restart">Desde el inicio</button>
-      <input type="range" id="scrub" min="0" max="223" step="0.01" value="0" aria-label="Posición en la película">
+      <input type="range" id="scrub" min="0" max="223.8" step="0.01" value="0" aria-label="Posición en la película">
       <span class="time" id="time">0:00 / 3:43</span>
       <button class="btn" id="sound" aria-pressed="true">Sonido: encendido</button>
     </div>
@@ -162,7 +162,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 <script>
 (() => {
-const DUR = 223;
+const DUR = 223.8;
 const CARD = 3.6; // seconds a black year card stays on screen while the battle waits
 const cv = document.getElementById('film');
 const subsEl = document.getElementById('subs'), scrub = document.getElementById('scrub');
@@ -233,8 +233,8 @@ const SHAKES = [[24.2, 0.6, 0.3], [13, 1.6, 1.2], [14, 3, 0.15], [95.6, 1.6, 0.3
 
 const SCENES = [
   { a: 0, b: 10, name: 'Prólogo' }, { a: 10, b: 22, name: 'La invasión' }, { a: 22, b: 41.5, name: 'Los héroes' },
-  { a: 41.5, b: 59.5, name: 'Año 1' }, { a: 59.5, b: 69.5, name: 'La guarida' }, { a: 69.5, b: 82.5, name: 'El cuartel' }, { a: 82.5, b: 163.4, name: 'Cinco años de guerra' }, { a: 163.4, b: 175.4, name: 'Al borde' },
-  { a: 175.4, b: 185.4, name: 'El plan' }, { a: 185.4, b: 205, name: 'Batalla final' }, { a: 205, b: 223, name: 'Amanecer' }
+  { a: 41.5, b: 60.3, name: 'Año 1' }, { a: 60.3, b: 70.3, name: 'La guarida' }, { a: 70.3, b: 83.3, name: 'El cuartel' }, { a: 83.3, b: 164.2, name: 'Cinco años de guerra' }, { a: 164.2, b: 176.2, name: 'Al borde' },
+  { a: 176.2, b: 186.2, name: 'El plan' }, { a: 186.2, b: 205.8, name: 'Batalla final' }, { a: 205.8, b: 223.8, name: 'Amanecer' }
 ];
 
 // ---------- 3D setup ----------
@@ -1231,9 +1231,9 @@ const DRAW = [
     const P = { rayo: [-8, 0, 1.5], guardian: [-6.5, 0, -0.8], sombra: [-5, 0, 2.2] };
     const out = skirmish(lt, D_YEAR1, P, { hurtHero: { id: 'sombra', t0: 3, kind: 'blast', down: 2.3 } });
     // Malvor arrives, the heroes beat him down
-    const atk = ss(6.1, 6.5, lt) * (1 - ss(10.2, 10.5, lt));
-    const kneel = ss(6.4, 8.2, lt) * (1 - ss(11.3, 11.9, lt));
-    const flee = ss(12.5, 14.4, lt);
+    const atk = ss(6.1, 6.5, lt) * (1 - ss(11, 11.3, lt));
+    const kneel = ss(6.4, 8.2, lt) * (1 - ss(12.1, 12.7, lt));
+    const flee = ss(13.3, 15.2, lt);
     const mx = lerp(45, 16, ss(4.4, 6, lt));
     const mpos = V(mx + flee * 6, 0.3 + Math.sin(lt * 1.5) * 0.2 - 0.9 * kneel + flee * flee * 26, -1);
     let mcore = V(mx, 7, -1);
@@ -1247,18 +1247,18 @@ const DRAW = [
     }
     // the allies drop in to save him
     ALLY.forEach(([m, c], i) => {
-      if (lt < 10.3) return;
-      const z = i ? 3.6 : -5, k = ss(10.3, 11, lt);
+      if (lt < 11.1) return;
+      const z = i ? 3.6 : -5, k = ss(11.1, 11.8, lt);
       const p = V(19 + flee * 6, lerp(30, 0, k) + flee * flee * 24 + Math.sin(lt * 1.6 + i) * 0.15, z);
       const core = poseMalvor(m, p, { s: 1.05, t: lt, col: c });
-      if (lt > 11.3 && lt < 12.2) { const tgt = V(P.guardian[0] + 3.4, 1.4 + i, P.guardian[2] + (i ? 1 : -1)); if (Math.sin(lt * 14 + i * 2) > 0) { beam(core, tgt, 0.14, c, 0.9); glow(tgt, 1.8, c, 0.9); } }
+      if (lt > 12.1 && lt < 13) { const tgt = V(P.guardian[0] + 3.4, 1.4 + i, P.guardian[2] + (i ? 1 : -1)); if (Math.sin(lt * 14 + i * 2) > 0) { beam(core, tgt, 0.14, c, 0.9); glow(tgt, 1.8, c, 0.9); } }
       if (flee > 0) for (let q = 1; q < 6; q++) glow(p.clone().add(V(-q * 0.3, -q * 1.5 * flee + 2, 0)), 2.4 - q * 0.3, c, 0.5 * flee);
     });
-    if (lt > 11 && lt < 11.9) { const k = (lt - 11) / 0.9; ring.visible = true; ring.position.set(19, 0.2, -0.7); ring.rotation.set(Math.PI / 2, 0, 0); ring.scale.setScalar(1 + k * 20); ring.material.opacity = 1 - k; ring.material.color.setHex(0xff8a30); }
+    if (lt > 11.8 && lt < 12.7) { const k = (lt - 11.8) / 0.9; ring.visible = true; ring.position.set(19, 0.2, -0.7); ring.rotation.set(Math.PI / 2, 0, 0); ring.scale.setScalar(1 + k * 20); ring.material.opacity = 1 - k; ring.material.color.setHex(0xff8a30); }
     if (flee > 0) for (let q = 0; q < 10; q++) glow(mpos.clone().add(V(-q * 0.4, -q * 1.8 * flee + 3, 0)), 3 - q * 0.25, RED, 0.5 * flee);
     // smoke bomb to cover the escape
-    if (lt > 11.9 && lt < 14.4) { const a = lt - 11.9, f = 1 - ss(1.3, 2.5, a); for (let q = 0; q < 8; q++) smoke(V(17 + Math.cos(q * 0.8) * (3 + a * 6), 2 + a * 3 + (q % 3) * 2, -0.5 + Math.sin(q * 0.8) * (2 + a * 3)), 9 + a * 6, 0.6 * f); }
-    camKeys(lt, [[0, [-17, 4, 15], [6, 3, 0]], [4.6, [-15, 4.5, 17], [8, 3.5, 0]], [6.6, [-5, 2.2, 10], [14, 3.4, -1]], [8.3, [-4, 2, 9], [15, 2.6, -1]], [9.6, [-5, 2.4, 10], [15, 3, -1]], [10.3, [-6, 3, 13], [16, 6, 0]], [12.2, [-8, 3, 15], [17, 7, 0]], [14.4, [-9, 2.6, 15], [22, 20, 0]]]);
+    if (lt > 12.7 && lt < 15.2) { const a = lt - 12.7, f = 1 - ss(1.3, 2.5, a); for (let q = 0; q < 8; q++) smoke(V(17 + Math.cos(q * 0.8) * (3 + a * 6), 2 + a * 3 + (q % 3) * 2, -0.5 + Math.sin(q * 0.8) * (2 + a * 3)), 9 + a * 6, 0.6 * f); }
+    camKeys(lt, [[0, [-17, 4, 15], [6, 3, 0]], [4.6, [-15, 4.5, 17], [8, 3.5, 0]], [6.6, [-5, 2.2, 10], [14, 3.4, -1]], [8.3, [-4, 2, 9], [15, 2.6, -1]], [10.4, [-5, 2.4, 10], [15, 3, -1]], [11.1, [-6, 3, 13], [16, 6, 0]], [13, [-8, 3, 15], [17, 7, 0]], [15.2, [-9, 2.6, 15], [22, 20, 0]]]);
     chapterCard('AÑO 1', 'La batalla de Valdoria', cardA);
   },
   function lair(lt, t) {
@@ -1760,13 +1760,24 @@ const SUBS = [
   SUBS.forEach(l => { if (l[0] >= 58.6) { l[0] += 0.9; l[1] += 0.9; } });
   SFX.forEach(e => { if (e.t >= 58.6) e.t += 0.9; });
   SHAKES.forEach(x => { if (x[0] >= 58.6) x[0] += 0.9; });
-  place('¡Se escapan!', B1 + 13.1, 1.3);
-  SFX.push({ t: B1 + 11, k: 'boom' }, { t: B1 + 11.4, k: 'pew' }, { t: B1 + 12, k: 'boom' }, { t: B1 + 12.5, k: 'whoosh' }, { t: B1 + 12.7, k: 'rumble' });
-  SHAKES.push([B1 + 11, 0.7, 0.35]);
+  // and 0.8 s more, so the allies come two seconds after he has finished crying for help
+  SUBS.forEach(l => { if (l[0] >= 59.5) { l[0] += 0.8; l[1] += 0.8; } });
+  SFX.forEach(e => { if (e.t >= 59.5) e.t += 0.8; });
+  SHAKES.forEach(x => { if (x[0] >= 59.5) x[0] += 0.8; });
+  place('¡Se escapan!', B1 + 13.9, 1.3);
+  SFX.push({ t: B1 + 11.8, k: 'boom' }, { t: B1 + 12.2, k: 'pew' }, { t: B1 + 12.8, k: 'boom' }, { t: B1 + 13.3, k: 'whoosh' }, { t: B1 + 13.5, k: 'rumble' });
+  SHAKES.push([B1 + 11.8, 0.7, 0.35]);
   SUBS.sort((a, b) => a[0] - b[0]);
 }
 // ---------- playback ----------
 // moments just before each cut (scene changes, and the parts inside the five-year war) where the film may wait for a voice
+// the black year cards: [start, end] in film time
+const CARD_WINDOWS = (() => {
+  const w = [], war = SCENES.find(s => s.name === 'Cinco años de guerra');
+  ['Año 1', 'Batalla final'].forEach(n => { const a = SCENES.find(s => s.name === n).a; w.push([a, a + CARD]); });
+  let x = war.a; for (const len of [CARD, 8, 11, CARD, 8, 11, CARD, 8, 11, CARD]) { if (len === CARD) w.push([x, x + CARD]); x += len; }
+  return w;
+})();
 const HOLDS = (() => {
   const b = SCENES.slice(1).map(s => s.a);
   const war = SCENES.find(s => s.name === 'Cinco años de guerra');
@@ -1884,7 +1895,7 @@ function unlockSpeech() {
   if (!TTS || !soundOn || speechUnlocked) return;
   try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; TTS.speak(u); speechUnlocked = true; } catch (e) {}
 }
-function hush() { voiceBusy = false; current = null; speakingLine = null; clearTimeout(sayTimer); try { if (TTS && (TTS.speaking || TTS.pending)) TTS.cancel(); } catch (e) {} stopRobot(); }
+function hush() { voiceBusy = false; current = null; speakingLine = null; clearTimeout(sayTimer); try { if (TTS && (TTS.speaking || TTS.pending)) TTS.cancel(); } catch (e) {} stopRobot(); try { stopTension(); } catch (e) {} }
 function startRobot() {
   if (!ac || !soundOn) return;
   stopRobot();
@@ -1959,6 +1970,38 @@ function audioTick(prev, t) {
   if (robot && !SUBS.some(l => l[2] === 'malvor' && t >= l[0] && t < l[1] + 1.5)) stopRobot();
   if (!ac) return;
   for (const e of SFX) if (prev < e.t && t >= e.t) sfx(e.k);
+  const card = CARD_WINDOWS.find(c => t >= c[0] && t < c[1]);
+  if (card && !tension) startTension();
+  else if (!card && tension) { stopTension(); if (CARD_WINDOWS.some(c => prev < c[1] && t >= c[1])) sfx('big'); }
+}
+// tension music for the black year cards: a dark dissonant drone, a ticking pulse and a rising sweep
+let tension = null;
+function startTension() {
+  if (!ac || tension) return;
+  const now = ac.currentTime, out = ac.createGain();
+  out.gain.setValueAtTime(0, now); out.gain.linearRampToValueAtTime(0.24, now + 0.6); out.connect(master);
+  const trem = ac.createGain(); trem.gain.value = 0.75; trem.connect(out);
+  const lfo = ac.createOscillator(), lfoG = ac.createGain(); lfo.frequency.value = 5.5; lfoG.gain.value = 0.25; lfo.connect(lfoG); lfoG.connect(trem.gain); lfo.start();
+  const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 5; lp.frequency.setValueAtTime(450, now); lp.frequency.linearRampToValueAtTime(1900, now + 3.6); lp.connect(trem);
+  const oscs = [110, 116.54, 164.81, 233.08].map((f, i) => { const o = ac.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = (i - 1.5) * 6; o.connect(lp); o.start(); return o; });
+  const nz = ac.createBufferSource(); nz.buffer = noise; nz.loop = true;
+  const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 3; bp.frequency.setValueAtTime(400, now); bp.frequency.exponentialRampToValueAtTime(3200, now + 3.6);
+  const ng = ac.createGain(); ng.gain.setValueAtTime(0, now); ng.gain.linearRampToValueAtTime(0.12, now + 3.4);
+  nz.connect(bp); bp.connect(ng); ng.connect(out); nz.start();
+  let beat = 0;
+  const iv = setInterval(() => {
+    if (!ac) return;
+    beat++;
+    noiseHit(5000, 0.18, 0.04);
+    if (beat % 2 === 0) { tone(98, 'sine', 0.5, 0.28, 60); tone(196, 'triangle', 0.18, 0.2); }
+  }, Math.max(220, 420 - 0));
+  tension = { out, oscs, lfo, nz, iv };
+}
+function stopTension() {
+  if (!tension) return;
+  const tn = tension; tension = null; clearInterval(tn.iv);
+  try { const now = ac.currentTime; tn.out.gain.cancelScheduledValues(now); tn.out.gain.setValueAtTime(tn.out.gain.value, now); tn.out.gain.linearRampToValueAtTime(0, now + 0.35); } catch (e) {}
+  setTimeout(() => { try { tn.oscs.forEach(o => o.stop()); tn.lfo.stop(); tn.nz.stop(); tn.out.disconnect(); } catch (e) {} }, 450);
 }
 soundBtn.addEventListener('click', () => {
   soundOn = !soundOn;
