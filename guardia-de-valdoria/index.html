@@ -106,7 +106,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
   <header>
     <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · 3 min 42 s</div>
     <h1>La Guardia de <span>Valdoria</span></h1>
-    <p class="logline">Año 2187. Malvor invade la ciudad de Valdoria con un ejército de drones. Capitán Relámpago, Guardián Cósmico y Sombra Dorada pelean contra él durante cinco años y cien batallas. Más de una vez están a punto de perder a uno de los suyos, hasta que descubren cómo derrotarlo.</p>
+    <p class="logline">Año 2187. Malvor invade la ciudad de Valdoria con un ejército de drones. Thunderbolt, Sky Warrior y Mangar pelean contra él durante cinco años y cien batallas. Más de una vez están a punto de perder a uno de los suyos, hasta que descubren cómo derrotarlo.</p>
   </header>
 
   <section class="player" aria-label="Reproductor">
@@ -140,9 +140,9 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 
   <h2>Reparto</h2>
   <div class="cast">
-    <div class="who" style="--c: var(--nova)"><b>CAPITÁN RELÁMPAGO</b><em>Rayos de energía</em><p>Dispara rayos con la energía de las estrellas. Traje azul noche con capa y una estrella en el pecho.</p></div>
-    <div class="who" style="--c: var(--kael)"><b>GUARDIÁN CÓSMICO</b><em>Gravedad y escudos</em><p>Controla la gravedad y levanta escudos que frenan cualquier ataque. Traje violeta con hombreras.</p></div>
-    <div class="who" style="--c: var(--iris)"><b>SOMBRA DORADA</b><em>Supervelocidad</em><p>Corre más rápido que la luz y descubre el punto débil de Malvor. Traje ámbar con aletas en el casco.</p></div>
+    <div class="who" style="--c: var(--nova)"><b>THUNDERBOLT</b><em>Rayos de energía</em><p>Dispara rayos con la energía de las estrellas. Traje azul noche con capa y una estrella en el pecho.</p></div>
+    <div class="who" style="--c: var(--kael)"><b>SKY WARRIOR</b><em>Gravedad y escudos</em><p>Controla la gravedad y levanta escudos que frenan cualquier ataque. Traje violeta con hombreras.</p></div>
+    <div class="who" style="--c: var(--iris)"><b>MANGAR</b><em>Supervelocidad</em><p>Corre más rápido que la luz y descubre el punto débil de Malvor. Traje ámbar con aletas en el casco.</p></div>
     <div class="who" style="--c: var(--malvor)"><b>MALVOR</b><em>El villano</em><p>Villano con armadura y cuernos. Su poder sale del núcleo rojo de su nave, y manda un ejército de miles de drones.</p></div>
   </div>
 
@@ -180,9 +180,9 @@ const mkRand = s => () => { s = (s * 16807) % 2147483647; return (s - 1) / 21474
 const TAU = Math.PI * 2;
 const SFX = [];
 const HEROES = {
-  rayo: { c: [79, 227, 255], suit: [26, 44, 82], name: ['CAPITÁN', 'RELÁMPAGO'], power: 'RAYOS DE ENERGÍA' },
-  guardian: { c: [167, 123, 255], suit: [46, 32, 82], bulk: 1.22, name: ['GUARDIÁN', 'CÓSMICO'], power: 'GRAVEDAD Y ESCUDOS' },
-  sombra: { c: [255, 190, 80], suit: [118, 84, 28], name: ['SOMBRA', 'DORADA'], power: 'SUPERVELOCIDAD' }
+  rayo: { c: [79, 227, 255], suit: [26, 44, 82], name: ['THUNDER', 'BOLT'], power: 'RAYOS DE ENERGÍA' },
+  guardian: { c: [167, 123, 255], suit: [46, 32, 82], bulk: 1.22, name: ['SKY', 'WARRIOR'], power: 'GRAVEDAD Y ESCUDOS' },
+  sombra: { c: [255, 190, 80], suit: [118, 84, 28], name: ['MANGAR', ''], power: 'SUPERVELOCIDAD' }
 };
 const RED = [255, 59, 78];
 const IDS = ['rayo', 'guardian', 'sombra'];
@@ -492,7 +492,7 @@ function makeHero(id, ghost) {
     const hand = new THREE.Object3D(); hand.position.set(0, -0.36, 0); el.add(hand);
     arms.push({ p, hand }); elbows.push(el);
   }
-  // cloth that moves: a cape for Capitán Relámpago, a scarf for Sombra Dorada
+  // cloth that moves: a cape for Thunderbolt, a scarf for Mangar
   const cloth = [];
   const addCloth = (w, hgt, mat, x, y, swing) => {
     const grp = new THREE.Group(); grp.position.set(x, y, 0); g.add(grp);
@@ -1055,7 +1055,7 @@ const CARS = (() => { const r = mkRand(23); return Array.from({ length: 16 }, ()
 const NIGHT = { top: [6, 8, 30], bot: [70, 40, 110] };
 const TAGS = [];
 const TAG_EL = [0, 1, 2].map(i => document.getElementById('tag' + i));
-const TAG_NAME = { rayo: 'Capitán Relámpago', guardian: 'Guardián Cósmico', sombra: 'Sombra Dorada' };
+const TAG_NAME = { rayo: 'Thunderbolt', guardian: 'Sky Warrior', sombra: 'Mangar' };
 const DRAW = [
   function prologue(lt, t) {
     env({ ...NIGHT, fog: 0.0055, stars: 1, hemi: 0.45, sun: 0.5, sets: ['city'] });
@@ -1516,9 +1516,9 @@ draw = function (t) {
 
 const SPEAKERS = {
   narrador: { n: 'Narrador', c: '#c9cfdd', pitch: 1, rate: 0.95, slot: 0 },
-  rayo: { n: 'Capitán Relámpago', c: '#4fe3ff', pitch: 1, rate: 1, shared: 1.04, slot: 1 },
-  guardian: { n: 'Guardián Cósmico', c: '#a77bff', pitch: 1, rate: 0.97, shared: 0.93, slot: 2 },
-  sombra: { n: 'Sombra Dorada', c: '#ffb547', pitch: 1, rate: 1.03, shared: 1.09, slot: 3 },
+  rayo: { n: 'Thunderbolt', c: '#4fe3ff', pitch: 1, rate: 1, shared: 1.04, slot: 1 },
+  guardian: { n: 'Sky Warrior', c: '#a77bff', pitch: 1, rate: 0.97, shared: 0.93, slot: 2 },
+  sombra: { n: 'Mangar', c: '#ffb547', pitch: 1, rate: 1.03, shared: 1.09, slot: 3 },
   gente: { n: 'La gente', c: '#e8ecf4', pitch: 1.1, rate: 1.08, slot: 4 },
   todos: { n: 'Los tres', c: '#ffffff', pitch: 1, rate: 1, shared: 1.04, slot: 1 },
   malvor: { n: 'Malvor', c: '#ff3b4e', pitch: 0.1, rate: 0.85, slot: 0, robot: true }
@@ -1541,16 +1541,16 @@ const SUBS = [
   [50, 54, 'sombra', '¡Destruimos mil drones y manda mil más!'],
   [54, 58, 'guardian', 'Estoy cansado... pero no me voy a rendir, porque voy a defender a mi gente.'],
   [58, 62, 'narrador', 'Hasta que volvieron a casa, a Valdoria.'],
-  [62.2, 63.8, 'sombra', '¡Capitán, cuidado!'],
-  [64.4, 68, 'malvor', 'Este es tu fin, Capitán.'],
+  [62.2, 63.8, 'sombra', '¡Thunderbolt, cuidado!'],
+  [64.4, 68, 'malvor', 'Este es tu fin, Thunderbolt.'],
   [68, 69.6, 'guardian', '¡No lo vas a tocar!'],
-  [69.6, 71.2, 'sombra', '¡Te tengo! ¡Resistí, Capitán!'],
+  [69.6, 71.2, 'sombra', '¡Te tengo! ¡Resistí, Thunderbolt!'],
   [71.2, 74, 'rayo', 'Gracias... casi no la cuento.'],
   [74.3, 79, 'sombra', 'Escuchen. Su poder sale del núcleo de la nave.'],
   [79, 84, 'rayo', 'Solos no podemos. ¡Pero los tres juntos, sí!'],
   [84.3, 86.6, 'malvor', '¡Ejército, destrúyanlos!'],
   [86.6, 88.6, 'guardian', '¡El escudo se rompe! ¡No aguanto más!'],
-  [88.6, 92, 'sombra', '¡Aguantá, Guardián! ¡Ahí voy!'],
+  [88.6, 92, 'sombra', '¡Aguantá, Sky Warrior! ¡Ahí voy!'],
   [92, 95.8, 'rayo', '¡Energía de los tres... ahora!'],
   [95.9, 98, 'malvor', '¡No! ¡No puede ser!'],
   [100.3, 103.4, 'gente', '¡Gracias, héroes! ¡Gracias!'],
@@ -1581,7 +1581,7 @@ const SUBS = [
   SUBS.forEach(l => { l[0] = S3(l[0]); l[1] = S3(l[1], true); });
   SFX.forEach(e => { e.t = S3(e.t); });
   SHAKES.forEach(x => { x[0] = S3(x[0]); });
-  SUBS.push([22.3, 25.5, 'narrador', 'Pero tres héroes salieron a enfrentarlo.'], [25.7, 28.1, 'sombra', '¡Yo soy Sombra Dorada!'], [28.2, 30.6, 'rayo', '¡Yo soy el Capitán Relámpago!'], [30.7, 33.1, 'guardian', '¡Yo soy Guardián Cósmico!'], [33.4, 37.4, 'todos', '¡No nos vas a quitar nuestro planeta!'], [37.8, 41.3, 'malvor', 'Eso ya lo veremos.']);
+  SUBS.push([22.3, 25.5, 'narrador', 'Pero tres héroes salieron a enfrentarlo.'], [25.7, 28.1, 'sombra', '¡Yo soy Mangar!'], [28.2, 30.6, 'rayo', '¡Yo soy Thunderbolt!'], [30.7, 33.1, 'guardian', '¡Yo soy Sky Warrior!'], [33.4, 37.4, 'todos', '¡No nos vas a quitar nuestro planeta!'], [37.8, 41.3, 'malvor', 'Eso ya lo veremos.']);
   SUBS.sort((a, b) => a[0] - b[0]);
   SFX.push({ t: 44.5, k: 'hit' }); SHAKES.push([44.5, 0.4, 0.25]);
   // the war grew from 16 s to 56 s (67.5 to 123.5)
@@ -1597,7 +1597,7 @@ const SUBS = [
   const W = 67.5;
   SUBS.push(
     [W + 0.3, W + 4, 'narrador', 'Durante cinco años pelearon por toda la galaxia.'],
-    [W + 5.2, W + 8.2, 'sombra', '¡Guardián, levantate! ¡Por favor, te necesitamos!', '¡Guardián, levantáte! ¡Por favor, te necesitamos!'],
+    [W + 5.2, W + 8.2, 'sombra', '¡Sky Warrior, levantate! ¡Por favor, te necesitamos!', '¡Sky Warrior, levantáte! ¡Por favor, te necesitamos!'],
     [W + 8.3, W + 11.8, 'sombra', 'Miren, este dron tiene un chip.'],
     [W + 12, W + 16, 'guardian', 'Las órdenes vienen de la luna roja. Ahí se esconde Malvor.'],
     [W + 16.3, W + 19, 'rayo', '¡Cuidado arriba!'],
@@ -1605,7 +1605,7 @@ const SUBS = [
     [W + 24.3, W + 28, 'narrador', 'En el hielo encontraron un archivo muy antiguo.'],
     [W + 28.2, W + 32, 'sombra', 'Malvor era un científico de Valdoria. Por eso conoce nuestra ciudad.'],
     [W + 33.3, W + 34.8, 'guardian', '¡Cuidado!'],
-    [W + 36.4, W + 38, 'sombra', '¡Te tengo, Capitán!'],
+    [W + 36.4, W + 38, 'sombra', '¡Te tengo, Thunderbolt!'],
     [W + 38.1, W + 40, 'rayo', '¡Miren! ¡Ahí hay una base!'],
     [W + 40.3, W + 44, 'narrador', 'Así descubrieron la base secreta de Malvor.'],
     [W + 44.2, W + 48, 'guardian', 'Su armadura se carga con la energía de la nave.'],
@@ -1649,7 +1649,7 @@ const SUBS = [
   place('Su armadura se carga con la energía de la nave.', 136.9 + 5, 4.6);
   place('Estoy cansado... pero no me voy a rendir, porque voy a defender a mi gente.', 151.5 + 0.2, 6);
   place('¡No vamos a perder nuestra ciudad!', 151.5 + 6.4, 3);
-  place('¡Aguantá, Guardián! ¡Ahí voy!', 192.3, 3);
+  place('¡Aguantá, Sky Warrior! ¡Ahí voy!', 192.3, 3);
   place('¡Energía de los tres... ahora!', 195.4, 2.6);
   place('Después de cinco años y cien batallas, Valdoria volvió a brillar.', 206.2, 5.6);
   place('¡Viva la Guardia de Valdoria!', 211.9, 3);
@@ -1805,7 +1805,8 @@ function say(line, retry) {
   const busy = !!retry;
   if (busy) { stopRobot(); try { TTS.cancel(); } catch (e) {} }
   // the 5th field, when present, is how the voice should say it (to fix the stress of Argentine verbs)
-  const u = new SpeechSynthesisUtterance((line[4] || line[3]).replace(/\.\.\./g, ', '));
+  // English names, written the way a Spanish voice should say them
+  const u = new SpeechSynthesisUtterance((line[4] || line[3]).replace(/\.\.\./g, ', ').replace(/Thunderbolt/g, 'Tánderbolt').replace(/Sky Warrior/g, 'Skái Uórrior'));
   const v = voiceFor(line[2]);
   if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'es-ES';
   const sharing = sp.shared && VOICES.length < 4;
