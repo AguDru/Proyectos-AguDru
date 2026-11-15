@@ -1666,6 +1666,14 @@ const SUBS = [
   SUBS.sort((a, b) => a[0] - b[0]);
 }
 // ---------- playback ----------
+// moments just before each cut (scene changes, and the parts inside the five-year war) where the film may wait for a voice
+const HOLDS = (() => {
+  const b = SCENES.slice(1).map(s => s.a);
+  const war = SCENES.find(s => s.name === 'Cinco años de guerra');
+  let x = war.a; for (const len of [CARD, 8, 11, CARD, 8, 11, CARD, 8, 11, CARD]) { x += len; b.push(x); }
+  ['Año 1', 'Batalla final'].forEach(n => b.push(SCENES.find(s => s.name === n).a + CARD));
+  return b.map(v => v - 0.45).sort((p, q) => p - q);
+})();
 let T = 0, playing = false, last = 0;
 const fmt = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const chapEl = document.getElementById('chapters');
@@ -1680,7 +1688,8 @@ let lastSub = '';
 function ui() {
   scrub.value = T.toFixed(2);
   timeEl.textContent = `${fmt(T)} / ${fmt(DUR)}`;
-  const s = SUBS.find(s => T >= s[0] && T < s[1]);
+  const spoken = soundOn && speakingLine;
+  const s = spoken ? speakingLine : SUBS.find(s => T >= s[0] && T < s[1]);
   const txt = s ? s[2] + s[3] : '';
   if (txt !== lastSub) {
     lastSub = txt; subsEl.textContent = '';
@@ -1690,7 +1699,7 @@ function ui() {
       subsEl.append(who, document.createTextNode(s[3]));
     }
   }
-  subsEl.style.opacity = s ? Math.min(1, (T - s[0]) / 0.3, (s[1] - T) / 0.3) : 0;
+  subsEl.style.opacity = !s ? 0 : spoken ? 1 : Math.min(1, (T - s[0]) / 0.3, (s[1] - T) / 0.3);
   let ci = 0; SCENES.forEach((c, i) => { if (T >= c.a) ci = i; });
   chapBtns.forEach((b, i) => b.classList.toggle('on', i === ci));
 }
@@ -1699,6 +1708,12 @@ function tick(now) {
   if (!playing) return;
   const dt = Math.min(0.25, (now - last) / 1000); last = now;
   const prev = T; let next = Math.min(DUR, T + dt);
+  let held = false;
+  if (soundOn && voiceBusy && TTS && (TTS.speaking || TTS.pending) && holdT < 6) {
+    const hp = HOLDS.find(x => prev <= x && next > x);
+    if (hp !== undefined) { next = hp; holdT += dt; held = true; }
+  }
+  if (!held) holdT = 0;
   T = next;
   try { audioTick(prev, T); } catch (e) {}
   try { render(); } catch (e) {}
@@ -1760,7 +1775,7 @@ function unlockSpeech() {
   if (!TTS || !soundOn || speechUnlocked) return;
   try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; TTS.speak(u); speechUnlocked = true; } catch (e) {}
 }
-function hush() { voiceBusy = false; current = null; clearTimeout(sayTimer); try { if (TTS && (TTS.speaking || TTS.pending)) TTS.cancel(); } catch (e) {} stopRobot(); }
+function hush() { voiceBusy = false; current = null; speakingLine = null; clearTimeout(sayTimer); try { if (TTS && (TTS.speaking || TTS.pending)) TTS.cancel(); } catch (e) {} stopRobot(); }
 function startRobot() {
   if (!ac || !soundOn) return;
   stopRobot();
@@ -1781,13 +1796,13 @@ function stopRobot() {
   try { robot.o1.stop(); robot.o2.stop(); } catch (e) {}
   robot = null;
 }
-let current = null, sayTimer = null;
+let current = null, sayTimer = null, speakingLine = null;
 function say(line, retry) {
   if (!TTS || !soundOn) return;
   const sp = SPEAKERS[line[2]];
   clearTimeout(sayTimer);
   // if someone is still talking, let this line wait its turn; only clear a longer backlog
-  const busy = retry || TTS.pending;
+  const busy = !!retry;
   if (busy) { stopRobot(); try { TTS.cancel(); } catch (e) {} }
   // the 5th field, when present, is how the voice should say it (to fix the stress of Argentine verbs)
   const u = new SpeechSynthesisUtterance((line[4] || line[3]).replace(/\.\.\./g, ', '));
@@ -1796,9 +1811,9 @@ function say(line, retry) {
   const sharing = sp.shared && VOICES.length < 4;
   u.pitch = sharing ? sp.shared : sp.pitch; u.rate = sp.rate; u.volume = 1;
   let started = false;
-  const done = () => { if (sp.robot) stopRobot(); if (current === u) voiceBusy = false; };
+  const done = () => { if (sp.robot) stopRobot(); if (speakingLine === line) speakingLine = null; if (current === u) voiceBusy = false; };
   u.onend = done; u.onerror = done;
-  u.onstart = () => { started = true; if (sp.robot) startRobot(); };
+  u.onstart = () => { started = true; speakingLine = line; if (sp.robot) startRobot(); };
   current = u; currentLine = line; voiceBusy = true;
   const go = () => { if (current !== u) return; try { TTS.resume(); TTS.speak(u); } catch (e) { voiceBusy = false; } };
   // after cancel() some browsers drop an utterance spoken right away, so wait a moment
