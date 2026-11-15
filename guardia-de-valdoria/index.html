@@ -1766,7 +1766,9 @@ const DRAW = [
         for (let i = 0; i < 28; i++) {
           const rr = (i * 0.618) % 1, an = i * 2.4;
           const st = V(45 + rr * 20, base + 4 + (i % 5) * 3.5, -16 + ((i * 7) % 32));
-          const tg = V(C0.x + 4 + 9 * Math.cos(an * 0.37), base + 2 + (i % 4) * 1.6, C0.z + 9 * Math.sin(an));
+          // spread all around the shield, always outside it (the shield is 9 wide)
+          const ang = (i / 28) * TAU + (hash(i, 4, 1) - 0.5) * 0.3, rad = 12.5 + (i % 4) * 1.7 + hash(i, 2, 7) * 1.2;
+          const tg = V(C0.x + Math.cos(ang) * rad, base + 2 + (i % 5) * 2.3 + hash(i, 6, 3) * 1.2, C0.z + Math.sin(ang) * rad);
           const kt = i < 12 ? 3 + i * 0.17 : 5 + (i - 12) * 0.1;
           const k = ss(0.2 + (i % 7) * 0.12, 1.6 + (i % 7) * 0.12, p3);
           const pos = st.lerp(tg, k).add(V(Math.sin(p3 * 3 + i) * 0.3, Math.cos(p3 * 2.5 + i) * 0.3, 0));
@@ -1783,7 +1785,7 @@ const DRAW = [
         if (p3 > 4.9 && p3 < 6.8) {
           // Mangar spins through the army like a golden tornado
           const fa = ss(4.9, 5.2, p3) * (1 - ss(6.4, 6.8, p3)); let prev = null;
-          for (let q = 0; q < 46; q++) { const ang = q * 0.36 + p3 * 7, rad = 10 - q * 0.18, pp = V(C0.x + 4 + Math.cos(ang) * rad, base + 1 + q * 0.26, C0.z + Math.sin(ang) * rad); if (prev) beam(prev, pp, 0.28, HEROES.sombra.c, 0.6 * fa); prev = pp; }
+          for (let q = 0; q < 46; q++) { const ang = q * 0.36 + p3 * 7, rad = 17 - q * 0.14, pp = V(C0.x + Math.cos(ang) * rad, base + 1 + q * 0.26, C0.z + Math.sin(ang) * rad); if (prev) beam(prev, pp, 0.28, HEROES.sombra.c, 0.6 * fa); prev = pp; }
           glow(prev, 3, HEROES.sombra.c, fa);
         }
       }
