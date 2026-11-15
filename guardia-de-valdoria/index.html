@@ -104,7 +104,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · 4 min 29 s</div>
+    <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · 4 min 34 s</div>
     <h1>La Guardia de <span>Valdoria</span></h1>
     <p class="logline">Año 2187. Malvor invade la ciudad de Valdoria con un ejército de drones. Thunderbolt, Sky Warrior y Mangar pelean contra él durante cinco años y cien batallas. Más de una vez están a punto de perder a uno de los suyos, hasta que descubren cómo derrotarlo.</p>
   </header>
@@ -130,8 +130,8 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
     <div class="controls">
       <button class="btn" id="play">Reproducir</button>
       <button class="btn" id="restart">Desde el inicio</button>
-      <input type="range" id="scrub" min="0" max="269.4" step="0.01" value="0" aria-label="Posición en la película">
-      <span class="time" id="time">0:00 / 4:29</span>
+      <input type="range" id="scrub" min="0" max="274.4" step="0.01" value="0" aria-label="Posición en la película">
+      <span class="time" id="time">0:00 / 4:34</span>
       <button class="btn" id="sound" aria-pressed="true">Sonido: encendido</button>
     </div>
   </section>
@@ -162,7 +162,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 <script>
 (() => {
-const DUR = 269.4;
+const DUR = 274.4;
 const CARD = 3.6; // seconds a black year card stays on screen while the battle waits
 const cv = document.getElementById('film');
 const subsEl = document.getElementById('subs'), scrub = document.getElementById('scrub');
@@ -233,8 +233,8 @@ const SHAKES = [[24.2, 0.6, 0.3], [13, 1.6, 1.2], [14, 3, 0.15], [95.6, 1.6, 0.3
 
 const SCENES = [
   { a: 0, b: 10, name: 'Prólogo' }, { a: 10, b: 22, name: 'La invasión' }, { a: 22, b: 41.5, name: 'Los héroes' },
-  { a: 41.5, b: 60.3, name: 'Año 1' }, { a: 60.3, b: 70.3, name: 'La guarida' }, { a: 70.3, b: 83.3, name: 'El cuartel' }, { a: 83.3, b: 209.8, name: 'Cinco años de guerra' }, { a: 209.8, b: 221.8, name: 'Al borde' },
-  { a: 221.8, b: 231.8, name: 'El plan' }, { a: 231.8, b: 251.4, name: 'Batalla final' }, { a: 251.4, b: 269.4, name: 'Amanecer' }
+  { a: 41.5, b: 60.3, name: 'Año 1' }, { a: 60.3, b: 70.3, name: 'La guarida' }, { a: 70.3, b: 83.3, name: 'El cuartel' }, { a: 83.3, b: 214.8, name: 'Cinco años de guerra' }, { a: 214.8, b: 226.8, name: 'Al borde' },
+  { a: 226.8, b: 236.8, name: 'El plan' }, { a: 236.8, b: 256.4, name: 'Batalla final' }, { a: 256.4, b: 274.4, name: 'Amanecer' }
 ];
 
 // ---------- 3D setup ----------
@@ -442,7 +442,9 @@ function makeDrone() {
   mesh(DRONE_RING, MAT.red, 0, 0, 0, g);
   return g;
 }
-function drone(p, t, ph, s = 1) { const d = dronePool.get(); d.position.copy(p); d.scale.setScalar(s); d.rotation.set(Math.sin(t * 2 + ph) * 0.15, t * 0.8 + ph, 0); glow(p, 2.2 * s, RED, 0.3, s > 3 ? 0 : 0); }
+function drone(p, t, ph, s = 1, dead = false) { const d = dronePool.get(); d.position.copy(p); d.scale.setScalar(s); if (dead) d.rotation.set(0.5 + ph * 0.1, ph * 2, 0.35 - ph * 0.08); else { d.rotation.set(Math.sin(t * 2 + ph) * 0.15, t * 0.8 + ph, 0); glow(p, 2.2 * s, RED, 0.3); } return d; }
+// where a shot-down drone ends up on the ground
+function wreckAt(d) { return V(40 - (d.td - d.spawn) * d.speed, 0.32, d.z); }
 
 function makeHero(id, ghost) {
   // heroic proportions: broad chest, narrow waist, jointed arms and legs, armor plates, detailed helmet
@@ -716,6 +718,8 @@ const bomb = new THREE.Group(); {
   mesh(new THREE.SphereGeometry(0.35, 8, 6), MAT.red, 0, 0.5, 1.15, bomb);
   bomb.visible = false; scene.add(bomb);
 }
+const CHIP = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.035, 0.14), new THREE.MeshStandardMaterial({ color: 0x1a3a2a, emissive: 0xff4a4a, emissiveIntensity: 1.2, metalness: 0.6, roughness: 0.3 }));
+CHIP.visible = false; scene.add(CHIP);
 const hurtRock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.9, 0), new THREE.MeshStandardMaterial({ color: 0x8a5a3a, roughness: 1, flatShading: true }));
 const hurtShard = new THREE.Mesh(new THREE.ConeGeometry(0.45, 2.6, 5), new THREE.MeshStandardMaterial({ color: 0xbfe8ff, emissive: 0x1a4a66, roughness: 0.2, flatShading: true }));
 hurtRock.visible = hurtShard.visible = false; scene.add(hurtRock, hurtShard);
@@ -1148,7 +1152,14 @@ function skirmish(lt, D, P, o = {}) {
       drone(pos(lt), lt, d.ph);
       const lf = d.spawn + (d.td - d.spawn) * 0.45;
       if (d.fire && !knock && lt > lf && lt < lf + 0.14) { const a = pos(lf); laser(a, V(kx, lerp(a.y, out.guardian.chest.y, 0.6), lerp(a.z, P.guardian[2], 0.75))); }
-    } else boom(pos(d.td), lt - d.td, 3.4);
+    } else {
+      boom(pos(d.td), lt - d.td, 3.4);
+      if (o.wreck) {
+        const p0 = pos(d.td), f = lt - d.td, g = Math.min(1, f / 0.7), wp = wreckAt(d);
+        const p = V(wp.x, lerp(p0.y, wp.y, g * g), wp.z);
+        drone(p, d.td, d.ph, 1, g >= 1); if (f < 6) smoke(p.clone().add(V(0, 0.8 + (f % 1.5), 0)), 1.4, 0.35 * (1 - ss(2, 6, f)));
+      }
+    }
     if (!knock && lt > d.td - 0.3 && lt < d.td) {
       // a hero who is down does not shoot: one of the others takes the shot
       let id = IDS[d.killer];
@@ -1388,7 +1399,7 @@ const DRAW = [
   function montage(lt, t) {
     // five years of war: four long battles, with a discovery about Malvor between each one
     const PARTS = [['c', 0], ['b', 0], ['d', 0], ['c', 2], ['b', 2], ['d', 3], ['c', 4], ['b', 4], ['d', 5], ['C', 0], ['A', 0], ['c', 6], ['b', 6]];
-    const LAST = PARTS[PARTS.length - 1], lenOf = pt => pt[0] === 'c' || pt[0] === 'C' ? CARD : pt[0] === 'A' ? 18 : pt[0] === 'd' ? 11 : pt === LAST ? 15.5 : 14;
+    const LAST = PARTS[PARTS.length - 1], lenOf = pt => pt[0] === 'c' || pt[0] === 'C' ? CARD : pt[0] === 'A' ? 18 : pt[0] === 'd' ? (pt === PARTS[2] ? 16 : 11) : pt === LAST ? 15.5 : 14;
     let rest = lt, part = LAST;
     for (const pt of PARTS) { const len = lenOf(pt); if (rest < len) { part = pt; break; } rest -= len; }
     const plen = lenOf(part);
@@ -1464,7 +1475,7 @@ const DRAW = [
         if (sl > 1.5 && sl < 2.3) { const q = (sl - 1.5) / 0.8; ring.visible = true; ring.position.set(ap.x, 0.2, ap.z); ring.rotation.set(Math.PI / 2, 0, 0); ring.scale.setScalar(1 + q * 16); ring.material.opacity = 1 - q; ring.material.color.setRGB(ac2[0] / 255, ac2[1] / 255, ac2[2] / 255); }
         if (bi === 0) HURTS[0].from = acore.clone().add(V(0, 3.1, 0));
       }
-      const outW = skirmish(sl, D_WAR[bi], bi === 2 ? { rayo: [-8, 5, 1.5], guardian: [-6.5, 7.5, -1], sombra: [-5, 3.5, 2.2] } : ground, { fly: bi === 2, hurtHero: HURTS[bi], overrides, raise: ss(10.4, 10.7, sl) * (1 - ss(11.3, 11.5, sl)) });
+      const outW = skirmish(sl, D_WAR[bi], bi === 2 ? { rayo: [-8, 5, 1.5], guardian: [-6.5, 7.5, -1], sombra: [-5, 3.5, 2.2] } : ground, { fly: bi === 2, wreck: bi === 0, hurtHero: HURTS[bi], overrides, raise: ss(10.4, 10.7, sl) * (1 - ss(11.3, 11.5, sl)) });
       if (ally) {
         // heavy blasts at the heroes: some hit the shield, others blow up the ground right next to them
         for (let n = 0; n < 5; n++) {
@@ -1511,19 +1522,38 @@ const DRAW = [
       const wars = ['La guerra de Ceres', 'La guerra de las lunas de hielo', 'La guerra de los asteroides', 'La guerra de Valdoria'];
       chapterCard(labels[bi][0], wars[bi], cardA);
     } else if (bi === 0) {
-      // discovery 1: a fallen drone carries a chip; the orders come from the red moon
-      const dp = V(-3, 0.35, 0.3);
-      drone(dp, 0, 1.2, 1.3);
-      for (let q = 0; q < 4; q++) smoke(dp.clone().add(V(Math.sin(q) * 0.5, 0.8 + ((sl * 0.5 + q * 0.3) % 1.5), Math.cos(q) * 0.4)), 1.6, 0.25);
-      const holo = ss(2.5, 3.2, sl);
+      // discovery 1: after the battle the drones lie on the ground; the heroes walk among them,
+      // Mangar kneels by one, pulls a chip out of it, and the chip shows where the orders come from
+      const W0 = D_WAR[0].map(d => ({ p: wreckAt(d), d }));
+      let ch = W0[0]; for (const w of W0) if (Math.abs(w.p.x - 3) + Math.abs(w.p.z) < Math.abs(ch.p.x - 3) + Math.abs(ch.p.z)) ch = w;
+      const cp = ch.p;
+      W0.forEach(w => { drone(w.p, 0, w.d.ph, 1, true); smoke(w.p.clone().add(V(0, 0.7 + ((sl * 0.4 + w.d.ph) % 1.4), 0)), 1.2, 0.18); });
+      const walkK = ss(0.6, 5.2, sl);
+      const goals = { rayo: cp.clone().add(V(-2.3, 0, 1.5)), guardian: cp.clone().add(V(-1.7, 0, -1.7)), sombra: cp.clone().add(V(-0.95, 0, 0.15)) };
+      const starts = { rayo: V(-8, 0, 1.5), guardian: V(-6.5, 0, -0.8), sombra: V(-5, 0, 2.2) };
+      const crouch = ss(5.3, 5.7, sl) * (1 - ss(6.4, 6.8, sl));
+      let sHand = null;
+      IDS.forEach((id, i) => {
+        const k = clamp(walkK * (id === 'sombra' ? 1 : 0.92)), p = starts[id].clone().lerp(goals[id], k);
+        const look = sl < 5.2 ? goals[id] : cp, yaw = -Math.atan2(look.z - p.z, look.x - p.x);
+        const walking = k > 0.01 && k < 0.99;
+        const o = { yaw, aR: 0.3, aL: -0.1, aura: 0.6, t: lt, spread: 0.12, walk: walking ? (sl * 7 + i) : undefined };
+        if (id === 'sombra') { p.y -= 0.32 * crouch; o.rot = -0.4 * crouch; o.aR = lerp(o.aR, 1.2, crouch); if (sl > 6.6) o.aR = 2.2; }
+        const out = poseHero(H[id], p, o); if (id === 'sombra') sHand = out.hand;
+      });
+      // the chip: glowing inside the wreck, pulled out, held up, then it projects the map
+      const held = ss(5.8, 6.6, sl);
+      const chipP = cp.clone().add(V(0, 0.15, 0)).lerp(sHand.clone().add(V(0.05, 0.05, 0)), held);
+      CHIP.visible = true; CHIP.position.copy(chipP); CHIP.rotation.set(0, sl * (held > 0.99 ? 1.5 : 0), 0);
+      glow(chipP, 0.9 + 0.4 * Math.sin(sl * 8), [255, 70, 70], 0.9);
+      const holo = ss(9.6, 10.4, sl);
       if (holo > 0) {
-        beam(dp, dp.clone().add(V(0, 2.8, 0)), 0.9, RED, 0.12 * holo);
-        const c = dp.clone().add(V(0, 2.6, 0)); glow(c, 1.6, [255, 90, 80], 0.9 * holo);
-        for (let q = 0; q < 30; q++) { const a = q / 30 * TAU; glow(c.clone().add(V(Math.cos(a) * 0.8, Math.sin(a) * 0.8, 0)), 0.12, [255, 120, 110], holo); }
-        for (let q = 0; q < 8; q++) { const k = ((sl * 0.6 + q / 8) % 1); glow(dp.clone().lerp(c, k), 0.18, [255, 120, 110], holo); }
+        const c = chipP.clone().add(V(0, 1.6, 0));
+        beam(chipP, c, 0.6, RED, 0.15 * holo); glow(c, 1.3, [255, 90, 80], 0.9 * holo);
+        for (let q = 0; q < 28; q++) { const an = q / 28 * TAU; glow(c.clone().add(V(Math.cos(an) * 0.6, Math.sin(an) * 0.6, 0)), 0.1, [255, 120, 110], holo); }
+        for (let q = 0; q < 8; q++) { const k2 = ((sl * 0.6 + q / 8) % 1); glow(chipP.clone().lerp(c, k2), 0.14, [255, 120, 110], holo); }
       }
-      [['rayo', V(-4.6, 0, 1.2), 0.5], ['guardian', V(-3.2, 0, -1.4), 1.6], ['sombra', V(-1.6, 0, 1.4), 2.6]].forEach(([id, p]) => poseHero(H[id], p, { yaw: -Math.atan2(dp.z - p.z, dp.x - p.x), aR: id === 'sombra' ? 1.2 : 0.3, aL: 0.1, aura: 0.6, t: lt, spread: 0.18 }));
-      camKeys(sl, [[0, [-6.5, 2.2, 6.5], [-3, 0.9, 0.3]], [8, [-1, 2.6, 6], [-3, 1.6, 0.3]]]);
+      camKeys(sl, [[0, [-15, 4, 13], [2, 1, 0]], [5.2, [cp.x - 4.5, 2, cp.z + 5], [cp.x, 0.6, cp.z]], [6.8, [cp.x - 2.4, 1.5, cp.z + 2.8], [cp.x - 0.8, 1.1, cp.z]], [10, [cp.x - 4.5, 2.4, cp.z + 5.5], [cp.x - 0.8, 1.8, cp.z]], [16, [cp.x - 6, 3, cp.z + 7], [cp.x - 0.8, 1.8, cp.z]]]);
       yearCard('AÑO 2', 'Un descubrimiento', ss(0.2, 0.6, sl) * (1 - ss(3, 3.5, sl)));
     } else if (bi === 1) {
       // discovery 2: an ancient archive; Malvor was a scientist of Valdoria
@@ -1716,7 +1746,7 @@ draw = function (t) {
   [H.rayo, H.guardian, H.sombra, ...GHOSTS].forEach(h => h.g.visible = false);
   [MALVOR, MALHOLO, KROG, VEXA, ...MINIONS].forEach(m => m.g.visible = false);
   [SHIP, SHIPHOLO].forEach(s => s.g.visible = false);
-  hurtRock.visible = hurtShard.visible = false; SCIENTIST.visible = false; BIGROCK.visible = REDMOON.visible = false;
+  hurtRock.visible = hurtShard.visible = false; CHIP.visible = false; SCIENTIST.visible = false; BIGROCK.visible = REDMOON.visible = false;
   bomb.visible = domeClip.visible = domeWire.visible = shieldArc.visible = ring.visible = ring2.visible = false;
   spot.intensity = 0; sun.position.copy(sun.userData.base);
   OV.flash.style.background = '#fff';
@@ -1973,6 +2003,16 @@ const SUBS = [
     for (let n = 0; n < 5; n++) SFX.push({ t: A + 7 + n * 0.42, k: 'pew' }, { t: A + 7.16 + n * 0.42, k: 'boom' });
     SHAKES.push([A + 2.3, 0.5, 0.3], [A + 10.45, 0.5, 0.3], [A + 12.9, 1.2, 0.8]);
   }
+  // discovery 1 grows from 11 s to 16 s: walk among the wrecks, find the chip
+  {
+    const D0 = 100.9, P = D0 + 11;
+    SUBS.forEach(l => { if (l[0] >= P) { l[0] += 5; l[1] += 5; } });
+    SFX.forEach(e => { if (e.t >= P) e.t += 5; });
+    SHAKES.forEach(x => { if (x[0] >= P) x[0] += 5; });
+    for (let i = SUBS.length - 1; i >= 0; i--) if (SUBS[i][3] === 'Miren, este dron tiene un chip.') SUBS.splice(i, 1);
+    SUBS.push([D0 + 0.3, D0 + 4.6, 'narrador', 'Después de la batalla, buscaron entre los restos de los drones.'], [D0 + 6.7, D0 + 9.5, 'sombra', '¡Miren! Encontré un chip adentro de este dron.']);
+    place('Las órdenes vienen de la luna roja. Ahí se esconde Malvor.', D0 + 10.4, 5.2);
+  }
   SUBS.sort((a, b) => a[0] - b[0]);
 }
 // ---------- playback ----------
@@ -1981,13 +2021,13 @@ const SUBS = [
 const CARD_WINDOWS = (() => {
   const w = [], war = SCENES.find(s => s.name === 'Cinco años de guerra');
   ['Año 1', 'Batalla final'].forEach(n => { const a = SCENES.find(s => s.name === n).a; w.push([a, a + CARD]); });
-  let x = war.a; for (const len of [CARD, 14, 11, CARD, 14, 11, CARD, 14, 11, CARD, 18, CARD]) { if (len === CARD) w.push([x, x + CARD]); x += len; }
+  let x = war.a; for (const len of [CARD, 14, 16, CARD, 14, 11, CARD, 14, 11, CARD, 18, CARD]) { if (len === CARD) w.push([x, x + CARD]); x += len; }
   return w;
 })();
 const HOLDS = (() => {
   const b = SCENES.slice(1).map(s => s.a);
   const war = SCENES.find(s => s.name === 'Cinco años de guerra');
-  let x = war.a; for (const len of [CARD, 14, 11, CARD, 14, 11, CARD, 14, 11, CARD, 18, CARD]) { x += len; b.push(x); }
+  let x = war.a; for (const len of [CARD, 14, 16, CARD, 14, 11, CARD, 14, 11, CARD, 18, CARD]) { x += len; b.push(x); }
   ['Año 1', 'Batalla final'].forEach(n => b.push(SCENES.find(s => s.name === n).a + CARD));
   return b.map(v => v - 0.45).sort((p, q) => p - q);
 })();
