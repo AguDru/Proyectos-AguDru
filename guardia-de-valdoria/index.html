@@ -104,7 +104,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · 4 min 46 s</div>
+    <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · 5 min 45 s</div>
     <h1>La Guardia de <span>Valdoria</span></h1>
     <p class="logline">Año 2187. Malvor invade la ciudad de Valdoria con un ejército de drones. Thunderbolt, Sky Warrior y Mangar pelean contra él durante cinco años y cien batallas. Más de una vez están a punto de perder a uno de los suyos, hasta que descubren cómo derrotarlo.</p>
   </header>
@@ -130,8 +130,8 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
     <div class="controls">
       <button class="btn" id="play">Reproducir</button>
       <button class="btn" id="restart">Desde el inicio</button>
-      <input type="range" id="scrub" min="0" max="286.4" step="0.01" value="0" aria-label="Posición en la película">
-      <span class="time" id="time">0:00 / 4:46</span>
+      <input type="range" id="scrub" min="0" max="345.4" step="0.01" value="0" aria-label="Posición en la película">
+      <span class="time" id="time">0:00 / 5:45</span>
       <button class="btn" id="sound" aria-pressed="true">Sonido: encendido</button>
     </div>
   </section>
@@ -143,6 +143,9 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
     <div class="who" style="--c: var(--nova)"><b>THUNDERBOLT</b><em>Rayos de energía</em><p>Dispara rayos con la energía de las estrellas. Traje azul noche con capa y una estrella en el pecho.</p></div>
     <div class="who" style="--c: var(--kael)"><b>SKY WARRIOR</b><em>Gravedad y escudos</em><p>Controla la gravedad y levanta escudos que frenan cualquier ataque. Traje violeta con hombreras.</p></div>
     <div class="who" style="--c: var(--iris)"><b>MANGAR</b><em>Supervelocidad</em><p>Corre más rápido que la luz y descubre el punto débil de Malvor. Traje ámbar con aletas en el casco.</p></div>
+    <div class="who" style="--c: #ff9a4a"><b>DUNA</b><em>Tormentas de arena</em><p>Aliada que aparece en la guerra de Ceres, saliendo de la arena.</p></div>
+    <div class="who" style="--c: #9fe6ff"><b>GLACIAR</b><em>Hielo</em><p>Aliado que se suma en las lunas de hielo de Tauro.</p></div>
+    <div class="who" style="--c: #6eff8c"><b>COMETA</b><em>Vuelo estelar</em><p>Aliado que llega volando en el cinturón de asteroides.</p></div>
     <div class="who" style="--c: var(--malvor)"><b>MALVOR</b><em>El villano</em><p>Villano con armadura y cuernos. Su poder sale del núcleo rojo de su nave, y manda un ejército de miles de drones.</p></div>
   </div>
 
@@ -162,7 +165,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 <script>
 (() => {
-const DUR = 286.4;
+const DUR = 345.4;
 const CARD = 3.6; // seconds a black year card stays on screen while the battle waits
 const cv = document.getElementById('film');
 const subsEl = document.getElementById('subs'), scrub = document.getElementById('scrub');
@@ -177,12 +180,18 @@ const ss = (a, b, t) => { const x = clamp((t - a) / (b - a)); return x * x * (3 
 const lerp = (a, b, k) => a + (b - a) * k;
 const mix = (c1, c2, k) => c1.map((v, i) => v + (c2[i] - v) * k);
 const mkRand = s => () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+const hash = (a, b, c) => { const v = Math.sin(a * 12.9898 + b * 78.233 + c * 3.17) * 43758.5453; return v - Math.floor(v); };
 const TAU = Math.PI * 2;
 const SFX = [];
 const HEROES = {
   rayo: { c: [79, 227, 255], suit: [26, 44, 82], name: ['THUNDER', 'BOLT'], power: 'RAYOS DE ENERGÍA' },
   guardian: { c: [167, 123, 255], suit: [46, 32, 82], bulk: 1.22, name: ['SKY', 'WARRIOR'], power: 'GRAVEDAD Y ESCUDOS' },
-  sombra: { c: [255, 190, 80], suit: [118, 84, 28], name: ['MANGAR', ''], power: 'SUPERVELOCIDAD' }
+  sombra: { c: [255, 190, 80], suit: [118, 84, 28], name: ['MANGAR', ''], power: 'SUPERVELOCIDAD' },
+  duna: { c: [255, 150, 60], suit: [96, 64, 34], name: ['DUNA', ''], power: 'TORMENTAS DE ARENA' },
+  glaciar: { c: [150, 230, 255], suit: [70, 96, 120], name: ['GLACIAR', ''], power: 'HIELO' },
+  cometa: { c: [110, 255, 140], suit: [30, 72, 44], name: ['COMETA', ''], power: 'VUELO ESTELAR' },
+  aurora: { c: [255, 120, 220], suit: [84, 38, 72], name: ['AURORA', ''], power: 'LUZ' },
+  titan: { c: [180, 235, 120], suit: [70, 82, 58], bulk: 1.4, name: ['TITÁN', ''], power: 'FUERZA' }
 };
 const RED = [255, 59, 78];
 const IDS = ['rayo', 'guardian', 'sombra'];
@@ -233,8 +242,8 @@ const SHAKES = [[24.2, 0.6, 0.3], [13, 1.6, 1.2], [14, 3, 0.15], [95.6, 1.6, 0.3
 
 const SCENES = [
   { a: 0, b: 10, name: 'Prólogo' }, { a: 10, b: 22, name: 'La invasión' }, { a: 22, b: 41.5, name: 'Los héroes' },
-  { a: 41.5, b: 60.3, name: 'Año 1' }, { a: 60.3, b: 70.3, name: 'La guarida' }, { a: 70.3, b: 82.3, name: 'El trono de Malvor' }, { a: 82.3, b: 95.3, name: 'El cuartel' }, { a: 95.3, b: 226.8, name: 'Cinco años de guerra' }, { a: 226.8, b: 238.8, name: 'Al borde' },
-  { a: 238.8, b: 248.8, name: 'El plan' }, { a: 248.8, b: 268.4, name: 'Batalla final' }, { a: 268.4, b: 286.4, name: 'Amanecer' }
+  { a: 41.5, b: 60.3, name: 'Año 1' }, { a: 60.3, b: 70.3, name: 'La guarida' }, { a: 70.3, b: 82.3, name: 'El trono de Malvor' }, { a: 82.3, b: 95.3, name: 'El cuartel' }, { a: 95.3, b: 263.8, name: 'Cinco años de guerra' }, { a: 263.8, b: 275.8, name: 'Al borde' },
+  { a: 275.8, b: 285.8, name: 'El plan' }, { a: 285.8, b: 327.4, name: 'Batalla final' }, { a: 327.4, b: 345.4, name: 'Amanecer' }
 ];
 
 // ---------- 3D setup ----------
@@ -727,11 +736,133 @@ function poseShip(sh, p, o = {}) {
 }
 
 const H = { rayo: makeHero('rayo'), guardian: makeHero('guardian'), sombra: makeHero('sombra') };
+const FRIENDS = { duna: makeHero('duna'), glaciar: makeHero('glaciar'), cometa: makeHero('cometa'), aurora: makeHero('aurora'), titan: makeHero('titan') };
+const FIRST3 = ['duna', 'glaciar', 'cometa'];
+// ---------- the two great armies of the final war (instanced, so a thousand of each are cheap) ----------
+const ARMY = (() => {
+  const g = (geo, f) => { f(geo); return geo; };
+  const eg = mergeGeos([
+    g(new THREE.CylinderGeometry(0.3, 0.24, 1.4, 8), x => x.translate(0, 0.95, 0)), g(new THREE.SphereGeometry(0.24, 10, 8), x => x.translate(0, 1.9, 0)),
+    g(new THREE.ConeGeometry(0.06, 0.45, 5), x => { x.rotateX(0.5); x.translate(0, 2.2, 0.16); }), g(new THREE.ConeGeometry(0.06, 0.45, 5), x => { x.rotateX(-0.5); x.translate(0, 2.2, -0.16); }),
+    g(new THREE.BoxGeometry(0.06, 1.3, 0.1), x => x.translate(0.3, 1.1, 0.32)),
+    g(new THREE.CylinderGeometry(0.1, 0.1, 0.9, 6), x => x.translate(0, 0.25, 0.12)), g(new THREE.CylinderGeometry(0.1, 0.1, 0.9, 6), x => x.translate(0, 0.25, -0.12))
+  ]);
+  const cg = mergeGeos([
+    g(new THREE.CylinderGeometry(0.22, 0.26, 1.15, 8), x => x.translate(0, 0.78, 0)), g(new THREE.SphereGeometry(0.19, 10, 8), x => x.translate(0, 1.56, 0)),
+    g(new THREE.BoxGeometry(0.04, 1.9, 0.04), x => x.translate(0.28, 1.1, 0.25)), g(new THREE.BoxGeometry(0.06, 0.7, 0.5), x => x.translate(0.3, 0.95, -0.25)),
+    g(new THREE.CylinderGeometry(0.09, 0.09, 0.6, 6), x => x.translate(0, 0.2, 0.1)), g(new THREE.CylinderGeometry(0.09, 0.09, 0.6, 6), x => x.translate(0, 0.2, -0.1))
+  ]);
+  const mk = (geo, mat, n) => { const m = new THREE.InstancedMesh(geo, mat, n); m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.frustumCulled = false; m.visible = false; scene.add(m); return m; };
+  const A = {
+    enemy: mk(eg, new THREE.MeshStandardMaterial({ color: 0x4a4e5e, map: BRUSH, metalness: 0.6, roughness: 0.45 }), 1000),
+    eyes: mk(new THREE.BoxGeometry(0.08, 0.05, 0.3), new THREE.MeshBasicMaterial({ color: 0xff3040 }), 1000),
+    cit: mk(cg, new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0.35 }), 1000),
+    dr: mk(DRONE_BODY, MAT.drone, 160), drr: mk(DRONE_RING, MAT.red, 160)
+  };
+  const c = new THREE.Color(), WORLD = [[0xd08a40, 0xe8a858, 0xb87030], [0xcfeaff, 0x9fd0f0, 0xeaf6ff], [0x5fd080, 0x3fae66, 0x8ae8a0]];
+  for (let j = 0; j < 1000; j++) { const w = WORLD[(j % 5) % 3]; A.cit.setColorAt(j, c.setHex(w[Math.floor(j / 5) % 3])); }
+  A.cit.instanceColor.needsUpdate = true;
+  return A;
+})();
+const PORTALS = Array.from({ length: 5 }, () => { const m = new THREE.Mesh(new THREE.TorusGeometry(1, 0.12, 10, 48), new THREE.MeshBasicMaterial({ color: 0x7fe8ff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); m.visible = false; scene.add(m); return m; });
+function makeDragon(color) {
+  const g = new THREE.Group();
+  const m = new THREE.MeshStandardMaterial({ color, map: BRUSH, metalness: 0.4, roughness: 0.5, flatShading: true });
+  const dk = new THREE.MeshStandardMaterial({ color: new THREE.Color(color).multiplyScalar(0.55), roughness: 0.6, side: THREE.DoubleSide, flatShading: true });
+  mesh(new THREE.SphereGeometry(1, 12, 8), m, 0, 0, 0, g).scale.set(3.2, 1.1, 1.2);
+  mesh(new THREE.CylinderGeometry(0.35, 0.6, 2.6, 8), m, 3.4, 0.9, 0, g).rotation.z = -1.0;
+  mesh(new THREE.ConeGeometry(0.55, 1.8, 6), m, 5.0, 1.7, 0, g).rotation.z = -Math.PI / 2;
+  for (const sz of [1, -1]) { const h = mesh(new THREE.ConeGeometry(0.1, 0.8, 5), dk, 4.4, 2.3, sz * 0.25, g); h.rotation.z = 0.9; }
+  mesh(new THREE.ConeGeometry(0.6, 5, 6), m, -5.2, -0.1, 0, g).rotation.z = Math.PI / 2;
+  const wGeo = new THREE.BufferGeometry(); wGeo.setAttribute('position', new THREE.Float32BufferAttribute([-1.5, 0, 0, 1.8, 0, 0, -0.5, 0, 6.5, 1.8, 0, 0, 1.0, 0, 5.5, -0.5, 0, 6.5], 3)); wGeo.computeVertexNormals();
+  const wingL = new THREE.Group(); wingL.position.set(0.3, 0.6, 0.8); g.add(wingL); mesh(wGeo, dk, 0, 0, 0, wingL);
+  const wingR = new THREE.Group(); wingR.position.set(0.3, 0.6, -0.8); g.add(wingR); mesh(wGeo, dk, 0, 0, 0, wingR).scale.z = -1;
+  g.visible = false; scene.add(g);
+  return { g, wingL, wingR };
+}
+const DRAGONS = [makeDragon(0x2a9a7a), makeDragon(0x3a6ad0), makeDragon(0xc8a030)];
+// first part of the final war: Malvor's army against the three; portals open, Valdoria's people,
+// five more heroes and the dragons join (22 s)
+function armyPhase(lt, t) {
+  env({ top: [20, 4, 14], bot: [110, 30, 38], fog: 0.006, stars: 0.4, hemi: 0.5, hemiT: [255, 150, 160], sun: 0.55, sunC: [255, 170, 160], sets: ['city'], bloom: 1.0 });
+  cityState(t, { lights: 0, ruined: true, fire: 0.6 });
+  const Mx = new THREE.Matrix4(), P = new THREE.Vector3(), S1 = new THREE.Vector3(1, 1, 1), Qy = new THREE.Quaternion().setFromAxisAngle(UP, Math.PI), Q0 = new THREE.Quaternion(), Z = new THREE.Matrix4().makeScale(0, 0, 0);
+  const march = ss(6, 13.5, lt), frontX = 24 - march * 14;
+  for (let i = 0; i < 1000; i++) {
+    const row = Math.floor(i / 40), col = i % 40;
+    const x = 24 + row * 1.7 + (hash(i, 1, 2) - 0.5) * 0.6 - march * 14, z = -14 + col * 0.82 + (hash(i, 3, 4) - 0.5) * 0.4;
+    const die = row < 4 ? 7 + hash(i, 5, 6) * 6.5 : row < 16 ? 17.6 + hash(i, 7, 8) * 4.2 : 1e9;
+    if (lt > die) { ARMY.enemy.setMatrixAt(i, Z); ARMY.eyes.setMatrixAt(i, Z); if (i % 7 === 0 && lt - die < 1.1) boom(V(x, 1.2, z), lt - die, 1.6); continue; }
+    const by = march > 0 && march < 1 ? Math.abs(Math.sin(lt * 9 + i)) * 0.12 : 0;
+    Mx.compose(P.set(x, by, z), Qy, S1); ARMY.enemy.setMatrixAt(i, Mx);
+    Mx.compose(P.set(x - 0.22, by + 1.92, z), Qy, S1); ARMY.eyes.setMatrixAt(i, Mx);
+  }
+  for (let i = 0; i < 160; i++) {
+    const die = i < 50 ? 8 + hash(i, 9, 1) * 5.5 : i < 120 ? 16.8 + hash(i, 2, 9) * 5 : 1e9;
+    const p = V(26 + (i % 16) * 2.6 - march * 12 + Math.sin(lt + i) * 0.6, 7 + (i % 7) * 2.6 + Math.cos(lt * 1.3 + i) * 0.5, -14 + Math.floor(i / 16) * 3.4);
+    if (lt > die) { ARMY.dr.setMatrixAt(i, Z); ARMY.drr.setMatrixAt(i, Z); if (i % 3 === 0) boom(p, lt - die, 2.2); continue; }
+    Mx.compose(p, Q0.setFromAxisAngle(UP, lt + i), S1); ARMY.dr.setMatrixAt(i, Mx); ARMY.drr.setMatrixAt(i, Mx);
+  }
+  for (let j = 0; j < 1000; j++) {
+    const pi = j % 5, te = 14.6 + Math.floor(j / 5) * 0.012;
+    if (lt < te) { ARMY.cit.setMatrixAt(j, Z); continue; }
+    const row = Math.floor(j / 40), col = j % 40, k = clamp((lt - te) / 3.2);
+    const tx = 1 - row * 1.3 + (hash(j, 2, 3) - 0.5) * 0.6, tz = -14 + col * 0.82;
+    const run = k < 1 ? Math.abs(Math.sin(lt * 12 + j)) * 0.15 : Math.abs(Math.sin(lt * 6 + j)) * 0.05;
+    Mx.compose(P.set(lerp(-42, tx, k), run, lerp(-10 + pi * 6.5, tz, k)), Q0.identity(), S1); ARMY.cit.setMatrixAt(j, Mx);
+  }
+  for (const m of [ARMY.enemy, ARMY.eyes, ARMY.cit, ARMY.dr, ARMY.drr]) { m.visible = true; m.instanceMatrix.needsUpdate = true; }
+  poseMalvor(MALVOR, V(frontX + 10, 0.3, 2), { s: 2, t: lt });
+  // the three heroes, alone at first
+  const HP = { rayo: V(-11, 0, 1), guardian: V(-9, 0, -1), sombra: V(-7, 0, 1.5) }, out = {};
+  const raise = ss(6, 6.3, lt) * (1 - ss(6.9, 7.2, lt));
+  IDS.forEach(id => { out[id] = poseHero(H[id], HP[id], { aR: id === 'rayo' ? lerp(1.5, 2.95, raise) : 1.5, aL: id === 'guardian' && lt > 9.5 && lt < 14.6 ? 2.6 : 0.4, aura: 1, t: lt, spread: 0.18 }); });
+  if (raise > 0.6) bolt(out.rayo.hammer.clone().add(V(2, 30, -1)), out.rayo.hammer, HEROES.rayo.c, raise);
+  if (lt > 6.8) {
+    const sh = Math.floor(lt / 0.45), z = -12 + hash(sh, 1, 1) * 28, tp = V(frontX + 0.5, 1.3, z);
+    if (lt % 0.45 < 0.18) bolt(out.rayo.hammer, tp, HEROES.rayo.c, 1);
+    if ((lt + 0.2) % 0.6 < 0.16) { const tp2 = V(frontX + 1, 1.3, -12 + hash(sh, 5, 2) * 28); beam(out.sombra.hand, tp2, 0.14, HEROES.sombra.c, 0.9); glow(tp2, 1.6, HEROES.sombra.c, 1); }
+  }
+  setDome(V(-9, 0, 0), 7, ss(9.5, 10.1, lt) * (1 - ss(14.6, 15.2, lt)), lt, ss(11.4, 12.4, lt) * (1 - ss(14.4, 15, lt)));
+  if (lt > 9 && lt < 14.6 && Math.sin(lt * 11) > 0.7) { const z = -6 + hash(Math.floor(lt * 6), 4, 4) * 12; laser(V(frontX, 1.6, z), V(-9 + 6.5, 1.6 + hash(Math.floor(lt * 6), 6, 1) * 3, z * 0.4)); }
+  // portals open on the heroes' side
+  const po = ss(14, 14.6, lt);
+  PORTALS.forEach((pm, pi) => {
+    if (po <= 0) return;
+    const pc = V(-42, 3.4, -10 + pi * 6.5);
+    const wc = [[255, 160, 70], [170, 230, 255], [110, 255, 150]][pi % 3];
+    pm.visible = true; pm.position.copy(pc); pm.rotation.set(0, Math.PI / 2, lt * 2); pm.scale.setScalar(3.2 * po); pm.material.opacity = 0.95; pm.material.color.setRGB(wc[0] / 255, wc[1] / 255, wc[2] / 255);
+    glow(pc, 9 * po, wc, 0.5);
+    for (let q = 0; q < 10; q++) { const an = q * 0.63 + lt * 5; glow(pc.clone().add(V(0, Math.sin(an) * 2.6 * po, Math.cos(an) * 2.6 * po)), 0.6, wc, po); }
+  });
+  // five heroes come through the middle portal
+  const FSP = { duna: V(-13, 0, 5), glaciar: V(-14, 0, -3.2), cometa: V(-12, 0, 8), aurora: V(-15, 0, 1.4), titan: V(-13.5, 0, -6.4) };
+  Object.keys(FRIENDS).forEach((fid, j) => {
+    const k = ss(15 + j * 0.3, 16.4 + j * 0.3, lt); if (k <= 0) return;
+    const p = V(-42, 0, 3).lerp(FSP[fid], k);
+    const fo = poseHero(FRIENDS[fid], p, { aR: 1.5, aL: 0.4, aura: 1, t: lt, walk: k < 1 ? lt * 8 + j : undefined, spread: 0.15 });
+    if (k >= 1 && (lt + j * 0.23) % 0.7 < 0.18) { const tp = V(frontX + 1, 1.3, -12 + hash(Math.floor(lt / 0.7), j, 3) * 28); beam(fo.hand, tp, 0.12, HEROES[fid].c, 0.9); glow(tp, 1.6, HEROES[fid].c, 1); }
+  });
+  // dragons fly over Malvor's army breathing fire
+  DRAGONS.forEach((dg, i) => {
+    const k = clamp((lt - 16.2 - i * 0.6) / 6.5); if (k <= 0 || k >= 1) return;
+    const p = V(lerp(-70, 85, k), 24 + i * 4 + Math.sin(lt * 1.5 + i) * 0.8, -6 + i * 10);
+    dg.g.visible = true; dg.g.position.copy(p); dg.g.rotation.set(0, 0, Math.sin(lt * 1.5 + i) * 0.06); dg.g.scale.setScalar(1.4);
+    const fl = 0.3 + Math.sin(lt * 5 + i) * 0.6; dg.wingL.rotation.x = -fl; dg.wingR.rotation.x = fl;
+    const mouth = p.clone().add(V(7.2, 2.2, 0));
+    glow(mouth.clone().add(V(-0.5, 0.3, 0.35)), 0.8, [255, 220, 120], 1);
+    if (p.x > 0 && p.x < 55) for (let q = 1; q <= 10; q++) { const f = q / 10, fp = mouth.clone().lerp(V(p.x + 14, 0.5, p.z + Math.sin(q) * 2), f); fire(fp, 1.5 + f * 5, q % 2 ? [255, 140, 40] : [255, 220, 120], 0.8 * (1 - f * 0.5), q + lt * 4); }
+  });
+  // the two armies clash in the middle
+  if (lt > 17.6) for (let q = 0; q < 8; q++) { const h1 = hash(Math.floor(lt * 5), q, 7), z = -12 + h1 * 26, ex = 24 - 14 + 1.7 * (4 + Math.floor(hash(q, 2, 2) * 6)); laser(V(ex - 14 * 0, 1.4, z), V(1 + h1, 1.2, z + (hash(q, 3, 3) - 0.5) * 4)); }
+  camKeys(lt, [[0, [-34, 24, 52], [18, 2, 4]], [5.5, [-24, 7, 24], [10, 2, 2]], [9.5, [-15, 3, 13], [4, 2, 0]], [13.6, [-17, 3.2, 12], [2, 2, 0]], [14.6, [-58, 14, 34], [-30, 4, 2]], [16.6, [-28, 34, 56], [8, 12, 4]], [20, [-24, 22, 46], [16, 4, 4]], [22, [-26, 8, 26], [6, 6, -2]]]);
+}
+
 const GHOSTS = [makeHero('sombra', true), makeHero('sombra', true), makeHero('sombra', true)];
 const MALVOR = makeMalvor(false, { sword: true }), MALHOLO = makeMalvor(true, { sword: true });
 const KROG = makeMalvor(false, { armor: 0x4d3a26, cape: 0x3a2008, eye: 0xff8a30 }), VEXA = makeMalvor(false, { armor: 0x3c3048, cape: 0x2a0838, eye: 0xd040ff });
 const ALLY = [[KROG, [255, 138, 48]], [VEXA, [208, 64, 255]]];
-const MINIONS = Array.from({ length: 6 }, (_, i) => makeMalvor(false, { armor: [0x3a3f4a, 0x4a3a3a, 0x3a4048][i % 3], cape: 0x2a1010, eye: 0xff5040 }));
+const MINIONS = Array.from({ length: 9 }, (_, i) => makeMalvor(false, { armor: [0x3a3f4a, 0x4a3a3a, 0x3a4048][i % 3], cape: 0x2a1010, eye: 0xff5040 }));
 const SHIP = makeShip(false), SHIPHOLO = makeShip(true);
 
 const bomb = new THREE.Group(); {
@@ -766,7 +897,7 @@ function setDome(c, R, a, t, stress = 0) {
 }
 
 // ---------- sets ----------
-const SETS = { throne: new THREE.Group(), room: new THREE.Group(), hq: new THREE.Group(), moon: new THREE.Group(), city: new THREE.Group(), desert: new THREE.Group(), ice: new THREE.Group(), space: new THREE.Group(), roof: new THREE.Group(), rain: new THREE.Group() };
+const SETS = { ceres: new THREE.Group(), throne: new THREE.Group(), room: new THREE.Group(), hq: new THREE.Group(), moon: new THREE.Group(), city: new THREE.Group(), desert: new THREE.Group(), ice: new THREE.Group(), space: new THREE.Group(), roof: new THREE.Group(), rain: new THREE.Group() };
 Object.values(SETS).forEach(s => scene.add(s));
 // city
 mesh(new THREE.PlaneGeometry(1400, 1400), MAT.ground, 0, 0, 0, SETS.city).rotation.x = -Math.PI / 2;
@@ -1161,7 +1292,7 @@ function skirmish(lt, D, P, o = {}) {
     const mine = hh && hh.id === id ? hk : 0, k2 = Math.max(knock, mine);
     const weak = mine ? lerp(1, 0.2 + 0.25 * (Math.sin(lt * 23) > 0 ? 1 : 0), mine) : 1;
     const raise = id === 'rayo' ? Math.max(o.raise || 0, lt > 1 ? ss(0, 0.2, lt % 3.2) * (1 - ss(0.5, 0.7, lt % 3.2)) : 0) * (1 - k2) : 0;
-    out[id] = poseHero(H[id], V(p[0] - 3 * knock - 0.6 * mine, p[1] + bob - (o.fly ? 2.5 * mine : 0), p[2]), { aR: lerp(lerp(1.5 + Math.sin(lt * 3 + i) * 0.12, 2.95, raise), 0.4, k2), aL: 0.35, fly: o.fly, aura: 0.9 * (1 - k2), t: lt, rot: 1.45 * k2, alpha: 1 - 0.3 * knock, spread: 0.12, glowK: weak, fulgor: weak });
+    out[id] = poseHero(H[id], V(p[0] - 3 * knock - 0.6 * mine, p[1] + bob - (o.fly ? 2.5 * mine : 0), p[2]), { yaw: p[3] || 0, aR: lerp(lerp(1.5 + Math.sin(lt * 3 + i) * 0.12, 2.95, raise), 0.4, k2), aL: 0.35, fly: o.fly, aura: 0.9 * (1 - k2), t: lt, rot: 1.45 * k2, alpha: 1 - 0.3 * knock, spread: 0.12, glowK: weak, fulgor: weak });
     if (raise > 0.6) { const hmr = out[id].hammer; bolt(hmr.clone().add(V(2, 30, -1)), hmr, HEROES.rayo.c, raise); glow(hmr, 3, HEROES.rayo.c, raise); }
     if (mine > 0.5) for (let q = 0; q < 3; q++) glow(out[id].chest.clone().add(V(Math.sin(lt * 9 + q) * 0.4, 0.2 + q * 0.2, Math.cos(lt * 7 + q) * 0.3)), 0.3, HEROES[id].c, Math.sin(lt * 31 + q) > 0.5 ? 1 : 0);
   });
@@ -1200,14 +1331,19 @@ function skirmish(lt, D, P, o = {}) {
         drone(p, d.td, d.ph, 1, g >= 1); if (f < 6) smoke(p.clone().add(V(0, 0.8 + (f % 1.5), 0)), 1.4, 0.35 * (1 - ss(2, 6, f)));
       }
     }
-    if (!knock && lt > d.td - 0.3 && lt < d.td) {
-      // a hero who is down does not shoot: one of the others takes the shot
-      let id = IDS[d.killer];
-      for (let q = 1; q < 3 && outOfFight(id); q++) id = IDS[(d.killer + q) % 3];
-      const k = (lt - (d.td - 0.3)) / 0.3, from = out[id].hand, to = pos(d.td), p = from.clone().lerp(to, k), c = HEROES[id].c;
-      if (id === 'rayo') bolt(out.rayo.hammer, to, c, 1);
-      else if (id === 'guardian') { glow(p, 1 + 2.5 * k, c, 0.9); glow(p, 0.6, [255, 255, 255], 0.8); }
-      else { beam(from, p, 0.14, c, 0.9); glow(p, 1.6, c, 1); }
+    for (const [hb, sh] of [[1.0, 1], [0.5, 2], [0, 0]]) {
+      const te = d.td - hb;
+      if (te - 0.3 < d.spawn + 0.25) continue;
+      if (!knock && lt > te - 0.3 && lt < te) {
+        // a hero who is down does not shoot: one of the others takes the shot
+        let id = IDS[(d.killer + sh) % 3];
+        for (let q = 1; q < 3 && outOfFight(id); q++) id = IDS[(d.killer + sh + q) % 3];
+        const k = (lt - (te - 0.3)) / 0.3, from = out[id].hand, to = pos(te), p = from.clone().lerp(to, k), c = HEROES[id].c;
+        if (id === 'rayo') bolt(out.rayo.hammer, to, c, 1);
+        else if (id === 'guardian') { glow(p, 1 + 2.5 * k, c, 0.9); glow(p, 0.6, [255, 255, 255], 0.8); }
+        else { beam(from, p, 0.14, c, 0.9); glow(p, 1.6, c, 1); }
+      }
+      if (hb > 0 && lt > te && lt < te + 0.3 && lt < d.td) { const q = pos(lt); for (let z = 0; z < 4; z++) glow(q.clone().add(V(Math.sin(lt * 40 + z) * 0.6, Math.cos(lt * 33 + z) * 0.5, Math.sin(z * 2) * 0.5)), 0.6, [255, 220, 150], 1); }
     }
   }
   return out;
@@ -1220,6 +1356,30 @@ const TAGS = [];
 const TAG_EL = [0, 1, 2].map(i => document.getElementById('tag' + i));
 const TAG_NAME = { rayo: 'Thunderbolt', guardian: 'Sky Warrior', sombra: 'Mangar' };
 // ---------- the assault on Malvor's secret base (18 s) ----------
+// ---------- Ceres seen from space: battles flash all over the planet, the heroes streak between them (5 s) ----------
+const CERES_C = V(0, 0, -60), CERES_R = 22;
+{
+  const pm = new THREE.MeshStandardMaterial({ color: 0xc8804c, map: noiseTex(256, 0.55, 1, 3), bumpMap: noiseTex(256, 0.3, 1, 3), bumpScale: 0.6, roughness: 1, emissive: 0x1a0804 });
+  const pl = mesh(new THREE.SphereGeometry(CERES_R, 64, 48), pm, CERES_C.x, CERES_C.y, CERES_C.z, SETS.ceres); pl.rotation.z = 0.3;
+}
+function onCeres(lat, lon, h = 1.01) { return V(Math.cos(lat) * Math.cos(lon), Math.sin(lat), Math.cos(lat) * Math.sin(lon)).multiplyScalar(CERES_R * h).add(CERES_C); }
+function ceresOrbit(a, lt, t) {
+  env({ top: [3, 3, 10], bot: [10, 8, 20], fog: 0.0008, stars: 1, hemi: 0.25, hemiT: [180, 170, 255], sun: 1.5, sunC: [255, 220, 190], sets: ['ceres'], bloom: 1 });
+  sun.position.set(-60, 30, 50);
+  glow(CERES_C, CERES_R * 2.7, [255, 170, 110], 0.28);
+  // explosions of the war, all over the surface
+  for (let i = 0; i < 16; i++) { const st = (i * 0.29) % 4.6, lat = Math.sin(i * 2.3) * 0.9, lon = 0.9 + i * 0.37; boom(onCeres(lat, lon, 1.02), a - st, 1.6, i % 2 ? [255, 150, 60] : [255, 90, 70]); }
+  // the three heroes fly between the fights, leaving trails of light
+  IDS.forEach((id, i) => {
+    const tilt = [-0.5, 0.2, 0.75][i], ph = [0.4, 1.6, 2.8][i], sp = 0.55 + i * 0.07;
+    const pt = k => { const lon = ph + k * sp + a * sp, lat = Math.sin(lon * 1.3 + i) * 0.55 + tilt * 0.4; return onCeres(lat, lon, 1.09); };
+    let prev = pt(-1.2);
+    for (let q = 1; q <= 14; q++) { const k = -1.2 + q * (1.2 / 14), p = pt(k); beam(prev, p, 0.35 * q / 14, HEROES[id].c, 0.75 * q / 14); prev = p; }
+    glow(prev, 3.2, HEROES[id].c, 1); glow(prev, 1.1, [255, 255, 255], 1);
+  });
+  const an = 1.9 + a * 0.06;
+  camera.position.set(CERES_C.x + Math.cos(an) * 58, 14 - a * 1.2, CERES_C.z + Math.sin(an) * 58); camTarget.copy(CERES_C);
+}
 function baseAssault(a, lt, t) {
   env({ top: [16, 6, 22], bot: [110, 40, 46], fog: 0.005, stars: 1, hemi: 0.85, hemiT: [255, 180, 180], hemiB: [60, 30, 40], sun: 1.1, sunC: [255, 190, 170], sets: ['moon'], bloom: 0.95 });
   sun.position.set(30, 60, 60);
@@ -1247,7 +1407,13 @@ function baseAssault(a, lt, t) {
     const sx = -6 + i * 2.4, w = clamp((Math.min(a, kt) - out0) / 3);
     const mp = V(sx * (0.6 + w * 0.4), 0, lerp(-52, -40, w));
     if (a > kt) { boom(mp.clone().add(V(0, 1.3, 0)), a - kt, 2.4, [255, 120, 80]); return; }
-    const mc = poseMalvor(mn, mp, { s: 0.55, t: lt, col: [255, 90, 70], yaw: face(mp) });
+    let stag = 0;
+    for (const [hb, who] of [[0.95, 'guardian'], [0.55, 'sombra']]) {
+      const te = kt - hb;
+      if (a > te - 0.22 && a < te && a > out0 + 0.3) { const from = out[who].hand, k = (a - (te - 0.22)) / 0.22, pp = from.clone().lerp(mp.clone().add(V(0, 1.3, 0)), k); beam(from, pp, 0.12, HEROES[who].c, 0.9); }
+      if (a > te && a < te + 0.3) { stag = 1; glow(mp.clone().add(V(0, 1.3, 0)), 1.2, [255, 220, 150], 1); }
+    }
+    const mc = poseMalvor(mn, mp, { s: 0.55, t: lt, col: [255, 90, 70], yaw: face(mp), hurt: stag });
     if (Math.sin(a * 7 + i * 2) > 0.9) { const tg = out.guardian.chest.clone().add(V((i % 3) - 1, 0, -2.5)); beam(mc, tg, 0.08, RED, 0.8); glow(tg, 1.1, RED, 0.8); }
     if (a > kt - 0.3) { const id = IDS[i % 3], from = id === 'rayo' ? out[id].hammer : out[id].hand;
       if (id === 'rayo') { bolt(from, mc, HEROES.rayo.c, 1); return; }
@@ -1282,6 +1448,21 @@ function baseAssault(a, lt, t) {
     if (a > 12.9 && a < 14.2) { const k = (a - 12.9) / 1.3; ring2.visible = true; ring2.position.set(0, 1, -49); ring2.rotation.set(Math.PI / 2, 0, 0); ring2.scale.setScalar(1 + k * 40); ring2.material.opacity = 1 - k; ring2.material.color.setHex(0xff3b4e); glow(mc, 20 * (1 - k), RED, 0.6); }
   }
   if (a > 12.9 && a < 13.4) { OV.flash.style.background = '#ff3b4e'; ov(OV.flash, 0.45 * (1 - (a - 12.9) / 0.5)); }
+  {
+    const FS = { duna: V(-7, 0, -31.5), glaciar: V(5, 0, -30.5), cometa: V(-1, 0, -25) }, VC = V(-1, 4.5, -21);
+    const lost = ss(13.3, 14.6, a), vort = ss(12.9, 13.4, a) * (1 - ss(14.6, 15.2, a));
+    FIRST3.forEach((fid, j) => {
+      if (lost >= 1) return;
+      const p = FS[fid].clone().add(V(0, lerp(26, 0, land), lerp(18, 0, land))).lerp(VC, lost);
+      const fo = poseHero(FRIENDS[fid], p, { yaw: -Math.atan2(DOOR.z - p.z, DOOR.x - p.x), fly: land < 1 || lost > 0, aR: 1.5, aura: 1, t: lt, s: 1 - lost * 0.85, rot: lost * 7 });
+      if (a > 3 && a < 12.5 && (a + j * 0.3) % 0.75 < 0.18) { const tp = V(-5 + j * 4, 1.5, -44 + (j % 2) * 3); beam(fo.hand, tp, 0.12, HEROES[fid].c, 0.9); boom(tp, ((a + j * 0.3) % 0.75), 1.4, HEROES[fid].c); }
+    });
+    if (vort > 0) {
+      ring.visible = true; ring.position.copy(VC); ring.rotation.set(0, 0, a * 3); ring.scale.setScalar(3.5 * vort); ring.material.opacity = 0.9; ring.material.color.setHex(0xc02060);
+      for (let q = 0; q < 24; q++) { const an = q * 0.5 - a * 6, rr = 3.4 * vort * (1 - q / 30); glow(VC.clone().add(V(Math.cos(an) * rr, Math.sin(an) * rr, 0)), 0.7, q % 2 ? [255, 60, 90] : [160, 40, 255], vort); }
+      glow(VC, 7 * vort, [120, 0, 40], 0.6);
+    }
+  }
   if (up > 0) IDS.forEach(id => { for (let q = 1; q < 6; q++) glow(out[id].chest.clone().add(V(0, -q * 1.4 * up, 0)), 1.8 - q * 0.25, HEROES[id].c, 0.6 * up); });
   camKeys(a, [[0, [14, 10, -4], [0, 5, -45]], [2.6, [-11, 3.5, -16], [0, 2.5, -45]], [6, [10, 4.5, -17], [-1, 2.5, -42]], [9, [-9, 2.6, -19], [3, 3, -40]], [11.8, [7, 3.2, -15], [0, 6, -50]], [14.5, [0, 7, -9], [0, 9, -45]], [18, [0, 13, -4], [0, 22, -40]]]);
 }
@@ -1455,19 +1636,20 @@ const DRAW = [
   },
   function montage(lt, t) {
     // five years of war: four long battles, with a discovery about Malvor between each one
-    const PARTS = [['c', 0], ['b', 0], ['d', 0], ['c', 2], ['b', 2], ['d', 3], ['c', 4], ['b', 4], ['d', 5], ['C', 0], ['A', 0], ['c', 6], ['b', 6]];
-    const LAST = PARTS[PARTS.length - 1], lenOf = pt => pt[0] === 'c' || pt[0] === 'C' ? CARD : pt[0] === 'A' ? 18 : pt[0] === 'd' ? (pt === PARTS[2] ? 16 : 11) : pt === LAST ? 15.5 : 14;
+    const PARTS = [['c', 0], ['P', 0], ['b', 0], ['d', 0], ['c', 2], ['b', 2], ['d', 3], ['c', 4], ['b', 4], ['d', 5], ['C', 0], ['A', 0], ['c', 6], ['b', 6]];
+    const LAST = PARTS[PARTS.length - 1], lenOf = pt => pt[0] === 'c' || pt[0] === 'C' ? CARD : pt[0] === 'A' ? 18 : pt[0] === 'P' ? 5 : pt[0] === 'd' ? (pt === PARTS[3] ? 16 : 11) : pt === LAST ? 23.5 : 22;
     let rest = lt, part = LAST;
     for (const pt of PARTS) { const len = lenOf(pt); if (rest < len) { part = pt; break; } rest -= len; }
     const plen = lenOf(part);
     if (part === LAST && rest > plen) rest = plen;
+    if (part[0] === 'P') { ceresOrbit(rest, lt, t); return ss(4.7, 5, rest); }
     if (part[0] === 'C' || part[0] === 'A') {
       const card = part[0] === 'C';
       baseAssault(card ? 0 : rest, lt, t);
       chapterCard('AÑO 4', 'Ataque a la base secreta', card ? 1 - ss(CARD - 0.6, CARD, rest) : 0);
       return card ? 0 : ss(17.7, 18, rest);
     }
-    const i = part[0] === 'd' ? [1, 3, 5][[2, 5, 8].indexOf(PARTS.indexOf(part))] : part[1];
+    const i = part[0] === 'd' ? [1, 3, 5][[3, 6, 9].indexOf(PARTS.indexOf(part))] : part[1];
     const inCard = part[0] === 'c', sl = inCard ? 0 : rest, cardA = inCard ? 1 - ss(CARD - 0.6, CARD, rest) : 0;
     const bi = [0, 0, 1, 1, 2, 2, 3][i];
     const ground = { rayo: [-8, 0, 1.5], guardian: [-6.5, 0, -0.8], sombra: [-5, 0, 2.2] };
@@ -1532,7 +1714,11 @@ const DRAW = [
         if (sl > 1.5 && sl < 2.3) { const q = (sl - 1.5) / 0.8; ring.visible = true; ring.position.set(ap.x, 0.2, ap.z); ring.rotation.set(Math.PI / 2, 0, 0); ring.scale.setScalar(1 + q * 16); ring.material.opacity = 1 - q; ring.material.color.setRGB(ac2[0] / 255, ac2[1] / 255, ac2[2] / 255); }
         if (bi === 0) HURTS[0].from = acore.clone().add(V(0, 3.1, 0));
       }
-      const outW = skirmish(sl, D_WAR[bi], bi === 2 ? { rayo: [-8, 5, 1.5], guardian: [-6.5, 7.5, -1], sombra: [-5, 3.5, 2.2] } : ground, { fly: bi === 2, wreck: bi === 0, hurtHero: HURTS[bi], overrides, raise: ss(10.4, 10.7, sl) * (1 - ss(11.3, 11.5, sl)) });
+      let p2pts = [], swarmPts = [];
+      const flank = bi === 0 ? 1 - ss(13.2, 14.4, sl) : 0;
+      const FLANK = { rayo: [7, 0, -12, -0.9], sombra: [7, 0, 12, 0.9], guardian: [-8, 0, -0.8, 0] };
+      const groundNow = flank > 0 ? Object.fromEntries(IDS.map(id => [id, ground[id].map((v, k) => lerp(v, FLANK[id][k], flank)).concat([lerp(0, FLANK[id][3], flank)])])) : ground;
+      const outW = skirmish(sl, D_WAR[bi], bi === 2 ? { rayo: [-8, 5, 1.5], guardian: [-6.5, 7.5, -1], sombra: [-5, 3.5, 2.2] } : groundNow, { fly: bi === 2, wreck: bi === 0, hurtHero: HURTS[bi], overrides, raise: Math.max(ss(10.4, 10.7, sl) * (1 - ss(11.3, 11.5, sl)), ss(16.6, 16.9, sl) * (1 - ss(19, 19.3, sl)), ss(20.6, 21, sl)) });
       if (ally) {
         // heavy blasts at the heroes: some hit the shield, others blow up the ground right next to them
         for (let n = 0; n < 5; n++) {
@@ -1551,14 +1737,20 @@ const DRAW = [
       }
       // second part of every battle: Malvor's small soldiers drop in, the heroes answer with a team attack
       if (sl > 8) {
-        const p2 = sl - 8, base = bi === 2 ? 4 : 0, pts = [];
+        const p2 = sl - 8, base = bi === 2 ? 4 : 0, pts = p2pts;
         MINIONS.forEach((mn, i) => {
           const sx = 6 + (i % 3) * 3.2, sz = -4.5 + i * 1.8, kt = 3.4 + i * 0.22;
           const xAt = tt => sx - Math.max(0, tt - 0.8) * 0.6;
           const mp = V(xAt(Math.min(p2, kt)), base + lerp(18, 0, ss(0.2 + i * 0.12, 0.8 + i * 0.12, p2)) + (bi === 2 ? Math.sin(p2 * 2 + i) * 0.4 : 0), sz);
           pts.push(mp.clone().add(V(0, 1.6, 0)));
           if (p2 > kt) { boom(mp.clone().add(V(0, 1.4, 0)), p2 - kt, 2.6, [255, 120, 80]); return; }
-          const mc = poseMalvor(mn, mp, { s: 0.55, t: lt, col: [255, 90, 70] });
+          let stag = 0;
+          for (const [hb, who] of [[1.4, 'sombra'], [0.8, 'guardian']]) {
+            const te = kt - hb;
+            if (p2 > te - 0.25 && p2 < te) { const from = outW[who].hand, k = (p2 - (te - 0.25)) / 0.25, pp = from.clone().lerp(mp.clone().add(V(0, 1.3, 0)), k); beam(from, pp, 0.12, HEROES[who].c, 0.9); glow(pp, 1.4, HEROES[who].c, 1); }
+            if (p2 > te && p2 < te + 0.35) { stag = 1; for (let z = 0; z < 4; z++) glow(mp.clone().add(V(Math.sin(lt * 40 + z) * 0.5, 1.3 + Math.cos(lt * 33 + z) * 0.4, Math.sin(z * 2) * 0.4)), 0.6, [255, 220, 150], 1); }
+          }
+          const mc = poseMalvor(mn, mp, { s: 0.55, t: lt, col: [255, 90, 70], hurt: stag });
           if (p2 > 1 && Math.sin(p2 * 6 + i * 1.7) > 0.93) { const tg = outW.guardian.chest.clone().add(V(3.2, (i % 3) * 0.4 - 0.3, (i % 2) - 0.5)); beam(mc, tg, 0.08, RED, 0.8); glow(tg, 1.2, RED, 0.8); }
           // Thunderbolt calls lightning down on each one
           if (p2 > kt - 0.3 && p2 < kt) { bolt(outW.rayo.hammer, mc, HEROES.rayo.c, 1, 0.2); glow(mc, 4, HEROES.rayo.c, 1); }
@@ -1568,13 +1760,60 @@ const DRAW = [
         if (p2 > 3.1 && p2 < 4.3) { const q = (p2 - 3.1) / 1.2; ring2.visible = true; ring2.position.set(-6.5, base + 0.3, -0.8); ring2.rotation.set(Math.PI / 2, 0, 0); ring2.scale.setScalar(1 + q * 22); ring2.material.opacity = 1 - q; ring2.material.color.setHex(0xa77bff); }
         if (p2 > 2.6 && p2 < 3.4) glow(outW.rayo.hammer, 4 * ss(2.6, 3.3, p2), HEROES.rayo.c, 1);
       }
+      // third part: a whole army closes in; shield, lightning storm, golden tornado, and the shield bursts outward
+      if (sl > 14) {
+        const p3 = sl - 14, base = bi === 2 ? 4 : 0, C0 = V(-6.5, base, 0.3);
+        for (let i = 0; i < 28; i++) {
+          const rr = (i * 0.618) % 1, an = i * 2.4;
+          const st = V(45 + rr * 20, base + 4 + (i % 5) * 3.5, -16 + ((i * 7) % 32));
+          const tg = V(C0.x + 4 + 9 * Math.cos(an * 0.37), base + 2 + (i % 4) * 1.6, C0.z + 9 * Math.sin(an));
+          const kt = i < 12 ? 3 + i * 0.17 : 5 + (i - 12) * 0.1;
+          const k = ss(0.2 + (i % 7) * 0.12, 1.6 + (i % 7) * 0.12, p3);
+          const pos = st.lerp(tg, k).add(V(Math.sin(p3 * 3 + i) * 0.3, Math.cos(p3 * 2.5 + i) * 0.3, 0));
+          if (p3 < kt) {
+            drone(pos, lt, i * 0.7); swarmPts.push(pos);
+            if (k >= 1 && p3 < 6.5 && Math.sin(p3 * 8 + i) > 0.93) laser(pos, C0.clone().add(pos.clone().sub(C0).normalize().multiplyScalar(9)));
+          } else boom(pos, p3 - kt, 2.6, i < 12 ? [150, 230, 255] : [255, 200, 90]);
+          if (i < 12 && p3 > kt - 0.25 && p3 < kt) bolt(pos.clone().add(V(1, 26, 0)), pos, HEROES.rayo.c, 1, 0.2);
+        }
+        const expand = ss(6.5, 7.8, p3);
+        setDome(C0, 9 + expand * 16, 0.6 * ss(1.4, 2, p3) * (1 - expand), lt, 0);
+        if (p3 > 6.5 && p3 < 7.9) { const q = (p3 - 6.5) / 1.4; ring2.visible = true; ring2.position.set(C0.x, base + 0.4, C0.z); ring2.rotation.set(Math.PI / 2, 0, 0); ring2.scale.setScalar(9 + q * 30); ring2.material.opacity = 1 - q; ring2.material.color.setHex(0xc8afff); }
+        if (p3 > 6.5 && p3 < 6.9) { OV.flash.style.background = '#fff'; ov(OV.flash, 0.15 * (1 - (p3 - 6.5) / 0.4)); }
+        if (p3 > 4.9 && p3 < 6.8) {
+          // Mangar spins through the army like a golden tornado
+          const fa = ss(4.9, 5.2, p3) * (1 - ss(6.4, 6.8, p3)); let prev = null;
+          for (let q = 0; q < 46; q++) { const ang = q * 0.36 + p3 * 7, rad = 10 - q * 0.18, pp = V(C0.x + 4 + Math.cos(ang) * rad, base + 1 + q * 0.26, C0.z + Math.sin(ang) * rad); if (prev) beam(prev, pp, 0.28, HEROES.sombra.c, 0.6 * fa); prev = pp; }
+          glow(prev, 3, HEROES.sombra.c, fa);
+        }
+      }
+      // the heroes' new friends fight beside them
+      {
+        const FR = [[['duna', 8.6]], [['duna', 0], ['glaciar', 8.6]], [['duna', 0], ['glaciar', 0], ['cometa', 8.6]], []][bi];
+        const FPOS = { duna: [-3.6, 0, -3.6], glaciar: [-3.2, 0, 3.8], cometa: [-2.2, 0, 0.6] }, base = bi === 2 ? 4 : 0;
+        const GEN = [V(12, base + 3, -2), V(16, base + 5, 2), V(10, base + 2, 3), V(14, base + 4, -4)];
+        const tgts = sl > 14 ? swarmPts : sl > 8 ? p2pts : GEN;
+        FR.forEach(([fid, t0], j) => {
+          if (sl < t0) return;
+          const k = ss(t0, t0 + 0.9, sl), fp = FPOS[fid], c = HEROES[fid].c;
+          let p = V(fp[0], base + (bi === 2 ? j * 1.3 : 0), fp[2]), al = 1;
+          if (t0 > 0 && k < 1) {
+            if (fid === 'duna') { p.y -= 1.9 * (1 - k); for (let q = 0; q < 4; q++) smoke(p.clone().add(V(Math.cos(q * 1.6) * 0.9, 0.4, Math.sin(q * 1.6) * 0.9)), 2.2, 0.5 * (1 - k)); }
+            if (fid === 'glaciar') { al = k; for (let q = 0; q < 8; q++) glow(p.clone().add(V(Math.cos(q) * 0.8, 0.3 + q * 0.25, Math.sin(q) * 0.8)), 0.5, c, 1 - k); }
+            if (fid === 'cometa') { const from = V(-30, 30, 10); p = from.lerp(p, k); beam(V(-30, 30, 10), p, 0.3, c, 0.6 * (1 - k)); }
+          }
+          const o = poseHero(FRIENDS[fid], p, { aR: 1.5, aL: 0.4, aura: 0.9, t: lt, fly: bi === 2 || (fid === 'cometa' && k < 1), alpha: al, spread: 0.15 });
+          if (tgts.length && sl > t0 + 1) { const ph = (sl + j * 0.27) % 0.8; if (ph < 0.2) { const tp = tgts[(Math.floor((sl + j * 0.27) / 0.8) + j) % tgts.length]; beam(o.hand, tp, 0.12, c, 0.9); glow(tp, 1.6, c, 0.9); } }
+        });
+      }
       const cams = [
-        [[0, [-16, 3.2, 14], [6, 3, 0]], [4, [-12, 2.6, 11], [2, 2, 0]], [8, [-15, 3.8, 15], [6, 3, 0]], [9.5, [-15, 4, 15], [8, 3, 0]], [11.3, [-11, 3, 11], [8, 2.5, 0]], [14, [-17, 6, 16], [10, 8, 0]]],
+        [[0, [-18, 8, 3], [10, 2, 0]], [4, [-14, 5, 10], [4, 2, 0]], [8, [-18, 8, -2], [10, 2, 0]], [9.5, [-17, 9, 5], [9, 2, 0]], [11.3, [-6, 6, 19], [8, 2, 0]], [14, [-17, 6, 16], [10, 8, 0]]],
         [[0, [-6, 2.2, 16], [4, 3, 0]], [3, [-8, 2, 11], [-4, 1.5, 1]], [8, [-3, 2.6, 16], [4, 3, 0]], [9.5, [-15, 4, 15], [7, 3, 0]], [11.3, [-11, 3, 11], [8, 2.5, 0]], [14, [-17, 6, 16], [10, 8, 0]]],
         [[0, [-19, 9, 12], [6, 6, 0]], [2.6, [-17, 7, 13], [-7, 4, 1]], [4.4, [-16, -3, 12], [-11, -6.5, 3]], [5.8, [-13, 4, 11], [-7, 5, 1]], [8, [-12, 6, 9], [50, 8, -88]], [9.5, [-14, 8, 13], [5, 6, 0]], [11.3, [-10, 6, 10], [7, 5, 0]], [14, [-16, 9, 15], [6, 6, 0]]],
         [[0, [-14, 6, 13], [5, 2, 0]], [4, [-12, 3, 10], [-2, 1.5, 0]], [8, [-11, 5, 14], [5, 2, 0]], [9.5, [-15, 4, 15], [7, 3, 0]], [11.3, [-11, 3, 11], [8, 2.5, 0]], [15.5, [-17, 6, 16], [8, 6, 0]]]
       ];
       camKeys(sl, cams[bi]);
+      if (sl > 14) { const p3 = sl - 14, base = bi === 2 ? 4 : 0, an = 1.25 + p3 * 0.21; camera.position.set(-6.5 + Math.cos(an) * 17, base + 5 + Math.sin(p3 * 0.5) * 1.5, 0.3 + Math.sin(an) * 17); camTarget.set(-3.5, base + 3, 0.3); }
       const labels = [['AÑO 2', 'Desiertos de Ceres'], ['AÑO 3', 'Lunas de hielo de Tauro'], ['AÑO 4', 'Cinturón de asteroides'], ['AÑO 5', 'De vuelta en Valdoria']];
       const wars = ['La guerra de Ceres', 'La guerra de las lunas de hielo', 'La guerra de los asteroides', 'La guerra de Valdoria'];
       chapterCard(labels[bi][0], wars[bi], cardA);
@@ -1700,6 +1939,7 @@ const DRAW = [
     camKeys(lt, [[0, [-2.5, 42.6, 18.5], [0, 41.8, 10]], [10, [2.5, 42.2, 17], [0, 41.8, 10]]]);
   },
   function finale(lt, t) {
+    { const b0 = Math.max(0, lt - CARD); if (b0 < 22) { armyPhase(b0, t); chapterCard('AÑO 5', 'La batalla final', 1 - ss(CARD - 0.6, CARD, lt)); return b0 > 21.65 ? ss(21.65, 22, b0) : 0; } lt -= 22; }
     const cardA = 1 - ss(CARD - 0.6, CARD, lt); lt = Math.max(0, lt - CARD);
     env({ top: [20, 4, 14], bot: [110, 30, 38], fog: 0.009, stars: 0.4, hemi: 0.45, hemiT: [255, 150, 160], sun: 0.45, sunC: [255, 170, 160], sets: ['city'], bloom: 1.05 });
     cityState(t, { lights: 0, ruined: true, fire: 0.6 });
@@ -1740,6 +1980,22 @@ const DRAW = [
     } else so = poseHero(H.sombra, V(-7, 0, 1.5), { aR: 1.4, aura: 1, t: lt, alpha: lt < 4 ? 1 : ss(8, 8.3, lt) });
     setDome(V(DOME.x, DOME.y, DOME.z), DOME.R, ss(0.3, 1, lt) * (1 - ss(8.5, 9.2, lt)), lt, stress);
     const ball = ro.hammer.clone().add(V(0.3, 0.1, 0));
+    {
+      const portal = 0, PC = V(-18, 3.4, 3);
+      if (portal > 0) {
+        ring.visible = true; ring.position.copy(PC); ring.rotation.set(0, 1.0, lt * 2); ring.scale.setScalar(3.4 * portal); ring.material.opacity = 0.95; ring.material.color.setHex(0x7fe8ff);
+        for (let q = 0; q < 26; q++) { const an = q * 0.45 + lt * 5, rr = 3.2 * portal * (1 - q / 32); glow(PC.clone().add(V(Math.cos(an) * rr * 0.55, Math.sin(an) * rr, Math.cos(an) * rr * 0.84)), 0.7, [140, 230, 255], portal); }
+        glow(PC, 9 * portal, [120, 220, 255], 0.55);
+      }
+      const FSPOT = { duna: V(-13.5, 0, 4.2), glaciar: V(-14.5, 0, -2.8), cometa: V(-16, 0, 1), aurora: V(-12.5, 0, 6.5), titan: V(-15.5, 0, -5) };
+      Object.keys(FRIENDS).forEach((fid, j) => {
+        const k = 1;
+        const p = PC.clone().lerp(FSPOT[fid], k); p.y = lerp(PC.y - 1.6, 0, k);
+        const fo = poseHero(FRIENDS[fid], p, { aR: 1.5, aL: 0.4, aura: 1, t: lt, fly: k < 1, s: lerp(0.4, 1, k), spread: 0.15 });
+        if (lt > 5.3 && lt < 8 && (lt + j * 0.3) % 0.7 < 0.18) { const live = WAVE2.filter(w => lt < w.kill); if (live.length) { const w = live[(j + Math.floor(lt / 0.7)) % live.length], tp = V(w.x, w.y, w.z); beam(fo.hand, tp, 0.12, HEROES[fid].c, 0.9); glow(tp, 1.5, HEROES[fid].c, 0.9); } }
+        if (charge > 0 && lt < 11.6) beam(fo.chest, ball, 0.07, HEROES[fid].c, charge);
+      });
+    }
     if (charge > 0 && lt < 13.6) {
       if (lt < 11.6) { beam(go.chest, ball, 0.08, HEROES.guardian.c, charge); beam(so.chest, ball, 0.08, HEROES.sombra.c, charge * ss(8.3, 9, lt)); }
       glow(ball, 1 + 4 * charge, HEROES.rayo.c, 0.9); glow(ball, 0.5 + 1.5 * charge, [255, 255, 255], 1);
@@ -1800,7 +2056,9 @@ draw = function (t) {
   const idx = t >= DUR ? SCENES.length - 1 : si;
   const sc = SCENES[idx], lt = t - sc.a, len = sc.b - sc.a;
   POOLS.forEach(p => p.reset()); gpN = 0;
-  [H.rayo, H.guardian, H.sombra, ...GHOSTS].forEach(h => h.g.visible = false);
+  [H.rayo, H.guardian, H.sombra, ...GHOSTS, ...Object.values(FRIENDS)].forEach(h => h.g.visible = false);
+  for (const m of [ARMY.enemy, ARMY.eyes, ARMY.cit, ARMY.dr, ARMY.drr, ...PORTALS]) m.visible = false;
+  DRAGONS.forEach(d => { d.g.visible = false; });
   [MALVOR, MALHOLO, KROG, VEXA, ...MINIONS].forEach(m => m.g.visible = false);
   [SHIP, SHIPHOLO].forEach(s => s.g.visible = false);
   hurtRock.visible = hurtShard.visible = false; CHIP.visible = false; SCIENTIST.visible = false; BIGROCK.visible = REDMOON.visible = false;
@@ -1854,6 +2112,10 @@ const SPEAKERS = {
   rayo: { n: 'Thunderbolt', c: '#4fe3ff', pitch: 1, rate: 1, shared: 1.04, slot: 1 },
   guardian: { n: 'Sky Warrior', c: '#a77bff', pitch: 1, rate: 1, shared: 0.93, slot: 2 },
   sombra: { n: 'Mangar', c: '#ffb547', pitch: 1, rate: 1, shared: 1.09, slot: 3 },
+  duna: { n: 'Duna', c: '#ff9a4a', pitch: 1.05, rate: 1, slot: 4 },
+  glaciar: { n: 'Glaciar', c: '#9fe6ff', pitch: 0.94, rate: 1, slot: 4 },
+  cometa: { n: 'Cometa', c: '#6eff8c', pitch: 1.1, rate: 1.05, slot: 4 },
+  aliados: { n: 'Guerreros de Ceres, del hielo y de los asteroides', c: '#ffd9a0', pitch: 1.05, rate: 1.05, slot: 4 },
   gente: { n: 'La gente', c: '#e8ecf4', pitch: 1.1, rate: 1.08, slot: 4 },
   todos: { n: 'Los tres', c: '#ffffff', pitch: 1, rate: 1, shared: 1.04, slot: 1 },
   malvor: { n: 'Malvor', c: '#ff3b4e', pitch: 0.1, rate: 0.85, slot: 0, robot: true }
@@ -2080,6 +2342,62 @@ const SUBS = [
     SFX.push({ t: P + 8.5, k: 'rumble' }, { t: P + 9, k: 'boom' }, { t: P + 9.6, k: 'whoosh' });
     SHAKES.push([P + 8.6, 1.4, 0.15]);
   }
+  // Ceres from space goes in between the Año 2 card and the battle (5 s)
+  {
+    const P = 98.9;
+    SUBS.forEach(l => { if (l[0] >= P) { l[0] += 5; l[1] += 5; } });
+    SFX.forEach(e => { if (e.t >= P) e.t += 5; });
+    SHAKES.forEach(x => { if (x[0] >= P) x[0] += 5; });
+    SUBS.push([P + 0.2, P + 4.7, 'narrador', 'En Ceres pelearon en todos los rincones del planeta.']);
+    for (const d of [0.6, 1.5, 2.4, 3.3, 4.1]) SFX.push({ t: P + d, k: 'boom' });
+    SFX.push({ t: P + 0.3, k: 'whoosh' });
+  }
+  // every war battle gets an 8 s third, epic part
+  [231.8, 180.1, 151.5, 117.9].forEach(P => {
+    SUBS.forEach(l => { if (l[0] >= P) { l[0] += 8; l[1] += 8; } });
+    SFX.forEach(e => { if (e.t >= P) e.t += 8; });
+    SHAKES.forEach(x => { if (x[0] >= P) x[0] += 8; });
+  });
+  {
+    const war = SCENES.find(x => x.name === 'Cinco años de guerra').a, st = {};
+    let x = war; for (const [k, len] of [['c0', CARD], ['P', 5], ['b0', 22], ['d0', 16], ['c1', CARD], ['b1', 22], ['d1', 11], ['c2', CARD], ['b2', 22], ['d2', 11], ['C', CARD], ['A', 18], ['c3', CARD], ['b3', 23.5]]) { st[k] = x; x += len; }
+    const L3 = [
+      [[14.3, 15.9, 'guardian', '¡Es un ejército entero!'], [16.6, 18.2, 'rayo', '¡Rayos, vengan a mí!'], [18.8, 20.3, 'sombra', '¡Ahora es mi turno!']],
+      [[14.3, 15.6, 'sombra', '¡Son cientos!'], [16.6, 18.2, 'rayo', '¡Rayos, vengan a mí!'], [20.4, 21.8, 'guardian', '¡Escudo, al máximo!']],
+      [[14.3, 15.9, 'guardian', '¡No se rindan!'], [16.6, 18.2, 'rayo', '¡Rayos, vengan a mí!'], [18.8, 20.3, 'sombra', '¡Ahora es mi turno!']],
+      [[15.6, 17, 'rayo', '¡Por Valdoria!'], [17.2, 18.6, 'rayo', '¡Rayos, vengan a mí!'], [18.9, 20.3, 'sombra', '¡Ahora es mi turno!']]
+    ];
+    ['b0', 'b1', 'b2', 'b3'].forEach((bk, i) => {
+      const b = st[bk];
+      L3[i].forEach(([a0, a1, who, txt]) => SUBS.push([b + a0, b + a1, who, txt]));
+      SFX.push({ t: b + 14.3, k: 'rumble' }, { t: b + 15.5, k: 'pew' }, { t: b + 16, k: 'pew' }, { t: b + 16.7, k: 'beam' }, { t: b + 18.9, k: 'whoosh' }, { t: b + 20.5, k: 'big' });
+      for (let q = 0; q < 12; q++) SFX.push({ t: b + 17 + q * 0.17, k: 'boom' });
+      SHAKES.push([b + 17, 2, 0.2], [b + 20.5, 1.2, 0.7]);
+    });
+    SUBS.push([st.b0 + 9.2, st.b0 + 11, 'duna', '¡Soy Duna! ¡Los voy a ayudar!'], [st.b1 + 9.2, st.b1 + 11, 'glaciar', '¡Soy Glaciar! ¡Cuenten conmigo!'], [st.b2 + 9.2, st.b2 + 11, 'cometa', '¡Soy Cometa! ¡Vamos juntos!']);
+    SUBS.push([st.A + 13.6, st.A + 15.2, 'sombra', '¡No! ¡Se llevó a nuestros amigos!']);
+    SFX.push({ t: st.A + 12.95, k: 'whoosh' }, { t: st.A + 13.4, k: 'rumble' });
+    const B = SCENES.find(x2 => x2.name === 'Batalla final').a + CARD;
+    SUBS.push([B + 5.2, B + 7.6, 'duna', '¡Volvimos por el portal! ¡Estamos con ustedes!']);
+    SFX.push({ t: B + 3.9, k: 'whoosh' }, { t: B + 4.1, k: 'rumble' });
+    const en = SUBS.find(l => l[3] === '¡Energía de los tres... ahora!'); if (en) en[3] = '¡Energía de todos... ahora!';
+  }
+  // the final war begins with the two great armies (22 s)
+  {
+    const B = SCENES.find(x => x.name === 'Batalla final').a + CARD;
+    SUBS.forEach(l => { if (l[0] >= B) { l[0] += 22; l[1] += 22; } });
+    SFX.forEach(e => { if (e.t >= B) e.t += 22; });
+    SHAKES.forEach(x => { if (x[0] >= B) x[0] += 22; });
+    place('¡Ejército, destrúyanlos!', B + 0.4, 2);
+    place('¡El escudo se rompe! ¡No aguanto más!', B + 11.6, 2.6);
+    place('¡Volvimos por el portal! ¡Estamos con ustedes!', B + 16.4, 3);
+    const ag = SUBS.find(l => l[3] === '¡Aguantá, Sky Warrior! ¡Ahí voy!'); if (ag) ag[3] = '¡Abran paso, que ahí voy!';
+    SUBS.push([B + 3, B + 6.8, 'narrador', 'Malvor reunió un ejército de mil soldados y miles de drones.'], [B + 7.3, B + 10.8, 'rayo', '¡Somos solo tres... pero no nos vamos a rendir!'], [B + 14.1, B + 16.3, 'narrador', 'Entonces se abrieron portales, y llegaron todos los que los habían ayudado.'], [B + 19.6, B + 21.4, 'aliados', '¡Por la Guardia de Valdoria!']);
+    SFX.push({ t: B + 0.6, k: 'rumble' }, { t: B + 6.1, k: 'rumble' }, { t: B + 6.4, k: 'beam' }, { t: B + 14.1, k: 'whoosh' }, { t: B + 14.4, k: 'whoosh' }, { t: B + 14.7, k: 'whoosh' }, { t: B + 16.4, k: 'rumble' }, { t: B + 17.2, k: 'beam' });
+    for (let q = 0; q < 10; q++) SFX.push({ t: B + 7 + q * 0.7, k: q % 2 ? 'pew' : 'boom' });
+    for (let q = 0; q < 12; q++) SFX.push({ t: B + 17.6 + q * 0.35, k: 'boom' });
+    SHAKES.push([B + 6.1, 7, 0.08], [B + 17.6, 4.4, 0.3]);
+  }
   SUBS.sort((a, b) => a[0] - b[0]);
 }
 // ---------- playback ----------
@@ -2088,13 +2406,13 @@ const SUBS = [
 const CARD_WINDOWS = (() => {
   const w = [], war = SCENES.find(s => s.name === 'Cinco años de guerra');
   ['Año 1', 'Batalla final'].forEach(n => { const a = SCENES.find(s => s.name === n).a; w.push([a, a + CARD]); });
-  let x = war.a; for (const len of [CARD, 14, 16, CARD, 14, 11, CARD, 14, 11, CARD, 18, CARD]) { if (len === CARD) w.push([x, x + CARD]); x += len; }
+  let x = war.a; for (const len of [CARD, 5, 22, 16, CARD, 22, 11, CARD, 22, 11, CARD, 18, CARD]) { if (len === CARD) w.push([x, x + CARD]); x += len; }
   return w;
 })();
 const HOLDS = (() => {
   const b = SCENES.slice(1).map(s => s.a);
   const war = SCENES.find(s => s.name === 'Cinco años de guerra');
-  let x = war.a; for (const len of [CARD, 14, 16, CARD, 14, 11, CARD, 14, 11, CARD, 18, CARD]) { x += len; b.push(x); }
+  let x = war.a; for (const len of [CARD, 5, 22, 16, CARD, 22, 11, CARD, 22, 11, CARD, 18, CARD]) { x += len; b.push(x); }
   ['Año 1', 'Batalla final'].forEach(n => b.push(SCENES.find(s => s.name === n).a + CARD));
   return b.map(v => v - 0.45).sort((p, q) => p - q);
 })();
