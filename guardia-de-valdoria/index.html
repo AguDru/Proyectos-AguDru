@@ -104,7 +104,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · 5 min 51 s</div>
+    <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · 6 min 18 s</div>
     <h1>La Guardia de <span>Valdoria</span></h1>
     <p class="logline">Año 2187. Malvor invade la ciudad de Valdoria con un ejército de drones. Thunderbolt, Sky Warrior y Mangar pelean contra él durante cinco años y cien batallas. Más de una vez están a punto de perder a uno de los suyos, hasta que descubren cómo derrotarlo.</p>
   </header>
@@ -131,7 +131,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
       <button class="btn" id="play">Reproducir</button>
       <button class="btn" id="restart">Desde el inicio</button>
       <input type="range" id="scrub" min="0" max="351.4" step="0.01" value="0" aria-label="Posición en la película">
-      <span class="time" id="time">0:00 / 5:51</span>
+      <span class="time" id="time">0:00 / 6:18</span>
       <button class="btn" id="sound" aria-pressed="true">Sonido: encendido</button>
     </div>
   </section>
@@ -165,7 +165,8 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 <script>
 (() => {
-const DUR = 351.4;
+const DUR = 378.4;
+const WALK_LEN = 9;
 const CARD = 3.6; // seconds a black year card stays on screen while the battle waits
 const cv = document.getElementById('film');
 const subsEl = document.getElementById('subs'), scrub = document.getElementById('scrub');
@@ -789,12 +790,12 @@ function armyPhase(lt, t) {
   env({ top: [20, 4, 14], bot: [110, 30, 38], fog: 0.0042, stars: 0.4, hemi: 0.5, hemiT: [255, 150, 160], sun: 0.55, sunC: [255, 170, 160], sets: ['city'], bloom: 1.0 });
   cityState(t, { lights: 0, ruined: true, fire: 0.6, oz: OUTSKIRTS });
   const Mx = new THREE.Matrix4(), P = new THREE.Vector3(), S1 = new THREE.Vector3(1, 1, 1), Qy = new THREE.Quaternion().setFromAxisAngle(UP, Math.PI), Q0 = new THREE.Quaternion(), Z = new THREE.Matrix4().makeScale(0, 0, 0);
-  const march = ss(6, 13, lt), frontX = 24 - march * 14;
+  const march = ss(4, 10, lt), frontX = 24 - march * 14;
   // Malvor's army: rows fall to the heroes first, then to the friends and the dragons
   for (let i = 0; i < 1000; i++) {
     const row = Math.floor(i / 40), col = i % 40;
     const x = 24 + row * 1.7 + (hash(i, 1, 2) - 0.5) * 0.6 - march * 14, z = -14 + col * 0.82 + (hash(i, 3, 4) - 0.5) * 0.4;
-    const die = row < 4 ? 7.7 + hash(i, 5, 6) * 1.4 : row < 15 ? 20.2 + hash(i, 7, 8) * 7.5 : 1e9;
+    const die = row < 4 ? 8.9 + hash(i, 5, 6) * 1.1 : row < 15 ? 22 + hash(i, 7, 8) * 5.8 : 1e9;
     if (lt > die) { ARMY.enemy.setMatrixAt(i, Z); ARMY.eyes.setMatrixAt(i, Z); if (i % 7 === 0 && lt - die < 1.1) boom(V(x, 1.2, z), lt - die, 1.6); continue; }
     const by = march > 0 && march < 1 ? Math.abs(Math.sin(lt * 9 + i)) * 0.12 : 0;
     Mx.compose(P.set(x, by, z), Qy, S1); ARMY.enemy.setMatrixAt(i, Mx);
@@ -820,41 +821,48 @@ function armyPhase(lt, t) {
   const HP = { rayo: V(-11, 0, 1), guardian: V(-9, 0, -1), sombra: V(-7, 0, 1.5) }, out = {};
   const beaten = ss(12.8, 13.6, lt) * (1 - ss(17.6, 18.4, lt));
   const raise = Math.max(ss(6, 6.3, lt) * (1 - ss(6.9, 7.2, lt)), ss(18.4, 18.7, lt) * (1 - ss(19.4, 19.7, lt)));
-  // they don't shoot from far away: they run into the soldiers and fight up close, spread along the front
-  const front2 = 15 + 3 * ss(20.5, 27.5, lt);
-  const SPOT1 = { rayo: V(0, 0, -7), guardian: V(0, 0, 0.5), sombra: V(0, 0, 7.5) };
-  const SPOT2 = { rayo: V(0, 0, -9), guardian: V(0, 0, 1), sombra: V(0, 0, 8) };
-  const meleeAt = (id, i) => {
-    if (lt > 6.6 && lt < 9.5) { // first clash, then back under Sky Warrior's shield
-      const fp = V(frontX - 1.1, 0, SPOT1[id].z + Math.sin(lt * 1.3 + i) * 1.2);
-      if (lt < 7.5) return { pos: HP[id].clone().lerp(fp, ss(6.6, 7.5, lt)), walk: lt * 10 + i };
-      if (lt < 8.9) return { pos: fp, fight: lt - 7.5 + i * 0.3 };
-      return { pos: fp.lerp(HP[id], ss(8.9, 9.5, lt)), walk: lt * 10 + i };
-    }
-    if (lt > 19.5) { // second clash, together with the friends
-      let fp = V(front2 - 1.1, 0, SPOT2[id].z + Math.sin(lt * 0.7 + i * 2) * 2.2);
-      if (id === 'rayo' && lt > 22.8 && lt < 25.6) fp = KP.clone().add(V(-1.3, 0, 1.2)).setY(0);
-      if (id === 'sombra' && lt > 25.6 && lt < 27.5) fp = VP.clone().add(V(-1.3, 0, -1)).setY(0);
-      if (lt < 20.4) return { pos: HP[id].clone().lerp(fp, ss(19.5, 20.4, lt)), walk: lt * 10 + i };
-      return { pos: fp, fight: lt - 20.4 + i * 0.3 };
-    }
-    return null;
+  // they run to the front (never jump) and fight it from close by with their powers, spread along the line
+  const front2 = 15 + 3 * ss(22, 27.5, lt);
+  const STAND = { rayo: 2.6, guardian: 3.2, sombra: 1.4 };
+  const Z1 = { rayo: -6, guardian: 0.5, sombra: 7 }, Z2 = { rayo: -9, guardian: 1, sombra: 8 };
+  const kb = ss(22.8, 23.6, lt) * (1 - ss(25.6, 26.3, lt)), vb = ss(25.2, 25.9, lt) * (1 - ss(27.4, 28, lt));
+  const spotAt = (id, i, tt) => {
+    if (tt < 15) return V(frontX - STAND[id], 0, Z1[id]);
+    let p = V(front2 - STAND[id], 0, Z2[id] + Math.sin(tt * 0.7 + i * 2) * 2.2);
+    if (id === 'rayo') p.lerp(V(KP.x - 2.8, 0, KP.z + 1), kb);
+    if (id === 'sombra') p.lerp(V(VP.x - 1.6, 0, VP.z), vb);
+    return p;
   };
+  const RUN = [[7.0, 9.0, 10.0, 11.6], [19.6, 21.8, 99, 99]];
+  const SORB = 0.6;
   IDS.forEach((id, i) => {
-    const m = meleeAt(id, i);
-    if (m) {
-      const sw = m.fight !== undefined ? meleeSwing(id, m.fight) : { aR: 0.7, aL: 0.4 };
-      out[id] = poseHero(H[id], m.pos, { aR: sw.aR, aL: sw.aL, walk: m.walk, aura: 1, t: lt, spread: m.fight !== undefined ? 0.3 : 0.15 });
-      if (m.fight !== undefined && Math.sin(lt * 11 + i * 2) > 0.7) { const hp = out[id].hand; glow(hp, 1.5, HEROES[id].c, 1); glow(hp, 0.6, [255, 255, 255], 1); for (let z = 0; z < 3; z++) glow(hp.clone().add(V(0.3 + Math.sin(lt * 40 + z) * 0.4, Math.cos(lt * 30 + z) * 0.4, 0)), 0.4, [255, 220, 160], 1); }
+    const R = lt < 15 ? RUN[0] : RUN[1], spot = spotAt(id, i, lt);
+    let ovr = null, f = -1;
+    if (lt > R[0] && lt < R[3]) {
+      if (lt < R[1]) { const k = ss(R[0], R[1], lt); ovr = { pos: HP[id].clone().lerp(spot, k), yaw: faceYaw(HP[id], spot), walk: lt * 11 + i }; }
+      else if (lt < R[2]) {
+        f = lt - R[1];
+        const c = spot.clone().add(V(1.4, 0, 0));
+        ovr = id === 'sombra' ? { pos: orbitAt(c, f * SORB, 1.4, 0), yaw: orbitYaw(f * SORB), walk: lt * 16 } : { pos: spot, yaw: 0 };
+      } else { const k = ss(R[2], R[3], lt); ovr = { pos: spot.clone().lerp(HP[id], k), yaw: faceYaw(spot, HP[id]), walk: lt * 11 + i }; }
+    }
+    if (ovr) {
+      const pw = f >= 0 ? powerPose(id, f) : { aR: 0.7, aL: 0.4 };
+      out[id] = poseHero(H[id], ovr.pos, { yaw: ovr.yaw, aR: pw.aR, aL: pw.aL, walk: ovr.walk, aura: 1, t: lt, spread: f >= 0 ? 0.3 : 0.15 });
+      if (id === 'sombra' && (f >= 0 || ovr.walk)) glow(out[id].chest, 3, HEROES.sombra.c, 0.7);
+      if (f >= 0) {
+        let tgt = V(spot.x + STAND[id] + 0.4, 1.4, spot.z);
+        if (id === 'rayo' && kb > 0.5) tgt = kc; if (id === 'sombra' && vb > 0.5) tgt = vc;
+        const c = spot.clone().add(V(1.4, 0, 0));
+        powerFx(id, out[id], tgt, f, 1, ff => orbitAt(c, Math.max(0, ff) * SORB, 1.4, 0));
+      }
       return;
     }
-    out[id] = poseHero(H[id], HP[id].clone().add(V(0, -0.35 * beaten, 0)), { aR: id === 'rayo' ? lerp(lerp(1.5, 2.95, raise), 0.3, beaten) : lerp(1.5, 0.3, beaten), aL: id === 'guardian' && lt > 9.5 && lt < 13 ? 2.6 : 0.4, aura: 1 - 0.6 * beaten, glowK: 1 - 0.6 * beaten, rot: 0.25 * beaten, t: lt, spread: 0.18 + 0.3 * beaten });
+    out[id] = poseHero(H[id], HP[id].clone().add(V(0, -0.35 * beaten, 0)), { aR: id === 'rayo' ? lerp(lerp(1.5, 2.95, raise), 0.3, beaten) : lerp(1.5, 0.3, beaten), aL: id === 'guardian' && lt > 11.4 && lt < 13 ? 2.6 : 0.4, aura: 1 - 0.6 * beaten, glowK: 1 - 0.6 * beaten, rot: 0.25 * beaten, t: lt, spread: 0.18 + 0.3 * beaten });
   });
   if (raise > 0.6) bolt(out.rayo.hammer.clone().add(V(2, 30, -1)), out.rayo.hammer, HEROES.rayo.c, raise);
-  // Thunderbolt's hammer still calls lightning down on the soldiers right next to him
-  if (((lt > 7.5 && lt < 8.9) || lt > 20.4) && lt % 0.9 < 0.15) { const tp = out.rayo.hammer.clone().add(V(1.6, -0.6, Math.sin(Math.floor(lt / 0.9)) * 1.5)); bolt(tp.clone().add(V(1, 28, 0)), tp, HEROES.rayo.c, 1); boom(tp, (lt % 0.9) * 3, 2.2, [170, 210, 255]); }
-  setDome(V(-9, 0, 0), 7, ss(9.5, 10.1, lt) * (1 - ss(13.2, 13.8, lt)), lt, ss(11.4, 12.4, lt));
-  if (lt > 9 && lt < 17.6 && Math.sin(lt * 11) > 0.6) { const z = -6 + hash(Math.floor(lt * 6), 4, 4) * 12; laser(V(frontX, 1.6, z), V(-9 + (lt < 13.4 ? 6.5 : 1), 1.4 + hash(Math.floor(lt * 6), 6, 1) * 2, z * 0.3)); }
+  setDome(V(-9, 0, 0), 7, ss(11.4, 11.9, lt) * (1 - ss(13.2, 13.8, lt)), lt, ss(11.6, 12.4, lt));
+  if (lt > 11.6 && lt < 17.6 && Math.sin(lt * 11) > 0.6) { const z = -6 + hash(Math.floor(lt * 6), 4, 4) * 12; laser(V(frontX, 1.6, z), V(-9 + (lt < 13.4 ? 6.5 : 1), 1.4 + hash(Math.floor(lt * 6), 6, 1) * 2, z * 0.3)); }
   // the message: a hologram of their friends appears in front of them
   const msg = ss(14.8, 15.3, lt) * (1 - ss(17.3, 17.7, lt));
   if (msg > 0) {
@@ -877,14 +885,14 @@ function armyPhase(lt, t) {
   const FSP = { duna: V(-13, 0, 5.5), glaciar: V(-5, 0, 9), cometa: V(-14, 0, -4) };
   const gDown = ss(23.4, 24, lt);
   FIRST3.forEach((fid, j) => {
-    const k = ss(18.1 + j * 0.25, 20.9 + j * 0.25, lt); if (k <= 0) return;
-    let tgt = V(front2 - 1.1, 0, FSP[fid].z * 0.9 + Math.sin(lt * 0.8 + j * 3) * 2);
-    if (fid === 'duna' && lt > 22.8 && lt < 25.6) tgt = KP.clone().add(V(-1.2, 0, -1.3)).setY(0);
+    const k = ss(18.1 + j * 0.25, 22.6 + j * 0.25, lt); if (k <= 0) return;
+    const db = fid === 'duna' ? ss(22.8, 23.6, lt) * (1 - ss(25.6, 26.3, lt)) : 0;
+    const tgt = V(front2 - 3, 0, FSP[fid].z * 0.9 + Math.sin(lt * 0.8 + j * 3) * 2).lerp(KP.clone().add(V(-3, 0, -1.5)).setY(0), db);
     const down = fid === 'glaciar' ? gDown : 0;
-    const p = down > 0 ? V(front2 - 1.1 - down * 1.5, 0, FSP[fid].z * 0.9) : PP[j].clone().setY(0).lerp(tgt, k);
-    const sw = meleeSwing('x', lt + j);
-    const fo = poseHero(FRIENDS[fid], p, { aR: k < 1 ? 0.7 : lerp(sw.aR, 0.3, down), aL: k < 1 ? 0.4 : lerp(sw.aL, 0.3, down), aura: 1 - down, glowK: 1 - 0.75 * down, rot: 1.45 * down, t: lt, walk: k < 1 ? lt * 9 + j : undefined, spread: k < 1 ? 0.15 : 0.3 });
-    if (k >= 1 && down < 0.2 && Math.sin(lt * 11 + j * 1.7) > 0.7) { const hp = fo.hand; glow(hp, 1.5, HEROES[fid].c, 1); glow(hp, 0.6, [255, 255, 255], 1); }
+    const p = PP[j].clone().setY(0).lerp(tgt, k).add(V(-1.5 * down, 0, 0));
+    const fo = poseHero(FRIENDS[fid], p, { yaw: k < 1 ? faceYaw(PP[j], tgt) : 0, aR: k < 1 ? 0.7 : lerp(1.55, 0.3, down), aL: 0.4, aura: 1 - down, glowK: 1 - 0.75 * down, rot: 1.45 * down, t: lt, walk: k < 1 ? lt * 10 + j : undefined, spread: 0.15 });
+    // each friend uses their own power from close by: sand, ice and comet light
+    if (k >= 1 && down < 0.2 && Math.sin(lt * 7 + j * 2) > 0) { const tp = db > 0.5 ? kc : V(p.x + 3.4, 1.4, p.z); beam(fo.hand, tp, 0.12, HEROES[fid].c, 0.9); glow(tp, 1.6, HEROES[fid].c, 1); }
     if (fid === 'glaciar' && lt > 23.1 && lt < 23.5) { beam(vc, fo.chest, 0.35, [208, 64, 255], 1); }
     if (fid === 'glaciar') boom(fo.chest, lt - 23.5, 2.4, [210, 90, 255]);
   });
@@ -905,7 +913,7 @@ function armyPhase(lt, t) {
   });
   // everyone fights everyone in the middle
   if (lt > 20.4) for (let q = 0; q < 6; q++) { const h1 = hash(Math.floor(lt * 5), q, 7), z = -12 + h1 * 26, hp = V(front2 - 1 + (h1 - 0.5) * 2, 1 + h1 * 1.2, z); if (Math.sin(lt * 13 + q * 2.1) > 0.5) { glow(hp, 1.4, [255, 200, 140], 0.9); glow(hp, 0.5, [255, 255, 255], 1); } }
-  camKeys(lt, [[0, [-34, 24, 52], [18, 2, 4]], [5.5, [-24, 7, 24], [10, 2, 2]], [9.5, [-15, 3, 13], [4, 2, 0]], [12.8, [-14, 2, 9], [-9, 1.3, 0]], [14.8, [-1.5, 2.4, 6.5], [-8, 1.9, 0]], [17.4, [-2, 2.6, 7], [-8, 2, 0]], [18, [-55, 18, 32], [-30, 8, 2]], [20.5, [-20, 22, 46], [8, 6, -2]], [23, [-6, 9, 20], [16, 1, -4]], [25, [-8, 11, 24], [16, 2, -2]], [28, [-14, 12, 30], [12, 5, -6]]]);
+  camKeys(lt, [[0, [-34, 24, 52], [18, 2, 4]], [5.5, [-24, 7, 24], [10, 2, 2]], [9, [-2, 4, 15], [11, 2, 0]], [10.6, [-12, 3, 13], [-2, 2, 0]], [12.8, [-14, 2, 9], [-9, 1.3, 0]], [14.8, [-1.5, 2.4, 6.5], [-8, 1.9, 0]], [17.4, [-2, 2.6, 7], [-8, 2, 0]], [18, [-55, 18, 32], [-30, 8, 2]], [20.5, [-20, 22, 46], [8, 6, -2]], [23, [-6, 9, 20], [16, 1, -4]], [25, [-8, 11, 24], [16, 2, -2]], [28, [-14, 12, 30], [12, 5, -6]]]);
 }
 const GHOSTS = [makeHero('sombra', true), makeHero('sombra', true), makeHero('sombra', true)];
 const MALVOR = makeMalvor(false, { sword: true }), MALHOLO = makeMalvor(true, { sword: true });
@@ -1430,31 +1438,85 @@ function ceresOrbit(a, lt, t) {
   const an = 1.9 + a * 0.06;
   camera.position.set(CERES_C.x + Math.cos(an) * 58, 14 - a * 1.2, CERES_C.z + Math.sin(an) * 58); camTarget.copy(CERES_C);
 }
-// close combat in the second part of the wars: each hero runs at three soldiers in turn and fights them up close
-const MEL_TA = n => 1.0 + n * 1.55;              // when a hero reaches its n-th soldier (seconds into the second part)
+// close combat in the second part of the wars: each hero runs (never jumps) to three soldiers in turn
+// and fights each one up close with their own power
+const MSPD = { rayo: 9, guardian: 9, sombra: 22 };   // running speed; Mangar has super speed
 function minionAt(i, p2, base, space) {
-  const sx = 6 + (i % 3) * 3.2, sz = -6 + i * 1.6, eng = MEL_TA(Math.floor(i / 3));
-  return V(sx - Math.max(0, Math.min(p2, eng) - 0.8) * 0.6, base + lerp(18, 0, ss(0.2 + i * 0.12, 0.8 + i * 0.12, p2)) + (space ? Math.sin(p2 * 2 + i) * 0.4 : 0), sz);
+  const sx = 2 + (i % 3) * 2, sz = -6 + i * 1.6;
+  return V(sx - clamp(p2 - 0.8, 0, 1.5) * 0.8, base + lerp(18, 0, ss(0.2 + i * 0.12, 0.8 + i * 0.12, p2)) + (space ? Math.sin(p2 * 2 + i) * 0.4 : 0), sz);
 }
-function meleeSwing(id, f) {
-  // f: seconds into the fight; Thunderbolt swings the hammer, the others punch
-  if (id === 'rayo') return { aR: 0.6 + (Math.sin(f * 11) * 0.5 + 0.5) * 2.2, aL: 0.5 };
-  return { aR: 1.45 + Math.sin(f * 13) * 0.4, aL: 1.45 + Math.cos(f * 13) * 0.4 };
-}
-function meleeOverride(id, p2, base, space, home) {
-  if (p2 < 0.6 || p2 > 6) return null;
-  const hi = IDS.indexOf(id), spot = n => minionAt(hi + 3 * n, MEL_TA(n), base, space).add(V(-0.95, space ? -0.2 : -minionAt(hi + 3 * n, MEL_TA(n), base, space).y + base * 0, 0));
-  const spots = [0, 1, 2].map(n => { const v = minionAt(hi + 3 * n, MEL_TA(n), base, space); return V(v.x - 0.95, space ? v.y - 0.3 : 0, v.z); });
-  const H0 = V(home[0], home[1], home[2]);
-  let from = H0, t0 = 0.6;
+function meleePlan(hi, base, space, home) {
+  const id = IDS[hi], H0 = V(home[0], home[1], home[2]), legs = [];
+  let t = 0.5, pos = H0;
   for (let n = 0; n < 3; n++) {
-    const ta = MEL_TA(n);
-    if (p2 < ta) { const k = ss(t0, ta, p2); return { pos: from.clone().lerp(spots[n], k), fly: space, walk: space ? undefined : p2 * 9 + hi, aR: 0.6, aL: 0.4 }; }
-    if (p2 < ta + 1.2) { const f = p2 - ta, sw = meleeSwing(id, f); return { pos: spots[n].clone().add(V(Math.sin(f * 10) * 0.15, 0, 0)), fly: space, aR: sw.aR, aL: sw.aL, spread: 0.3 }; }
-    from = spots[n]; t0 = ta + 1.2;
+    const m = minionAt(hi + 3 * n, 3, base, space);
+    const spot = V(m.x - (id === 'rayo' ? 2.6 : id === 'guardian' ? 3.2 : 1.4), space ? m.y - 0.3 : 0, m.z);
+    const ta = t + Math.max(0.45, pos.distanceTo(spot) / MSPD[id]);
+    legs.push({ from: pos, t0: t, spot, ta, kt: ta + 0.85, m });
+    t = ta + 1.0; pos = spot;
   }
-  const k = ss(t0, 6, p2);
-  return { pos: from.clone().lerp(H0, k), fly: space, walk: space || k >= 1 ? undefined : p2 * 9 + hi, aR: 0.6, aL: 0.4 };
+  return { legs, home: H0, last: pos, r0: t, r1: t + Math.max(0.5, pos.distanceTo(H0) / MSPD[id]) };
+}
+const ORBIT_T = TAU / 8;
+function orbitAt(c, f, R, y) { const a = f * 8; return V(c.x - Math.cos(a) * R, y, c.z + Math.sin(a) * R); }
+const orbitYaw = f => { const a = f * 8; return -Math.atan2(Math.cos(a), Math.sin(a)); };
+const faceYaw = (from, to) => -Math.atan2(to.z - from.z, to.x - from.x);
+// Thunderbolt calls lightning with his hammer, Sky Warrior pushes gravity waves, Mangar circles the enemy at super speed
+function powerPose(id, f) {
+  if (id === 'rayo') return { aR: 2.3 + Math.sin(f * 7) * 0.5, aL: 0.6 };
+  if (id === 'guardian') return { aR: 1.55 + Math.sin(f * 6) * 0.1, aL: 1.55 + Math.cos(f * 6) * 0.1 };
+  return { aR: 1.2, aL: 0.5 };
+}
+function powerFx(id, o, tgt, f, k, posF) {
+  const c = HEROES[id].c;
+  if (id === 'rayo') {
+    if ((f * 2.4) % 1 < 0.45) { bolt(o.hammer, tgt, c, k, 0.2); glow(tgt, 2.2, c, k); glow(o.hammer, 1.2, [255, 255, 255], k); }
+  } else if (id === 'guardian') {
+    for (let q = 0; q < 3; q++) {
+      const u = (f * 1.5 + q / 3) % 1, cc = o.hand.clone().lerp(tgt, u), r = 0.3 + u * 0.9;
+      for (let s2 = 0; s2 < 12; s2++) { const a = s2 / 12 * TAU; glow(cc.clone().add(V(0, Math.sin(a) * r, Math.cos(a) * r)), 0.32, c, k * (1 - u * 0.5)); }
+    }
+    if ((f * 1.5) % (1 / 3) < 0.08) glow(tgt, 2, c, k);
+  } else if (posF) {
+    for (let q = 1; q <= 9; q++) glow(posF(f - q * 0.025).add(V(0, 1.1, 0)), 0.9 - q * 0.06, c, k * (1 - q / 10));
+    if (Math.sin(f * 16) > 0.5) { glow(tgt, 1.5, [255, 240, 200], k); glow(tgt, 2.4, c, 0.6 * k); }
+  }
+}
+function meleeOverride(id, p2, plan, space) {
+  const L = plan.legs; if (p2 < L[0].t0 || p2 > plan.r1) return null;
+  const fl = space || undefined, hi = IDS.indexOf(id);
+  for (const g of L) {
+    if (p2 < g.t0) break;
+    if (p2 < g.ta) { const k = clamp((p2 - g.t0) / (g.ta - g.t0)); return { pos: g.from.clone().lerp(g.spot, k), yaw: faceYaw(g.from, g.spot), fly: fl, walk: space ? undefined : p2 * 11 + hi, aR: 0.7, aL: 0.4, trail: id === 'sombra' }; }
+    if (p2 < g.ta + 1.0) {
+      const f = p2 - g.ta, pw = powerPose(id, f);
+      if (id === 'sombra' && f < ORBIT_T) return { pos: orbitAt(g.m, f, 1.4, g.spot.y), yaw: orbitYaw(f), fly: fl, walk: space ? undefined : p2 * 16, aR: pw.aR, aL: pw.aL, trail: true };
+      return { pos: g.spot.clone(), yaw: faceYaw(g.spot, g.m), fly: fl, aR: pw.aR, aL: pw.aL, spread: 0.3 };
+    }
+  }
+  if (p2 < plan.r0) return { pos: plan.last.clone(), fly: fl, aR: 0.6, aL: 0.4 };
+  const k = clamp((p2 - plan.r0) / (plan.r1 - plan.r0));
+  return { pos: plan.last.clone().lerp(plan.home, k), yaw: faceYaw(plan.last, plan.home), fly: fl, walk: space || k >= 1 ? undefined : p2 * 11 + hi, aR: 0.6, aL: 0.4, trail: id === 'sombra' };
+}
+// after each war the heroes walk on with the friend they just met, towards Malvor
+
+function allyWalk(bi, r, lt) {
+  const newF = ['duna', 'glaciar', 'cometa'][bi], older = ['duna', 'glaciar'].slice(0, bi);
+  const order = ['rayo', 'guardian', newF, 'sombra', ...older], n = order.length, space = bi === 2, base = space ? 5 : 0;
+  const x = -10 + r * (space ? 3.4 : 2.2);
+  order.forEach((id, k) => {
+    const p = V(x + (k % 2) * 0.5, base + (space ? Math.sin(lt * 1.3 + k) * 0.3 : 0), (k - (n - 1) / 2) * 1.8);
+    const o = { walk: space ? undefined : r * 6.5 + k * 1.3, fly: space || undefined, aR: space ? 0.9 : 0.35, aL: 0.3, aura: 0.85, t: lt, spread: 0.12 };
+    const ho = poseHero(IDS.includes(id) ? H[id] : FRIENDS[id], p, o);
+    if (id === newF && r < 4) glow(ho.chest, 2.5, HEROES[id].c, (bi === 1 ? 0.12 : 0.25) * (1 - ss(3, 4, r)));
+  });
+  // far away, the red glow where Malvor waits
+  const look = ss(4.6, 6.6, r);
+  if (space) { REDMOON.visible = true; glow(V(70, 6, -140), 60, RED, 0.25 * look); }
+  else glow(V(x + 260, 70, -40), 50, [255, 60, 50], 0.5 * look);
+  const front = V(x + 9, base + 2.2, 6.5), back = V(x - 10, base + 4.5, 5);
+  camera.position.copy(front.lerp(back, look)); camTarget.copy(V(x, base + 1.3, 0).lerp(V(x + 40, base + 6, -6), look));
+  return Math.max(1 - ss(0, 0.35, r), ss(WALK_LEN - 0.35, WALK_LEN, r));
 }
 function baseAssault(a, lt, t) {
   env({ top: [16, 6, 22], bot: [110, 40, 46], fog: 0.005, stars: 1, hemi: 0.85, hemiT: [255, 180, 180], hemiB: [60, 30, 40], sun: 1.1, sunC: [255, 190, 170], sets: ['moon'], bloom: 0.95 });
@@ -1628,18 +1690,26 @@ const DRAW = [
     env({ top: [14, 8, 22], bot: [80, 26, 42], fog: 0.012, stars: 0.3, hemi: 0.4, hemiT: [255, 150, 160], sun: 0.4, sets: ['city'] });
     cityState(t, { oz: 0, lights: 0.08, ruined: true, fire: 0.7 });
     const P = { rayo: [-8, 0, 1.5], guardian: [-6.5, 0, -0.8], sombra: [-5, 0, 2.2] };
-    const CLOSE = { rayo: V(13.8, 0, -2.6), guardian: V(13.4, 0, 0.4), sombra: V(14.2, 0, 2.6) };
+    // they run up to Malvor (Mangar at super speed) and fight him from close by with their powers
+    const CLOSE = { rayo: V(10, 0, -3.2), guardian: V(9.4, 0, 0.6) }, MC = V(16, 0, -1);
+    const Y1S = { rayo: 4.8, guardian: 4.8, sombra: 5.5 }, Y1A = { rayo: 7.0, guardian: 7.0, sombra: 6.6 };
+    const sOrb = f => orbitAt(MC, f * 0.55, 3.4, 0);
     const y1over = id => {
-      if (lt < 5.4 || lt > 11.6) return null;
-      const home = V(...P[id]), hi = IDS.indexOf(id);
-      if (lt < 6.3) return { pos: home.lerp(CLOSE[id], ss(5.4, 6.3, lt)), walk: lt * 9 + hi, aR: 0.6 };
-      if (lt < 10.6) { const sw = meleeSwing(id, lt - 6.3 + hi * 0.3); return { pos: CLOSE[id].clone().add(V(Math.sin(lt * 10 + hi) * 0.15, 0, 0)), yaw: -Math.atan2(-1 - CLOSE[id].z, 16 - CLOSE[id].x), aR: sw.aR, aL: sw.aL, spread: 0.3 }; }
-      return { pos: CLOSE[id].clone().lerp(home, ss(10.6, 11.6, lt)), walk: lt * 9 + hi, aR: 0.6 };
+      if (lt < Y1S[id] || lt > 12.6) return null;
+      const home = V(...P[id]), hi = IDS.indexOf(id), spot = id === 'sombra' ? sOrb(0) : CLOSE[id];
+      if (lt < Y1A[id]) return { pos: home.clone().lerp(spot, clamp((lt - Y1S[id]) / (Y1A[id] - Y1S[id]))), yaw: faceYaw(home, spot), walk: lt * 11 + hi, aR: 0.7, trail: id === 'sombra' };
+      if (lt < 10.6) {
+        const f = lt - Y1A[id], pw = powerPose(id, f);
+        if (id === 'sombra') return { pos: sOrb(f), yaw: orbitYaw(f * 0.55), walk: lt * 16, aR: pw.aR, aL: pw.aL, trail: true };
+        return { pos: spot.clone(), yaw: faceYaw(spot, MC), aR: pw.aR, aL: pw.aL, spread: 0.3 };
+      }
+      const from = id === 'sombra' ? sOrb(10.6 - Y1A.sombra) : spot;
+      return { pos: from.clone().lerp(home, ss(10.6, 12.6, lt)), yaw: faceYaw(from, home), walk: lt * 11 + hi, aR: 0.6, trail: id === 'sombra' };
     };
     const out = skirmish(lt, D_YEAR1, P, { hurtHero: { id: 'sombra', t0: 3, kind: 'blast', down: 2.3 }, overrides: y1over });
     // Malvor arrives, the heroes beat him down
-    const atk = ss(6.1, 6.5, lt) * (1 - ss(11, 11.3, lt));
-    const kneel = ss(6.4, 8.2, lt) * (1 - ss(12.1, 12.7, lt));
+    const atk = ss(6.6, 7.0, lt) * (1 - ss(10.4, 10.7, lt));
+    const kneel = ss(7.2, 9, lt) * (1 - ss(12.1, 12.7, lt));
     const flee = ss(13.3, 15.2, lt);
     const mx = lerp(45, 16, ss(4.4, 6, lt));
     const mpos = V(mx + flee * 6, 0.3 + Math.sin(lt * 1.5) * 0.2 - 0.9 * kneel + flee * flee * 26, -1);
@@ -1648,7 +1718,7 @@ const DRAW = [
     if (atk > 0) {
       const ph = lt * 3;
       // hits up close: sparks where each blow lands
-      IDS.forEach((id, i) => { if (Math.sin(lt * 11 + i * 2) > 0.75) { const hp = out[id].hand; glow(hp, 1.6, HEROES[id].c, atk); glow(hp, 0.6, [255, 255, 255], atk); for (let z = 0; z < 3; z++) glow(hp.clone().add(V(Math.sin(lt * 40 + z) * 0.4, Math.cos(lt * 30 + z) * 0.4, 0)), 0.4, [255, 220, 160], atk); } });
+      IDS.forEach(id => { if (lt > Y1A[id] && lt < 10.6) powerFx(id, out[id], id === 'sombra' ? mpos.clone().add(V(0, 2, 0)) : mcore, lt - Y1A[id], atk, ff => sOrb(Math.max(0, ff))); });
       if (Math.sin(ph * 4) > 0.9) boom(mcore.clone().add(V(-0.8, -2, 0)), (lt * 1.3) % 1.1, 2.4, [255, 180, 120]);
     }
     // the allies drop in to save him
@@ -1719,8 +1789,8 @@ const DRAW = [
   },
   function montage(lt, t) {
     // five years of war: four long battles, with a discovery about Malvor between each one
-    const PARTS = [['c', 0], ['P', 0], ['b', 0], ['d', 0], ['c', 2], ['b', 2], ['d', 3], ['c', 4], ['b', 4], ['d', 5], ['C', 0], ['A', 0], ['c', 6], ['b', 6]];
-    const LAST = PARTS[PARTS.length - 1], lenOf = pt => pt[0] === 'c' || pt[0] === 'C' ? CARD : pt[0] === 'A' ? 18 : pt[0] === 'P' ? 5 : pt[0] === 'd' ? (pt === PARTS[3] ? 16 : 11) : pt === LAST ? 23.5 : 22;
+    const PARTS = [['c', 0], ['P', 0], ['b', 0], ['w', 0], ['d', 0], ['c', 2], ['b', 2], ['w', 2], ['d', 3], ['c', 4], ['b', 4], ['w', 4], ['d', 5], ['C', 0], ['A', 0], ['c', 6], ['b', 6]];
+    const LAST = PARTS[PARTS.length - 1], lenOf = pt => pt[0] === 'c' || pt[0] === 'C' ? CARD : pt[0] === 'A' ? 18 : pt[0] === 'P' ? 5 : pt[0] === 'w' ? WALK_LEN : pt[0] === 'd' ? (pt[1] === 0 ? 16 : 11) : pt === LAST ? 23.5 : 22;
     let rest = lt, part = LAST;
     for (const pt of PARTS) { const len = lenOf(pt); if (rest < len) { part = pt; break; } rest -= len; }
     const plen = lenOf(part);
@@ -1732,7 +1802,7 @@ const DRAW = [
       chapterCard('AÑO 4', 'Ataque a la base secreta', card ? 1 - ss(CARD - 0.6, CARD, rest) : 0);
       return card ? 0 : ss(17.7, 18, rest);
     }
-    const i = part[0] === 'd' ? [1, 3, 5][[3, 6, 9].indexOf(PARTS.indexOf(part))] : part[1];
+    const i = part[0] === 'd' ? [1, 3, 5][[0, 3, 5].indexOf(part[1])] : part[1];
     const inCard = part[0] === 'c', sl = inCard ? 0 : rest, cardA = inCard ? 1 - ss(CARD - 0.6, CARD, rest) : 0;
     const bi = [0, 0, 1, 1, 2, 2, 3][i];
     const ground = { rayo: [-8, 0, 1.5], guardian: [-6.5, 0, -0.8], sombra: [-5, 0, 2.2] };
@@ -1743,6 +1813,7 @@ const DRAW = [
       () => { env({ top: [40, 6, 10], bot: [140, 36, 26], fog: 0.014, hemi: 0.45, hemiT: [255, 140, 120], sun: 0.4, sunC: [255, 160, 140], sets: ['city', 'rain'] }); cityState(t, { oz: 0, lights: 0, ruined: true, fire: 1 }); SETS.rain.position.set(-6, -((t * 32) % 40), 0); }
     ];
     envs[bi]();
+    if (part[0] === 'w') return allyWalk(bi, rest, lt);
     if (i % 2 === 0) {
       // battle
       const HURTS = [{ id: 'guardian', t0: 4.6, kind: 'rock' }, { id: 'sombra', t0: 3.2, kind: 'ice' }, { id: 'rayo', t0: 2.6, kind: 'asteroid' }, { id: 'rayo', t0: 4.5, kind: 'debris' }];
@@ -1801,10 +1872,11 @@ const DRAW = [
       const flank = bi === 0 ? 1 - ss(13.2, 14.4, sl) : 0;
       const FLANK = { rayo: [7, 0, -12, -0.9], sombra: [7, 0, 12, 0.9], guardian: [-8, 0, -0.8, 0] };
       const groundNow = flank > 0 ? Object.fromEntries(IDS.map(id => [id, ground[id].map((v, k) => lerp(v, FLANK[id][k], flank)).concat([lerp(0, FLANK[id][3], flank)])])) : ground;
+      const homeP = bi === 2 ? { rayo: [-8, 5, 1.5], guardian: [-6.5, 7.5, -1], sombra: [-5, 3.5, 2.2] } : groundNow;
+      const PLANS = sl > 8 ? Object.fromEntries(IDS.map((id, hi) => [id, meleePlan(hi, bi === 2 ? 4 : 0, bi === 2, homeP[id])])) : null;
       {
-        const homeP = bi === 2 ? { rayo: [-8, 5, 1.5], guardian: [-6.5, 7.5, -1], sombra: [-5, 3.5, 2.2] } : groundNow;
         const prevO = overrides;
-        overrides = id => (prevO && prevO(id)) || (sl > 8 ? meleeOverride(id, sl - 8, bi === 2 ? 4 : 0, bi === 2, homeP[id]) : null);
+        overrides = id => (prevO && prevO(id)) || (PLANS ? meleeOverride(id, sl - 8, PLANS[id], bi === 2) : null);
       }
       const outW = skirmish(sl, D_WAR[bi], bi === 2 ? { rayo: [-8, 5, 1.5], guardian: [-6.5, 7.5, -1], sombra: [-5, 3.5, 2.2] } : groundNow, { fly: bi === 2, wreck: bi === 0, hurtHero: HURTS[bi], overrides, raise: Math.max(ss(10.4, 10.7, sl) * (1 - ss(11.3, 11.5, sl)), ss(16.6, 16.9, sl) * (1 - ss(19, 19.3, sl)), ss(20.6, 21, sl)) });
       if (ally) {
@@ -1827,15 +1899,14 @@ const DRAW = [
       if (sl > 8) {
         const p2 = sl - 8, base = bi === 2 ? 4 : 0, pts = p2pts;
         MINIONS.forEach((mn, i) => {
-          const ta = MEL_TA(Math.floor(i / 3)), kt = ta + 1.15, mp = minionAt(i, p2, base, bi === 2), who = IDS[i % 3];
+          const who = IDS[i % 3], g = PLANS[who].legs[Math.floor(i / 3)], kt = g.kt, mp = minionAt(i, p2, base, bi === 2);
           pts.push(mp.clone().add(V(0, 1.6, 0)));
           if (p2 > kt) { boom(mp.clone().add(V(0, 1.4, 0)), p2 - kt, 2.6, [255, 120, 80]); return; }
-          const hit = [ta + 0.35, ta + 0.75].some(h => p2 > h && p2 < h + 0.28);
-          const mc = poseMalvor(mn, mp, { s: 0.55, t: lt, col: [255, 90, 70], hurt: hit ? 1 : 0, yaw: Math.PI });
-          if (hit) for (let z = 0; z < 5; z++) glow(mp.clone().add(V(-0.4 + Math.sin(lt * 40 + z) * 0.3, 1.3 + Math.cos(lt * 33 + z) * 0.4, Math.sin(z * 2) * 0.4)), 0.7, z % 2 ? HEROES[who].c : [255, 230, 170], 1);
+          const fighting = p2 > g.ta && p2 < kt;
+          const mc = poseMalvor(mn, mp, { s: 0.55, t: lt, col: [255, 90, 70], hurt: fighting && Math.sin(p2 * 14 + i) > 0.2 ? 1 : 0, yaw: Math.PI });
+          if (fighting) powerFx(who, outW[who], mc, p2 - g.ta, 1, ff => orbitAt(g.m, clamp(ff, 0, ORBIT_T), 1.4, g.spot.y));
           if (p2 > kt - 0.18) glow(mc, 3.5, HEROES[who].c, 1);
-          if (p2 > ta - 0.1 && p2 < kt && Math.sin(p2 * 9 + i) > 0.86) glow(mp.clone().add(V(-0.7, 1.4, 0)), 1.1, RED, 0.9);
-          if (p2 < ta - 0.4 && p2 > 1 && Math.sin(p2 * 6 + i * 1.7) > 0.93) { const tg = outW[who].chest.clone(); beam(mc, tg, 0.07, RED, 0.7); glow(tg, 1, RED, 0.7); }
+          if (p2 < g.ta - 0.4 && p2 > 1 && Math.sin(p2 * 6 + i * 1.7) > 0.93) { const tg = outW[who].chest.clone(); beam(mc, tg, 0.07, RED, 0.7); glow(tg, 1, RED, 0.7); }
         });
       }
       // third part: a whole army closes in; shield, lightning storm, golden tornado, and the shield bursts outward
@@ -1883,15 +1954,20 @@ const DRAW = [
             if (fid === 'cometa') { const from = V(-30, 30, 10); p = from.lerp(p, k); beam(V(-30, 30, 10), p, 0.3, c, 0.6 * (1 - k)); }
           }
           // while the soldiers are on the ground, the friends also run in and fight them up close
-          const mk = sl > t0 + 1 ? ss(9.2, 10, sl) * (1 - ss(13.3, 14, sl)) : 0;
-          let fsw = null;
+          const mk = sl > t0 + 1 && PLANS ? ss(9.2, 10.4, sl) * (1 - ss(13.2, 14.4, sl)) : 0;
+          let fsw = null, ftg = null;
           if (mk > 0) {
-            const u = clamp((sl - 9) / 1.55, 0, 2), n = Math.min(1, Math.floor(u)), fr = ss(0.75, 1, u - n);
-            const fpAt = m => { const v = minionAt((m * 3 + j + 1) % 9, MEL_TA(m), base, bi === 2); return V(v.x - 1, bi === 2 ? v.y - 0.3 : 0, v.z + 1.1); };
+            const u = clamp((sl - 9) / 1.55, 0, 2), n = Math.min(1, Math.floor(u)), fr = ss(0.4, 1, u - n), mi = m => (m * 3 + j + 1) % 9;
+            const fpAt = m => { const v = minionAt(mi(m), sl - 8, base, bi === 2); return V(v.x - 3, bi === 2 ? v.y - 0.3 : 0, v.z + 0.8); };
             p = p.lerp(fpAt(n).lerp(fpAt(n + 1), fr), mk);
-            if (mk > 0.95) { fsw = meleeSwing(fid, sl + j); if (Math.sin(sl * 11 + j * 2) > 0.72) glow(p.clone().add(V(0.7, 1.4, 0)), 1.3, c, 1); }
+            if (mk > 0.95) {
+              fsw = { aR: 1.55, aL: 0.5 };
+              const tm = mi(fr > 0.5 ? n + 1 : n), alive = sl - 8 < PLANS[IDS[tm % 3]].legs[Math.floor(tm / 3)].kt;
+              if (alive) ftg = minionAt(tm, sl - 8, base, bi === 2).add(V(0, 1.4, 0));
+            }
           }
           const o = poseHero(FRIENDS[fid], p, { aR: fsw ? fsw.aR : 1.5, aL: fsw ? fsw.aL : 0.4, aura: 0.9, t: lt, fly: bi === 2 || (fid === 'cometa' && k < 1), alpha: al, spread: fsw ? 0.3 : 0.15, walk: mk > 0 && mk < 0.95 && bi !== 2 ? sl * 9 + j : undefined });
+          if (ftg && Math.sin(sl * 7 + j * 2) > 0) { beam(o.hand, ftg, 0.1, c, 0.9); glow(ftg, 1.4, c, 0.9); }
           if (tgts.length && sl > t0 + 1 && !(sl > 8 && sl < 14)) { const ph = (sl + j * 0.27) % 0.8; if (ph < 0.2) { const tp = tgts[(Math.floor((sl + j * 0.27) / 0.8) + j) % tgts.length]; beam(o.hand, tp, 0.12, c, 0.9); glow(tp, 1.6, c, 0.9); } }
         });
       }
@@ -2367,7 +2443,7 @@ const SUBS = [
     const war = 83.3, bs = [0, 1, 2, 3].map(i => war + CARD + i * (CARD + 14 + 11));
     bs.forEach((b, i) => {
       SFX.push({ t: b + 8.6, k: 'boom' }, { t: b + 8.7, k: 'whoosh' });
-      for (let n = 0; n < 3; n++) { const ta = b + 8 + 1.0 + n * 1.55; SFX.push({ t: ta + 0.35, k: 'hit' }, { t: ta + 0.75, k: 'hit' }, { t: ta + 1.15, k: 'boom' }); }
+      for (let n = 0; n < 3; n++) { const ta = b + 8 + 1.9 + n * 1.7; SFX.push({ t: ta + 0.05, k: 'beam' }, { t: ta + 0.4, k: 'pew' }, { t: ta + 0.85, k: 'boom' }); }
       SHAKES.push([b + 11.4, 1.3, 0.25]);
       if (i < 2) SFX.push({ t: b + 12.7, k: 'whoosh' });
     });
@@ -2508,6 +2584,27 @@ const SUBS = [
     for (let q = 0; q < 18; q++) SFX.push({ t: B + 19.5 + q * 0.45, k: q % 3 ? 'boom' : 'pew' });
     SHAKES.push([B + 19.5, 8, 0.25], [B + 25.6, 1, 0.8]);
   }
+  // the heroes walk on with each new friend after Ceres, the ice moons and the asteroids
+  {
+    const war = SCENES.find(x => x.name === 'Cinco años de guerra'), st = {};
+    let x = war.a; for (const [k, len] of [['c0', CARD], ['P', 5], ['b0', 22], ['d0', 16], ['c1', CARD], ['b1', 22], ['d1', 11], ['c2', CARD], ['b2', 22]]) { st[k] = x; x += len; }
+    const WL = 9;
+    const INS = [
+      [st.b0 + 22, [[0.3, 5.8, 'narrador', 'En Ceres conocieron a Duna, una guerrera del desierto que salió de la arena para salvarlos.'], [6, 8.6, 'duna', '¡Desde hoy camino con ustedes!']]],
+      [st.b1 + 22, [[0.3, 5.6, 'narrador', 'En las lunas de hielo conocieron a Glaciar, que apareció del hielo para ayudarlos.'], [5.8, 8.6, 'glaciar', '¡Vamos juntos a buscar a Malvor!']]],
+      [st.b2 + 22, [[0.3, 5.6, 'narrador', 'En los asteroides conocieron a Cometa, que llegó volando como una estrella fugaz.'], [5.8, 8.6, 'cometa', '¡Malvor, allá vamos!']]]
+    ];
+    for (let q = INS.length - 1; q >= 0; q--) {
+      const [P, lines] = INS[q];
+      SUBS.forEach(l => { if (l[0] >= P) { l[0] += WL; l[1] += WL; } });
+      SFX.forEach(e => { if (e.t >= P) e.t += WL; });
+      SHAKES.forEach(z => { if (z[0] >= P) z[0] += WL; });
+      lines.forEach(([a, b2, who, txt]) => SUBS.push([P + a, P + b2, who, txt]));
+      if (q === 2) SFX.push({ t: P + 0.4, k: 'whoosh' });
+    }
+    war.b += 3 * WL;
+    SCENES.forEach(sc => { if (sc.a > war.a) { sc.a += 3 * WL; sc.b += 3 * WL; } });
+  }
   SUBS.sort((a, b) => a[0] - b[0]);
 }
 // ---------- playback ----------
@@ -2516,13 +2613,13 @@ const SUBS = [
 const CARD_WINDOWS = (() => {
   const w = [], war = SCENES.find(s => s.name === 'Cinco años de guerra');
   ['Año 1', 'Batalla final'].forEach(n => { const a = SCENES.find(s => s.name === n).a; w.push([a, a + CARD]); });
-  let x = war.a; for (const len of [CARD, 5, 22, 16, CARD, 22, 11, CARD, 22, 11, CARD, 18, CARD]) { if (len === CARD) w.push([x, x + CARD]); x += len; }
+  let x = war.a; for (const len of [CARD, 5, 22, WALK_LEN, 16, CARD, 22, WALK_LEN, 11, CARD, 22, WALK_LEN, 11, CARD, 18, CARD]) { if (len === CARD) w.push([x, x + CARD]); x += len; }
   return w;
 })();
 const HOLDS = (() => {
   const b = SCENES.slice(1).map(s => s.a);
   const war = SCENES.find(s => s.name === 'Cinco años de guerra');
-  let x = war.a; for (const len of [CARD, 5, 22, 16, CARD, 22, 11, CARD, 22, 11, CARD, 18, CARD]) { x += len; b.push(x); }
+  let x = war.a; for (const len of [CARD, 5, 22, WALK_LEN, 16, CARD, 22, WALK_LEN, 11, CARD, 22, WALK_LEN, 11, CARD, 18, CARD]) { x += len; b.push(x); }
   ['Año 1', 'Batalla final'].forEach(n => b.push(SCENES.find(s => s.name === n).a + CARD));
   return b.map(v => v - 0.45).sort((p, q) => p - q);
 })();
