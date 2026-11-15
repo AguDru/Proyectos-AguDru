@@ -332,7 +332,13 @@ const winR = mkRand(17);
 const WIN = []; for (let i = 0; i < 64; i++) WIN.push(winR());
 const facadeT = canvasTex(128, 128, g => { g.fillStyle = '#20232f'; g.fillRect(0, 0, 128, 128); g.fillStyle = '#0c0e15'; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) g.fillRect(i * 16 + 4, j * 16 + 4, 8, 9); });
 const emisT = canvasTex(128, 128, g => { g.fillStyle = '#000'; g.fillRect(0, 0, 128, 128); for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { const v = WIN[i * 8 + j]; if (v > 0.5) { g.fillStyle = v > 0.86 ? '#78e6ff' : '#ffd68c'; g.fillRect(i * 16 + 4, j * 16 + 4, 8, 9); } } });
-[facadeT, emisT].forEach(t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; });
+// glass towers: blue glass with thin frames, whole floors lit in bands
+const glassT = canvasTex(128, 128, g => { const gr = g.createLinearGradient(0, 0, 128, 128); gr.addColorStop(0, '#2a3c52'); gr.addColorStop(1, '#1a2636'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); g.fillStyle = '#0a0f17'; for (let j = 0; j < 8; j++) g.fillRect(0, j * 16, 128, 2); for (let i = 0; i < 4; i++) g.fillRect(i * 32, 0, 2, 128); });
+const glassE = canvasTex(128, 128, g => { g.fillStyle = '#000'; g.fillRect(0, 0, 128, 128); const r = mkRand(41); for (let j = 0; j < 8; j++) { let x = 0; while (x < 128) { const len = 10 + r() * 50; if (r() > 0.45) { g.fillStyle = r() > 0.7 ? '#9fe8ff' : '#e8f4ff'; g.fillRect(x, j * 16 + 4, len, 9); } x += len + 4; } } });
+// stone towers: vertical window slits
+const stoneT = canvasTex(128, 128, g => { g.fillStyle = '#34302e'; g.fillRect(0, 0, 128, 128); g.fillStyle = '#100e0e'; for (let i = 0; i < 8; i++) g.fillRect(i * 16 + 5, 0, 6, 128); g.fillStyle = '#2a2624'; for (let j = 0; j < 4; j++) g.fillRect(0, j * 32, 128, 3); });
+const stoneE = canvasTex(128, 128, g => { g.fillStyle = '#000'; g.fillRect(0, 0, 128, 128); const r = mkRand(53); for (let i = 0; i < 8; i++) for (let j = 0; j < 4; j++) if (r() > 0.4) { g.fillStyle = r() > 0.8 ? '#ff9ad0' : '#ffcf8a'; g.fillRect(i * 16 + 5, j * 32 + 4, 6, 26); } });
+[facadeT, emisT, glassT, glassE, stoneT, stoneE].forEach(t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; });
 
 function noiseTex(n, lo, hi, rep) {
   const t = canvasTex(n, n, g => {
@@ -346,6 +352,10 @@ function noiseTex(n, lo, hi, rep) {
 }
 const MAT = {
   bld: new THREE.MeshStandardMaterial({ map: facadeT, emissive: 0xffffff, emissiveMap: emisT, emissiveIntensity: 1, roughness: 0.85, metalness: 0.15 }),
+  glass: new THREE.MeshStandardMaterial({ map: glassT, emissive: 0xffffff, emissiveMap: glassE, emissiveIntensity: 1, roughness: 0.2, metalness: 0.6 }),
+  stone: new THREE.MeshStandardMaterial({ map: stoneT, emissive: 0xffffff, emissiveMap: stoneE, emissiveIntensity: 1, roughness: 0.9, metalness: 0.05 }),
+  concrete: new THREE.MeshStandardMaterial({ color: 0x4a4c56, roughness: 0.95 }),
+  neon: new THREE.MeshBasicMaterial({ vertexColors: true }),
   dead: new THREE.MeshStandardMaterial({ color: 0x17181f, roughness: 1 }),
   ground: new THREE.MeshStandardMaterial({ color: 0x2a2c34, map: noiseTex(256, 0.55, 1, 120), roughness: 0.95 }),
   street: new THREE.MeshStandardMaterial({ color: 0x3a3c46, map: noiseTex(256, 0.5, 1, [70, 2]), roughness: 0.55, metalness: 0.25 }),
@@ -693,49 +703,121 @@ function ruinOf(b, age, ruined) {
   if (ruined && b.f < 0.3) { dead = true; sy = Math.min(sy, 0.45 + 0.35 * b.f2); rz += (b.f2 - 0.5) * 0.12; }
   return { sy, rx, rz, dead };
 }
-const CITYM = {};
+const CITYM = {}, HELI = [], LAMPS = [];
+const BSTYLE = () => [MAT.bld, MAT.glass, MAT.stone];
+function cityPart(geo, windows, sx, sy, sz) {
+  // windows: scale the facade texture to the real size; otherwise use a dark corner of the texture (roofs, props)
+  const uv = geo.attributes.uv;
+  for (let i = 0; i < uv.count; i++) {
+    if (!windows) { uv.setXY(i, 0.01, 0.01); continue; }
+    const f = Math.floor(i / 4);
+    if (f === 2 || f === 3) uv.setXY(i, 0.01, 0.01);
+    else uv.setXY(i, uv.getX(i) * (f < 2 ? sz : sx) / 14, uv.getY(i) * sy / 14);
+  }
+  return geo;
+}
+function boxAt(w, h, d, x, y, z, windows = true) { const g = new THREE.BoxGeometry(w, h, d); cityPart(g, windows, w, h, d); g.translate(x, y + h / 2, z); return g; }
+function cylAt(r1, r2, h, x, y, z, seg = 10) { const g = new THREE.CylinderGeometry(r1, r2, h, seg); cityPart(g, false); g.translate(x, y + h / 2, z); return g; }
+function withColor(geo, c) { const n = geo.attributes.position.count, a = new Float32Array(n * 3); for (let i = 0; i < n; i++) { a[i * 3] = c[0] / 255; a[i * 3 + 1] = c[1] / 255; a[i * 3 + 2] = c[2] / 255; } geo.setAttribute('color', new THREE.BufferAttribute(a, 3)); return geo; }
+function mergeColored(geos) { const m = mergeGeos(geos); const cols = []; for (const g of geos) cols.push(...g.attributes.color.array); m.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3)); return m; }
 {
   const r = mkRand(5), rows = [-18, -33, -48, -63, -78, -95, -115, -140, -170];
+  const NEON = [[0, 240, 255], [255, 60, 200], [255, 190, 60], [120, 255, 120], [170, 110, 255]];
   for (const z0 of rows) for (let x0 = -160; x0 <= 160; x0 += 13) {
     if (r() < 0.12) continue;
-    const w = 7 + r() * 4, d = 7 + r() * 4, h = 9 + r() * 26 + 34 * Math.exp(-(x0 * x0) / 6400) * (z0 > -100 ? 1 : 0.6) + (z0 < -90 ? 15 : 0);
-    const geo = new THREE.BoxGeometry(w, h, d); geo.translate(0, h / 2, 0);
-    const uv = geo.attributes.uv;
-    for (let f = 0; f < 6; f++) for (let v = 0; v < 4; v++) {
-      const i = f * 4 + v; let u = uv.getX(i), vv = uv.getY(i);
-      if (f === 2 || f === 3) { u = 0.01; vv = 0.01; } else { u *= (f < 2 ? d : w) / 14; vv *= h / 14; }
-      uv.setXY(i, u, vv);
+    const w = 7 + r() * 4, d = 7 + r() * 4;
+    let h = 9 + r() * 26 + 34 * Math.exp(-(x0 * x0) / 6400) * (z0 > -100 ? 1 : 0.6) + (z0 < -90 ? 15 : 0);
+    const st = r(), style = st < 0.5 ? 0 : st < 0.8 ? 1 : 2;
+    const parts = [], props = [];
+    const setback = h > 26 && r() < 0.65;
+    const h1 = setback ? h * 0.62 : h;
+    parts.push(boxAt(w, h1, d, 0, 0, 0));
+    props.push(boxAt(w + 0.4, 0.5, d + 0.4, 0, h1 - 0.1, 0, false));
+    let top = h1;
+    if (setback) {
+      const w2 = w * 0.72, d2 = d * 0.72, h2 = h - h1;
+      parts.push(boxAt(w2, h2, d2, 0, h1, 0)); props.push(boxAt(w2 + 0.3, 0.4, d2 + 0.3, 0, h1 + h2 - 0.1, 0, false)); top = h;
+      if (r() < 0.45) { const h3 = h * 0.1; parts.push(boxAt(w2 * 0.6, h3, d2 * 0.6, 0, top, 0)); top += h3; }
     }
+    if (style === 1 && r() < 0.5) { const cone = new THREE.ConeGeometry(Math.min(w, d) * 0.45, 5, 4); cityPart(cone, false); cone.rotateY(Math.PI / 4); cone.translate(0, top + 2.5, 0); props.push(cone); top += 5; }
+    const rp = r();
+    if (rp < 0.25) { props.push(cylAt(1.1, 1.1, 2.2, w * 0.2, top + 1, d * 0.15)); for (const lx of [-0.7, 0.7]) props.push(cylAt(0.08, 0.08, 1, w * 0.2 + lx, top, d * 0.15, 5)); }
+    else if (rp < 0.5) { props.push(boxAt(1.6, 1.1, 1.2, -w * 0.2, top, 0, false), boxAt(1.2, 0.9, 1.2, w * 0.15, top, -d * 0.2, false)); }
+    else if (rp < 0.65) { props.push(boxAt(0.25, 6 + r() * 6, 0.25, 0, top, 0, false)); }
+    else if (rp < 0.75 && !setback) { props.push(cylAt(Math.min(w, d) * 0.4, Math.min(w, d) * 0.4, 0.3, 0, top, 0, 16)); }
     const x = x0 + (r() - 0.5) * 3, z = z0 + (r() - 0.5) * 3;
-    const b = { geo, x, z, h, f: r(), f2: r(), dead: false, top: h };
+    if (rp >= 0.65 && rp < 0.75 && !setback) HELI.push([x, top + 0.4, z, Math.min(w, d) * 0.4]);
+    const geo = mergeGeos([...parts, ...props]);
+    // neon signs on the street side
+    const signs = [];
+    if (r() < 0.55 && z0 > -100) {
+      const c = NEON[(r() * NEON.length) | 0], vert = r() < 0.5, sy = 3 + r() * Math.min(10, h1 * 0.4);
+      const sw = vert ? 1.1 : 3 + r() * 3, sh = vert ? 4 + r() * 6 : 1 + r() * 0.8;
+      signs.push(withColor(boxAt(sw, sh, 0.15, (r() - 0.5) * w * 0.5, sy, d / 2 + 0.12, false), c));
+      if (!vert) for (let k = 0; k < 3; k++) signs.push(withColor(boxAt(sw * 0.22, sh * 0.25, 0.05, -sw * 0.33 + k * sw * 0.33 + (r() - 0.5) * w * 0, sy + sh * 0.35, d / 2 + 0.22, false), [255, 255, 255]));
+    }
+    const b = { geo, x, z, h: top, f: r(), f2: r(), dead: false, top, style, signs };
     b.near = Math.hypot(x - IMP.x, z - IMP.z) < 62;
     CITY.push(b);
     if (b.f < 0.45 && z > -110) FIRES.push(b);
   }
   CITY.slice().sort((a, b) => b.h - a.h).slice(0, 14).forEach(b => SPIRES.push(b));
-  const placed = (b, rp) => { const g = b.geo.clone(); const m = new THREE.Matrix4().compose(V(b.x, 0, b.z), new THREE.Quaternion().setFromEuler(new THREE.Euler(rp.rx, 0, rp.rz)), V(1, rp.sy, 1)); g.applyMatrix4(m); return g; };
+  const placedG = (g0, b, rp) => { const g = g0.clone(); const m = new THREE.Matrix4().compose(V(b.x, 0, b.z), new THREE.Quaternion().setFromEuler(new THREE.Euler(rp.rx, 0, rp.rz)), V(1, rp.sy, 1)); g.applyMatrix4(m); return g; };
+  const placed = (b, rp) => placedG(b.geo, b, rp);
   const NONE = { sy: 1, rx: 0, rz: 0 };
-  CITYM.all = new THREE.Mesh(mergeGeos(CITY.map(b => placed(b, NONE))), MAT.bld);
-  CITYM.far = new THREE.Mesh(mergeGeos(CITY.filter(b => !b.near).map(b => placed(b, NONE))), MAT.bld);
   CITY.forEach(b => { b.ruin = ruinOf(b, 10, true); });
-  CITYM.alive = new THREE.Mesh(mergeGeos(CITY.filter(b => !b.ruin.dead).map(b => placed(b, b.ruin))), MAT.bld);
-  CITYM.dead = new THREE.Mesh(mergeGeos(CITY.filter(b => b.ruin.dead).map(b => placed(b, b.ruin))), MAT.dead);
-  for (const k in CITYM) SETS.city.add(CITYM[k]);
-  CITY.filter(b => b.near).forEach(b => { b.mesh = new THREE.Mesh(b.geo, MAT.bld); b.mesh.position.set(b.x, 0, b.z); SETS.city.add(b.mesh); });
+  const mats = BSTYLE();
+  const byStyle = (list, rp) => mats.map((mt, si) => { const L = list.filter(b => b.style === si); return L.length ? new THREE.Mesh(mergeGeos(L.map(b => placed(b, rp(b)))), mt) : new THREE.Group(); });
+  CITYM.all = byStyle(CITY, () => NONE);
+  CITYM.far = byStyle(CITY.filter(b => !b.near), () => NONE);
+  CITYM.alive = byStyle(CITY.filter(b => !b.ruin.dead), b => b.ruin);
+  CITYM.dead = [new THREE.Mesh(mergeGeos(CITY.filter(b => b.ruin.dead).map(b => placed(b, b.ruin))), MAT.dead)];
+  const signsOf = list => { const gs = []; list.forEach(b => b.signs.forEach(sg => gs.push(placedG(sg, b, NONE)))); return gs.length ? new THREE.Mesh(mergeColored(gs), MAT.neon) : new THREE.Group(); };
+  CITYM.signsAll = [signsOf(CITY)]; CITYM.signsFar = [signsOf(CITY.filter(b => !b.near))]; CITYM.signsRuin = [signsOf(CITY.filter(b => !b.near && !b.ruin.dead))];
+  for (const k in CITYM) CITYM[k].forEach(m => SETS.city.add(m));
+  CITY.filter(b => b.near).forEach(b => { b.mesh = new THREE.Mesh(b.geo, mats[b.style]); b.mesh.position.set(b.x, 0, b.z); SETS.city.add(b.mesh); });
+  // the needle tower: a landmark on the skyline
+  const nt = [cylAt(6, 7, 40, 0, 0, 0, 16), cylAt(4, 6, 50, 0, 40, 0, 16), cylAt(1.2, 4, 40, 0, 90, 0, 16), cylAt(0.25, 0.4, 25, 0, 130, 0, 6)];
+  nt.slice(0, 3).forEach(g => { const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, i / uv.count * 6, (g.attributes.position.getY(i)) / 14); });
+  const needle = new THREE.Mesh(mergeGeos(nt), MAT.glass); needle.position.set(-46, 0, -128); SETS.city.add(needle);
+  const ntRing = new THREE.Mesh(new THREE.TorusGeometry(9, 0.7, 10, 48), new THREE.MeshBasicMaterial({ color: 0x4fe3ff })); ntRing.rotation.x = Math.PI / 2; ntRing.position.set(-46, 92, -128); SETS.city.add(ntRing);
+  CITYM.needleRing = ntRing;
+  // sidewalks, curbs and street lamps
+  const side = [boxAt(500, 0.18, 3.2, 0, 0, 8.6, false), boxAt(500, 0.18, 3.2, 0, 0, -8.6, false)];
+  const walk = new THREE.Mesh(mergeGeos(side), MAT.concrete); SETS.city.add(walk);
+  const poles = [];
+  for (let x = -200; x <= 200; x += 16) for (const sz of [1, -1]) {
+    const z = sz * 7.6; poles.push(cylAt(0.08, 0.1, 6, x, 0, z, 6)); const arm = new THREE.BoxGeometry(0.12, 0.12, 1.6); cityPart(arm, false); arm.translate(x, 6, z - sz * 0.7); poles.push(arm);
+    LAMPS.push([x, 5.85, z - sz * 1.4]);
+  }
+  SETS.city.add(new THREE.Mesh(mergeGeos(poles), MAT.metal));
+  // crosswalk stripes
+  const cw = []; for (let k = 0; k < 7; k++) { const g = new THREE.BoxGeometry(2.6, 0.02, 0.7); g.translate(30, 0.045, -5.4 + k * 1.8); cw.push(g); }
+  SETS.city.add(new THREE.Mesh(mergeGeos(cw), new THREE.MeshBasicMaterial({ color: 0x8a8d98 })));
 }
 function cityState(t, o) {
   const anim = !o.ruined && (o.impactAge ?? -1) > 0;
-  CITYM.all.visible = !o.ruined && !anim; CITYM.far.visible = anim;
-  CITYM.alive.visible = CITYM.dead.visible = !!o.ruined;
+  const show = (k, v) => CITYM[k].forEach(m => { m.visible = v; });
+  show('all', !o.ruined && !anim); show('far', anim); show('alive', !!o.ruined); show('dead', !!o.ruined);
+  show('signsAll', !o.ruined && !anim); show('signsFar', anim); show('signsRuin', !!o.ruined);
+  const neonK = o.ruined ? 0.25 * o.lights * (Math.sin(t * 13) > -0.3 ? 1 : 0.2) : Math.max(0.15, o.lights);
+  MAT.neon.color.setScalar(neonK);
+  CITYM.needleRing.material.color.setRGB(0.31 * neonK * 3, 0.89 * Math.min(1, neonK * 3), Math.min(1, neonK * 3));
   for (const b of CITY) {
     if (b.mesh) b.mesh.visible = anim;
     if (o.ruined) { b.dead = b.ruin.dead; b.top = b.h * b.ruin.sy; }
     else if (anim && b.near) {
       const rp = ruinOf(b, o.impactAge, false);
-      b.mesh.scale.y = rp.sy; b.mesh.rotation.set(rp.rx, 0, rp.rz); b.mesh.material = rp.dead ? MAT.dead : MAT.bld; b.dead = rp.dead; b.top = b.h * rp.sy;
+      b.mesh.scale.y = rp.sy; b.mesh.rotation.set(rp.rx, 0, rp.rz); b.mesh.material = rp.dead ? MAT.dead : BSTYLE()[b.style]; b.dead = rp.dead; b.top = b.h * rp.sy;
     } else { b.dead = false; b.top = b.h; }
   }
-  MAT.bld.emissiveIntensity = o.lights;
+  MAT.bld.emissiveIntensity = MAT.glass.emissiveIntensity = MAT.stone.emissiveIntensity = o.lights;
+  // street lamps, helipad lights and flying traffic
+  const lampK = o.ruined ? 0 : clamp(o.lights * 1.2);
+  if (lampK > 0.05) for (const [x, y, z] of LAMPS) { glow(V(x, y, z), 2.2, [255, 220, 170], 0.8 * lampK); glow(V(x, 0.2, z), 5, [255, 200, 140], 0.12 * lampK); }
+  if (o.ruined) for (let i = 0; i < LAMPS.length; i += 5) { const [x, y, z] = LAMPS[i]; if (Math.sin(t * 17 + x) > 0.6) glow(V(x, y, z), 2, [255, 210, 160], 0.6); }
+  if (o.lights > 0.4 && !o.ruined) for (const [x, y, z, rr] of HELI) for (let k = 0; k < 6; k++) { const an = k / 6 * TAU; glow(V(x + Math.cos(an) * rr, y, z + Math.sin(an) * rr), 0.8, k % 2 ? [255, 80, 80] : [120, 255, 140], Math.sin(t * 4 + k) > 0 ? 0.9 : 0.3); }
+  if (o.traffic) for (const c of CARS) { const x = ((c.x + c.d * t * c.v) % 300 + 300) % 300 - 150; glow(V(x, c.y, c.z), 2.4, c.d > 0 ? [255, 240, 220] : [255, 70, 70], 0.9); glow(V(x - c.d * 2.5, c.y, c.z), 1.6, [120, 230, 255], 0.35); }
   if (o.fire > 0) for (const b of FIRES) if (b.dead) { glow(V(b.x, b.top + 2, b.z), 15 + 3 * Math.sin(t * 9 + b.x), [255, 110, 40], 0.55 * o.fire); glow(V(b.x, b.top + 1, b.z), 5, [255, 220, 150], 0.6 * o.fire); }
   if (o.lights > 0.3) for (const b of SPIRES) if (!b.dead) glow(V(b.x, b.h + 1.5, b.z), 3.5, [255, 60, 70], Math.sin(t * 3 + b.x) > 0 ? 0.9 : 0.12);
 }
@@ -836,12 +918,13 @@ function updateCrowd(lt, hx) {
     const ex = 1 - clamp(Math.abs(p.x - hx) / 28);
     const j = Math.max(0, Math.sin(lt * 7 + p.ph)) * 0.2 * (0.25 + 0.75 * ex);
     _sc.set(p.s, p.s, p.s); _q.identity();
-    _m.compose(_p.set(p.x, j, p.z), _q, _sc); crowdIM.body.setMatrixAt(i, _m);
-    _m.compose(_p.set(p.x, j + 1.33 * p.s, p.z), _q, _sc); crowdIM.head.setMatrixAt(i, _m);
+    const curb = Math.abs(p.z) > 7 ? 0.18 : 0;
+    _m.compose(_p.set(p.x, j + curb, p.z), _q, _sc); crowdIM.body.setMatrixAt(i, _m);
+    _m.compose(_p.set(p.x, j + curb + 1.33 * p.s, p.z), _q, _sc); crowdIM.head.setMatrixAt(i, _m);
     for (const sd of [-1, 1]) {
       const up = (p.wave || ex > 0.45) ? 2.5 + 0.35 * Math.sin(lt * 9 + p.ph + sd) : 0.3 + 0.2 * Math.sin(lt * 5 + p.ph);
       _q.setFromEuler(_e.set(0, 0, sd * up));
-      _m.compose(_p.set(p.x + sd * 0.22 * p.s, j + 1.08 * p.s, p.z), _q, _sc); crowdIM.arm.setMatrixAt(i * 2 + (sd > 0 ? 1 : 0), _m);
+      _m.compose(_p.set(p.x + sd * 0.22 * p.s, j + curb + 1.08 * p.s, p.z), _q, _sc); crowdIM.arm.setMatrixAt(i * 2 + (sd > 0 ? 1 : 0), _m);
     }
   });
   crowdIM.body.instanceMatrix.needsUpdate = crowdIM.head.instanceMatrix.needsUpdate = crowdIM.arm.instanceMatrix.needsUpdate = true;
@@ -984,7 +1067,7 @@ const DRAW = [
   function invasion(lt, t) {
     const dk = ss(3, 8, lt);
     env({ top: mix(NIGHT.top, [30, 4, 12], dk), bot: mix(NIGHT.bot, [120, 28, 32], dk), fog: 0.006, stars: 1 - dk, hemi: 0.45, sun: 0.4, sets: ['city'] });
-    cityState(t, { lights: 1.1 - 0.95 * ss(3, 6, lt), impactAge: lt - 3, fire: ss(3.2, 5, lt) });
+    cityState(t, { lights: 1.1 - 0.95 * ss(3, 6, lt), impactAge: lt - 3, fire: ss(3.2, 5, lt), traffic: lt < 3 });
     camKeys(lt, [[0, [-12, 7, 42], [0, 26, -62]], [3.5, [-4, 7, 40], [0, 22, -62]], [8.5, [6, 6, 38], [0, 45, -75]], [12, [10, 6, 36], [0, 42, -75]]]);
     if (lt > 0.3 && lt < 3) {
       const k = (lt - 0.3) / 2.7, y = lerp(220, 2, k * k), x = lerp(-40, IMP.x, k);
@@ -1344,7 +1427,7 @@ const DRAW = [
     const day = ss(0, 10, lt);
     env({ top: mix([30, 40, 90], [90, 130, 205], day), bot: mix([170, 100, 120], [255, 190, 140], day), fog: 0.004, stars: 0.6 * (1 - day), hemi: 0.6 + 0.4 * day, hemiT: [255, 220, 200], sun: 0.8 + 0.6 * day, sunC: [255, 200, 160], sets: ['city', 'hq'], bloom: 0.8 - 0.3 * day });
     sun.position.set(-80, 40, -100);
-    cityState(t, { lights: 1 - 0.5 * day });
+    cityState(t, { lights: 1 - 0.5 * day, traffic: true });
     for (const f of FIREWORKS) {
       const age = lt - f.t; if (age < 0 || age > 1.8) continue;
       const k = age / 1.8, fx = f.x * 0.6 + 70, fz = f.z * 0.5;
