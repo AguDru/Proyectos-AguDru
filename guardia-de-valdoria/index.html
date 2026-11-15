@@ -740,6 +740,7 @@ const H = { rayo: makeHero('rayo'), guardian: makeHero('guardian'), sombra: make
 const FRIENDS = { duna: makeHero('duna'), glaciar: makeHero('glaciar'), cometa: makeHero('cometa') };
 const FIRST3 = ['duna', 'glaciar', 'cometa'];
 // ---------- the two great armies of the final war (instanced, so a thousand of each are cheap) ----------
+const ARMY_N = 1800;
 const ARMY = (() => {
   const g = (geo, f) => { f(geo); return geo; };
   const eg = mergeGeos([
@@ -755,8 +756,8 @@ const ARMY = (() => {
   ]);
   const mk = (geo, mat, n) => { const m = new THREE.InstancedMesh(geo, mat, n); m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.frustumCulled = false; m.visible = false; scene.add(m); return m; };
   const A = {
-    enemy: mk(eg, new THREE.MeshStandardMaterial({ color: 0x4a4e5e, map: BRUSH, metalness: 0.6, roughness: 0.45 }), 1000),
-    eyes: mk(new THREE.BoxGeometry(0.08, 0.05, 0.3), new THREE.MeshBasicMaterial({ color: 0xff3040 }), 1000),
+    enemy: mk(eg, new THREE.MeshStandardMaterial({ color: 0x4a4e5e, map: BRUSH, metalness: 0.6, roughness: 0.45 }), ARMY_N),
+    eyes: mk(new THREE.BoxGeometry(0.08, 0.05, 0.3), new THREE.MeshBasicMaterial({ color: 0xff3040 }), ARMY_N),
     cit: mk(cg, new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0.35 }), 1000),
     dr: mk(DRONE_BODY, MAT.drone, 160), drr: mk(DRONE_RING, MAT.red, 160)
   };
@@ -791,20 +792,31 @@ function armyPhase(lt, t) {
   cityState(t, { lights: 0, ruined: true, fire: 0.6, oz: OUTSKIRTS });
   const Mx = new THREE.Matrix4(), P = new THREE.Vector3(), S1 = new THREE.Vector3(1, 1, 1), Qy = new THREE.Quaternion().setFromAxisAngle(UP, Math.PI), Q0 = new THREE.Quaternion(), Z = new THREE.Matrix4().makeScale(0, 0, 0);
   const march = ss(4, 10, lt), frontX = 24 - march * 14;
-  // Malvor's army: rows fall to the heroes first, then to the friends and the dragons
-  for (let i = 0; i < 1000; i++) {
-    const row = Math.floor(i / 40), col = i % 40;
-    const x = 24 + row * 1.7 + (hash(i, 1, 2) - 0.5) * 0.6 - march * 14, z = -14 + col * 0.82 + (hash(i, 3, 4) - 0.5) * 0.4;
-    const die = row < 4 ? 8.9 + hash(i, 5, 6) * 1.1 : row < 15 ? 22 + hash(i, 7, 8) * 5.8 : 1e9;
-    if (lt > die) { ARMY.enemy.setMatrixAt(i, Z); ARMY.eyes.setMatrixAt(i, Z); if (i % 7 === 0 && lt - die < 1.1) boom(V(x, 1.2, z), lt - die, 1.6); continue; }
-    const by = march > 0 && march < 1 ? Math.abs(Math.sin(lt * 9 + i)) * 0.12 : 0;
-    Mx.compose(P.set(x, by, z), Qy, S1); ARMY.enemy.setMatrixAt(i, Mx);
-    Mx.compose(P.set(x - 0.22, by + 1.92, z), Qy, S1); ARMY.eyes.setMatrixAt(i, Mx);
+  // Malvor's army: no neat rows. Soldiers are scattered in groups, always moving, and they take a lot to bring down
+  const Qs = new THREE.Quaternion(), EYE = new THREE.Vector3();
+  const front2x = 11 + 8 * ss(21.8, 27.8, lt);
+  for (let i = 0; i < ARMY_N; i++) {
+    // soldiers move in loose groups with open ground between them; each group drifts on its own
+    const h1 = hash(i, 1, 2), h2 = hash(i, 3, 4), h3 = hash(i, 5, 6), g = i % 44;
+    const front = g < 9, gd0 = front ? hash(g, 1, 1) * 2.5 : 4 + 32 * Math.pow(hash(g, 1, 1), 1.1);
+    const gz0 = front ? -13 + g * 3.3 + (hash(g, 2, 2) - 0.5) * 1.5 : (hash(g, 2, 2) - 0.5) * 56, R = 1.8 + hash(g, 3, 3) * 3.2;
+    const roam = march < 1 ? 0.5 : 1, a = h2 * TAU, r = Math.sqrt(h1) * R;
+    const d = Math.max(0, gd0 + Math.cos(a) * r + Math.sin(lt * 0.4 + g * 1.7) * 1.4 * roam * (front ? 0.4 : 1));
+    const x = frontX + d + Math.sin(lt * 0.9 + i * 1.7) * 0.35;
+    const z = gz0 + Math.sin(a) * r + Math.sin(lt * 0.33 + g * 2.1) * 2.4 * roam + Math.sin(lt * 0.7 + i * 2.3) * 0.4;
+    // first clash: only a few at the very front fall; second clash: the front is pushed back slowly
+    const die = d < 1.6 && h3 < 0.4 ? 9.2 + h3 * 2 : d < 8.5 ? 21.9 + d * 0.68 + h3 * 0.7 : d < 15 && h3 < 0.45 ? 25 + h3 * 6 : 1e9;
+    if (lt > die) { ARMY.enemy.setMatrixAt(i, Z); ARMY.eyes.setMatrixAt(i, Z); if (i % 5 === 0 && lt - die < 1.1) boom(V(x, 1.2, z), lt - die, 1.6); continue; }
+    const by = Math.abs(Math.sin(lt * (march < 1 ? 9 : 4) + i)) * 0.12;
+    Qs.setFromAxisAngle(UP, Math.PI + Math.sin(lt * 0.5 + i) * 0.55);
+    Mx.compose(P.set(x, by, z), Qs, S1); ARMY.enemy.setMatrixAt(i, Mx);
+    EYE.set(0.22, 1.92, 0).applyQuaternion(Qs);
+    Mx.compose(P.set(x + EYE.x, by + EYE.y, z + EYE.z), Qs, S1); ARMY.eyes.setMatrixAt(i, Mx);
   }
   const dronePos = [];
   for (let i = 0; i < 160; i++) {
     const die = i < 45 ? 8 + hash(i, 9, 1) * 5 : i < 125 ? 19.2 + hash(i, 2, 9) * 8.5 : 1e9;
-    const p = V(18 + (i % 16) * 2.6 - march * 6 + Math.sin(lt + i) * 0.6, 8 + (i % 7) * 2.6 + Math.cos(lt * 1.3 + i) * 0.5, -16 + Math.floor(i / 16) * 3.6);
+    const p = V(16 + hash(i, 4, 7) * 44 - march * 6 + Math.sin(lt * 0.8 + i) * 1.4, 6 + hash(i, 8, 3) * 22 + Math.cos(lt * 1.3 + i) * 0.8, -22 + hash(i, 6, 5) * 44 + Math.sin(lt * 0.6 + i * 2) * 1.5);
     if (lt > die) { ARMY.dr.setMatrixAt(i, Z); ARMY.drr.setMatrixAt(i, Z); if (i % 3 === 0) boom(p, lt - die, 2.2); continue; }
     dronePos.push(p);
     Mx.compose(p, Q0.setFromAxisAngle(UP, lt + i), S1); ARMY.dr.setMatrixAt(i, Mx); ARMY.drr.setMatrixAt(i, Mx);
@@ -822,7 +834,7 @@ function armyPhase(lt, t) {
   const beaten = ss(12.8, 13.6, lt) * (1 - ss(17.6, 18.4, lt));
   const raise = Math.max(ss(6, 6.3, lt) * (1 - ss(6.9, 7.2, lt)), ss(18.4, 18.7, lt) * (1 - ss(19.4, 19.7, lt)));
   // they run to the front (never jump) and fight it from close by with their powers, spread along the line
-  const front2 = 15 + 3 * ss(22, 27.5, lt);
+  const front2 = front2x;
   const STAND = { rayo: 2.6, guardian: 3.2, sombra: 1.4 };
   const Z1 = { rayo: -6, guardian: 0.5, sombra: 7 }, Z2 = { rayo: -9, guardian: 1, sombra: 8 };
   const kb = ss(22.8, 23.6, lt) * (1 - ss(25.6, 26.3, lt)), vb = ss(25.2, 25.9, lt) * (1 - ss(27.4, 28, lt));
@@ -855,6 +867,7 @@ function armyPhase(lt, t) {
         if (id === 'rayo' && kb > 0.5) tgt = kc; if (id === 'sombra' && vb > 0.5) tgt = vc;
         const c = spot.clone().add(V(1.4, 0, 0));
         powerFx(id, out[id], tgt, f, 1, ff => orbitAt(c, Math.max(0, ff) * SORB, 1.4, 0));
+        if (Math.sin(lt * 9 + i * 2.5) > 0.55) { const from = V(spot.x + STAND[id] + 1.2 + Math.sin(lt * 3 + i) * 1.5, 1.5, spot.z + Math.cos(lt * 2.3 + i) * 2); laser(from, out[id].chest); glow(out[id].chest, 1.2, RED, 0.6); }
       }
       return;
     }
@@ -919,7 +932,7 @@ const GHOSTS = [makeHero('sombra', true), makeHero('sombra', true), makeHero('so
 const MALVOR = makeMalvor(false, { sword: true }), MALHOLO = makeMalvor(true, { sword: true });
 const KROG = makeMalvor(false, { armor: 0x4d3a26, cape: 0x3a2008, eye: 0xff8a30 }), VEXA = makeMalvor(false, { armor: 0x3c3048, cape: 0x2a0838, eye: 0xd040ff });
 const ALLY = [[KROG, [255, 138, 48]], [VEXA, [208, 64, 255]]];
-const MINIONS = Array.from({ length: 9 }, (_, i) => makeMalvor(false, { armor: [0x3a3f4a, 0x4a3a3a, 0x3a4048][i % 3], cape: 0x2a1010, eye: 0xff5040 }));
+const MINIONS = Array.from({ length: 15 }, (_, i) => makeMalvor(false, { armor: [0x3a3f4a, 0x4a3a3a, 0x3a4048][i % 3], cape: 0x2a1010, eye: 0xff5040 }));
 const SHIP = makeShip(false), SHIPHOLO = makeShip(true);
 
 const bomb = new THREE.Group(); {
@@ -1441,19 +1454,26 @@ function ceresOrbit(a, lt, t) {
 // close combat in the second part of the wars: each hero runs (never jumps) to three soldiers in turn
 // and fights each one up close with their own power
 const MSPD = { rayo: 9, guardian: 9, sombra: 22 };   // running speed; Mangar has super speed
+const MR = (i, k) => { const v = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453; return v - Math.floor(v); };
 function minionAt(i, p2, base, space) {
-  const sx = 2 + (i % 3) * 2, sz = -6 + i * 1.6;
-  return V(sx - clamp(p2 - 0.8, 0, 1.5) * 0.8, base + lerp(18, 0, ss(0.2 + i * 0.12, 0.8 + i * 0.12, p2)) + (space ? Math.sin(p2 * 2 + i) * 0.4 : 0), sz);
+  // soldiers 0-5 are the ones the heroes fight; the rest spread out behind them
+  const sx = i < 6 ? 2 + (i % 3) * 2.2 + (MR(i, 1) - 0.5) * 1.6 : 5 + MR(i, 2) * 8;
+  const sz = i < 6 ? -6.5 + (i % 3) * 2.2 + Math.floor(i / 3) * 6 + (MR(i, 3) - 0.5) * 2 : -9 + MR(i, 4) * 18;
+  const land = 0.2 + MR(i, 5) * 1.1, roam = clamp(p2 - land - 0.6);
+  return V(sx - clamp(p2 - 0.8, 0, 1.5) * 0.8 + Math.sin(p2 * 1.3 + i * 1.7) * 0.5 * roam, base + lerp(18, 0, ss(land, land + 0.6, p2)) + (space ? Math.sin(p2 * 2 + i) * 0.4 : 0), sz + Math.cos(p2 * 1.1 + i * 2.3) * 0.7 * roam);
 }
+// when each extra soldier falls: the friends take some, the big blast of the third part takes the rest
+const FRIEND_TG = j => [6 + j * 2, 7 + j * 2];
+function extraKill(i, nFriends) { for (let j = 0; j < nFriends; j++) { const m = FRIEND_TG(j).indexOf(i); if (m >= 0) return 3.2 + m * 2.2; } return 12.5 + MR(i, 6) * 0.4; }
 function meleePlan(hi, base, space, home) {
   const id = IDS[hi], H0 = V(home[0], home[1], home[2]), legs = [];
   let t = 0.5, pos = H0;
-  for (let n = 0; n < 3; n++) {
+  for (let n = 0; n < 2; n++) {
     const m = minionAt(hi + 3 * n, 3, base, space);
     const spot = V(m.x - (id === 'rayo' ? 2.6 : id === 'guardian' ? 3.2 : 1.4), space ? m.y - 0.3 : 0, m.z);
     const ta = t + Math.max(0.45, pos.distanceTo(spot) / MSPD[id]);
-    legs.push({ from: pos, t0: t, spot, ta, kt: ta + 0.85, m });
-    t = ta + 1.0; pos = spot;
+    legs.push({ from: pos, t0: t, spot, ta, kt: ta + 1.5, m });
+    t = ta + 1.65; pos = spot;
   }
   return { legs, home: H0, last: pos, r0: t, r1: t + Math.max(0.5, pos.distanceTo(H0) / MSPD[id]) };
 }
@@ -1488,9 +1508,9 @@ function meleeOverride(id, p2, plan, space) {
   for (const g of L) {
     if (p2 < g.t0) break;
     if (p2 < g.ta) { const k = clamp((p2 - g.t0) / (g.ta - g.t0)); return { pos: g.from.clone().lerp(g.spot, k), yaw: faceYaw(g.from, g.spot), fly: fl, walk: space ? undefined : p2 * 11 + hi, aR: 0.7, aL: 0.4, trail: id === 'sombra' }; }
-    if (p2 < g.ta + 1.0) {
+    if (p2 < g.ta + 1.65) {
       const f = p2 - g.ta, pw = powerPose(id, f);
-      if (id === 'sombra' && f < ORBIT_T) return { pos: orbitAt(g.m, f, 1.4, g.spot.y), yaw: orbitYaw(f), fly: fl, walk: space ? undefined : p2 * 16, aR: pw.aR, aL: pw.aL, trail: true };
+      if (id === 'sombra' && f < 2 * ORBIT_T) return { pos: orbitAt(g.m, f, 1.4, g.spot.y), yaw: orbitYaw(f), fly: fl, walk: space ? undefined : p2 * 16, aR: pw.aR, aL: pw.aL, trail: true };
       return { pos: g.spot.clone(), yaw: faceYaw(g.spot, g.m), fly: fl, aR: pw.aR, aL: pw.aL, spread: 0.3 };
     }
   }
@@ -1539,7 +1559,7 @@ function baseAssault(a, lt, t) {
   const lift = ss(12.5, 17, a);
   poseShip(SHIP, V(34, 26 + lift * 18, -90), { s: 0.5, t: lt });
   // Malvor's small soldiers pour out of the door; the heroes take them down one by one
-  MINIONS.forEach((mn, i) => {
+  MINIONS.slice(0, 9).forEach((mn, i) => {
     const out0 = 2.6 + i * 0.25, kt = 3.6 + i * 0.45;
     if (a < out0) return;
     const sx = -6 + i * 2.4, w = clamp((Math.min(a, kt) - out0) / 3);
@@ -1764,7 +1784,7 @@ const DRAW = [
     [['rayo', -0.9], ['guardian', 0], ['sombra', 0.9]].forEach(([id, x]) => poseHero(H[id], V(x, 0.95, -2), { s: 0.55, yaw: -Math.PI / 2 + lt * 0.4, alpha: 0.38 * ha * (0.85 + 0.15 * Math.sin(lt * 20)), t: lt, spread: 0.1 }));
     if (ha > 0) { beam(V(0, 0.9, -2), V(0, 2.2, -2), 1.6, [255, 60, 60], 0.06 * ha); glow(V(0, 1.6, -2), 3, [255, 60, 70], 0.25 * ha); }
     // the army: soldiers wake up along the walls, drones fill the air
-    MINIONS.forEach((mn, i) => { const side = i % 2 ? 1 : -1, z = -3 - Math.floor(i / 2) * 2.6; poseMalvor(mn, V(side * 8.2, 0, z), { s: 0.7, t: lt, yaw: -Math.PI / 2 - side * 0.5, coreK: 0.3 + army * 1.2, col: [255, 90, 70] }); });
+    MINIONS.slice(0, 9).forEach((mn, i) => { const side = i % 2 ? 1 : -1, z = -3 - Math.floor(i / 2) * 2.6; poseMalvor(mn, V(side * 8.2, 0, z), { s: 0.7, t: lt, yaw: -Math.PI / 2 - side * 0.5, coreK: 0.3 + army * 1.2, col: [255, 90, 70] }); });
     for (let i = 0; i < 14; i++) { const k = ss(8.6 + i * 0.08, 9.8 + i * 0.08, lt); if (k <= 0) continue; const an = i * 0.45 + lt * 0.3; drone(V(Math.cos(an) * (5 + (i % 3) * 2), lerp(14, 6 + (i % 4), k), -6 + Math.sin(an) * 3), lt, i, 0.8); }
     camKeys(lt, [[0, [0, 3.2, 10], [0, 2.6, -5]], [4, [2.6, 2.6, 4.5], [0, 4, -6.5]], [8.4, [-1.5, 3, 6], [0, 4.5, -6.5]], [9.6, [0, 6, 13], [0, 3.5, -6]], [12, [0, 7.5, 15.5], [0, 4, -6]]]);
   },
@@ -1898,13 +1918,31 @@ const DRAW = [
       // second part of every battle: Malvor's small soldiers drop in, and the heroes run into them and fight up close
       if (sl > 8) {
         const p2 = sl - 8, base = bi === 2 ? 4 : 0, pts = p2pts;
+        const nFr = [1, 2, 3, 0][bi];
         MINIONS.forEach((mn, i) => {
-          const who = IDS[i % 3], g = PLANS[who].legs[Math.floor(i / 3)], kt = g.kt, mp = minionAt(i, p2, base, bi === 2);
+          const mp = minionAt(i, p2, base, bi === 2);
+          if (i >= 6) {
+            // the extra soldiers move around and keep shooting at the heroes and their friends
+            const kx = extraKill(i, nFr);
+            if (p2 > kx) { boom(mp.clone().add(V(0, 1.4, 0)), p2 - kx, 2.6, [255, 120, 80]); return; }
+            const hitBy = p2 > kx - 1.6;
+            const mc2 = poseMalvor(mn, mp, { s: 0.55, t: lt, col: [255, 90, 70], hurt: hitBy && Math.sin(p2 * 14 + i) > 0.2 ? 1 : 0, yaw: Math.PI + Math.sin(p2 * 0.8 + i) * 0.5 });
+            pts.push(mp.clone().add(V(0, 1.6, 0)));
+            if (p2 > 1.4 && p2 < 6 && Math.sin(p2 * 5 + i * 2.1) > 0.9) { const tg = outW[IDS[i % 3]].chest.clone(); beam(mc2, tg, 0.06, RED, 0.7); glow(tg, 0.9, RED, 0.6); }
+            return;
+          }
+          const who = IDS[i % 3], g = PLANS[who].legs[Math.floor(i / 3)], kt = g.kt;
           pts.push(mp.clone().add(V(0, 1.6, 0)));
           if (p2 > kt) { boom(mp.clone().add(V(0, 1.4, 0)), p2 - kt, 2.6, [255, 120, 80]); return; }
           const fighting = p2 > g.ta && p2 < kt;
           const mc = poseMalvor(mn, mp, { s: 0.55, t: lt, col: [255, 90, 70], hurt: fighting && Math.sin(p2 * 14 + i) > 0.2 ? 1 : 0, yaw: Math.PI });
-          if (fighting) powerFx(who, outW[who], mc, p2 - g.ta, 1, ff => orbitAt(g.m, clamp(ff, 0, ORBIT_T), 1.4, g.spot.y));
+          if (fighting) {
+            const f = p2 - g.ta;
+            powerFx(who, outW[who], mc, f, 1, ff => orbitAt(g.m, clamp(ff, 0, 2 * ORBIT_T), 1.4, g.spot.y));
+            // it doesn't go down easily: a red barrier blocks the first hits, and it strikes back
+            if (f < 0.6) { glow(mc, 2.6, RED, 0.45 * (1 - f / 0.6)); for (let q = 0; q < 8; q++) { const a = q / 8 * TAU; glow(mc.clone().add(V(-0.5, Math.sin(a) * 1.1, Math.cos(a) * 1.1)), 0.35, RED, 0.8 * (1 - f / 0.6)); } }
+            if (f > 0.5 && Math.sin(f * 9 + i) > 0.85) { const tg = outW[who].chest.clone(); beam(mc, tg, 0.08, RED, 0.8); glow(tg, 1.2, RED, 0.7); }
+          }
           if (p2 > kt - 0.18) glow(mc, 3.5, HEROES[who].c, 1);
           if (p2 < g.ta - 0.4 && p2 > 1 && Math.sin(p2 * 6 + i * 1.7) > 0.93) { const tg = outW[who].chest.clone(); beam(mc, tg, 0.07, RED, 0.7); glow(tg, 1, RED, 0.7); }
         });
@@ -1957,12 +1995,12 @@ const DRAW = [
           const mk = sl > t0 + 1 && PLANS ? ss(9.2, 10.4, sl) * (1 - ss(13.2, 14.4, sl)) : 0;
           let fsw = null, ftg = null;
           if (mk > 0) {
-            const u = clamp((sl - 9) / 1.55, 0, 2), n = Math.min(1, Math.floor(u)), fr = ss(0.4, 1, u - n), mi = m => (m * 3 + j + 1) % 9;
+            const u = clamp((sl - 9.2) / 2.2, 0, 1.99), n = Math.min(0, Math.floor(u)), fr = ss(0.85, 1, u - n), mi = m => FRIEND_TG(j)[m];
             const fpAt = m => { const v = minionAt(mi(m), sl - 8, base, bi === 2); return V(v.x - 3, bi === 2 ? v.y - 0.3 : 0, v.z + 0.8); };
             p = p.lerp(fpAt(n).lerp(fpAt(n + 1), fr), mk);
             if (mk > 0.95) {
               fsw = { aR: 1.55, aL: 0.5 };
-              const tm = mi(fr > 0.5 ? n + 1 : n), alive = sl - 8 < PLANS[IDS[tm % 3]].legs[Math.floor(tm / 3)].kt;
+              const tm = mi(fr > 0.5 ? n + 1 : n), alive = sl - 8 < extraKill(tm, 3);
               if (alive) ftg = minionAt(tm, sl - 8, base, bi === 2).add(V(0, 1.4, 0));
             }
           }
@@ -2443,7 +2481,7 @@ const SUBS = [
     const war = 83.3, bs = [0, 1, 2, 3].map(i => war + CARD + i * (CARD + 14 + 11));
     bs.forEach((b, i) => {
       SFX.push({ t: b + 8.6, k: 'boom' }, { t: b + 8.7, k: 'whoosh' });
-      for (let n = 0; n < 3; n++) { const ta = b + 8 + 1.9 + n * 1.7; SFX.push({ t: ta + 0.05, k: 'beam' }, { t: ta + 0.4, k: 'pew' }, { t: ta + 0.85, k: 'boom' }); }
+      for (let n = 0; n < 2; n++) { const ta = b + 8 + 1.9 + n * 2.35; SFX.push({ t: ta + 0.05, k: 'beam' }, { t: ta + 0.3, k: 'hit' }, { t: ta + 0.8, k: 'pew' }, { t: ta + 1.5, k: 'boom' }); }
       SHAKES.push([b + 11.4, 1.3, 0.25]);
       if (i < 2) SFX.push({ t: b + 12.7, k: 'whoosh' });
     });
@@ -2557,7 +2595,7 @@ const SUBS = [
     place('¡El escudo se rompe! ¡No aguanto más!', B + 11.6, 2.6);
     place('¡Volvimos por el portal! ¡Estamos con ustedes!', B + 16.4, 3);
     const ag = SUBS.find(l => l[3] === '¡Aguantá, Sky Warrior! ¡Ahí voy!'); if (ag) ag[3] = '¡Abran paso, que ahí voy!';
-    SUBS.push([B + 3, B + 6.8, 'narrador', 'Malvor reunió un ejército de mil soldados y miles de drones.'], [B + 7.3, B + 10.8, 'rayo', '¡Somos solo tres... pero no nos vamos a rendir!'], [B + 14.1, B + 16.3, 'narrador', 'Entonces se abrieron portales, y llegaron todos los que los habían ayudado.'], [B + 19.6, B + 21.4, 'aliados', '¡Por la Guardia de Valdoria!']);
+    SUBS.push([B + 3, B + 6.8, 'narrador', 'Malvor reunió un ejército de casi dos mil soldados y miles de drones.'], [B + 7.3, B + 10.8, 'rayo', '¡Somos solo tres... pero no nos vamos a rendir!'], [B + 14.1, B + 16.3, 'narrador', 'Entonces se abrieron portales, y llegaron todos los que los habían ayudado.'], [B + 19.6, B + 21.4, 'aliados', '¡Por la Guardia de Valdoria!']);
     SFX.push({ t: B + 0.6, k: 'rumble' }, { t: B + 6.1, k: 'rumble' }, { t: B + 6.4, k: 'beam' }, { t: B + 14.1, k: 'whoosh' }, { t: B + 14.4, k: 'whoosh' }, { t: B + 14.7, k: 'whoosh' }, { t: B + 16.4, k: 'rumble' }, { t: B + 17.2, k: 'beam' });
     for (let q = 0; q < 10; q++) SFX.push({ t: B + 7 + q * 0.7, k: q % 2 ? 'pew' : 'boom' });
     for (let q = 0; q < 12; q++) SFX.push({ t: B + 17.6 + q * 0.35, k: 'boom' });
