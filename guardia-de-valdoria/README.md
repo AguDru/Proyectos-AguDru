@@ -1,6 +1,6 @@
 # La Guardia de Valdoria
 
-Cortometraje animado en 3D de ciencia ficción (5 min 45 s).
+Cortometraje animado en 3D de ciencia ficción (5 min 51 s).
 
 Thunderbolt, Sky Warrior y Mangar pelean durante cinco años contra Malvor y su ejército de drones hasta salvar la ciudad de Valdoria.
 
