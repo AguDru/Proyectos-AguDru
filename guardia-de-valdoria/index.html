@@ -104,7 +104,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · 3 min 43 s</div>
+    <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · 4 min 8 s</div>
     <h1>La Guardia de <span>Valdoria</span></h1>
     <p class="logline">Año 2187. Malvor invade la ciudad de Valdoria con un ejército de drones. Thunderbolt, Sky Warrior y Mangar pelean contra él durante cinco años y cien batallas. Más de una vez están a punto de perder a uno de los suyos, hasta que descubren cómo derrotarlo.</p>
   </header>
@@ -130,8 +130,8 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
     <div class="controls">
       <button class="btn" id="play">Reproducir</button>
       <button class="btn" id="restart">Desde el inicio</button>
-      <input type="range" id="scrub" min="0" max="223.8" step="0.01" value="0" aria-label="Posición en la película">
-      <span class="time" id="time">0:00 / 3:43</span>
+      <input type="range" id="scrub" min="0" max="247.8" step="0.01" value="0" aria-label="Posición en la película">
+      <span class="time" id="time">0:00 / 4:07</span>
       <button class="btn" id="sound" aria-pressed="true">Sonido: encendido</button>
     </div>
   </section>
@@ -162,7 +162,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 <script>
 (() => {
-const DUR = 223.8;
+const DUR = 247.8;
 const CARD = 3.6; // seconds a black year card stays on screen while the battle waits
 const cv = document.getElementById('film');
 const subsEl = document.getElementById('subs'), scrub = document.getElementById('scrub');
@@ -233,8 +233,8 @@ const SHAKES = [[24.2, 0.6, 0.3], [13, 1.6, 1.2], [14, 3, 0.15], [95.6, 1.6, 0.3
 
 const SCENES = [
   { a: 0, b: 10, name: 'Prólogo' }, { a: 10, b: 22, name: 'La invasión' }, { a: 22, b: 41.5, name: 'Los héroes' },
-  { a: 41.5, b: 60.3, name: 'Año 1' }, { a: 60.3, b: 70.3, name: 'La guarida' }, { a: 70.3, b: 83.3, name: 'El cuartel' }, { a: 83.3, b: 164.2, name: 'Cinco años de guerra' }, { a: 164.2, b: 176.2, name: 'Al borde' },
-  { a: 176.2, b: 186.2, name: 'El plan' }, { a: 186.2, b: 205.8, name: 'Batalla final' }, { a: 205.8, b: 223.8, name: 'Amanecer' }
+  { a: 41.5, b: 60.3, name: 'Año 1' }, { a: 60.3, b: 70.3, name: 'La guarida' }, { a: 70.3, b: 83.3, name: 'El cuartel' }, { a: 83.3, b: 188.2, name: 'Cinco años de guerra' }, { a: 188.2, b: 200.2, name: 'Al borde' },
+  { a: 200.2, b: 210.2, name: 'El plan' }, { a: 210.2, b: 229.8, name: 'Batalla final' }, { a: 229.8, b: 247.8, name: 'Amanecer' }
 ];
 
 // ---------- 3D setup ----------
@@ -684,6 +684,7 @@ const GHOSTS = [makeHero('sombra', true), makeHero('sombra', true), makeHero('so
 const MALVOR = makeMalvor(false, { sword: true }), MALHOLO = makeMalvor(true, { sword: true });
 const KROG = makeMalvor(false, { armor: 0x4d3a26, cape: 0x3a2008, eye: 0xff8a30 }), VEXA = makeMalvor(false, { armor: 0x3c3048, cape: 0x2a0838, eye: 0xd040ff });
 const ALLY = [[KROG, [255, 138, 48]], [VEXA, [208, 64, 255]]];
+const MINIONS = Array.from({ length: 6 }, (_, i) => makeMalvor(false, { armor: [0x3a3f4a, 0x4a3a3a, 0x3a4048][i % 3], cape: 0x2a1010, eye: 0xff5040 }));
 const SHIP = makeShip(false), SHIPHOLO = makeShip(true);
 
 const bomb = new THREE.Group(); {
@@ -1087,7 +1088,7 @@ function skirmish(lt, D, P, o = {}) {
     const p = P[id], bob = o.fly ? Math.sin(lt * 2 + i * 2) * 0.4 : 0;
     const ovr = o.overrides ? o.overrides(id) : null;
     if (ovr) {
-      out[id] = poseHero(H[id], ovr.pos, { yaw: ovr.yaw || 0, aR: ovr.aR ?? 0.4, aL: ovr.aL ?? 0.3, fly: ovr.fly, aura: 0.8, t: lt, rot: ovr.rot || 0, glowK: ovr.glowK ?? 1, fulgor: ovr.glowK ?? 1, spread: 0.12 });
+      out[id] = poseHero(H[id], ovr.pos, { yaw: ovr.yaw || 0, walk: ovr.walk, aR: ovr.aR ?? 0.4, aL: ovr.aL ?? 0.3, fly: ovr.fly, aura: 0.8, t: lt, rot: ovr.rot || 0, glowK: ovr.glowK ?? 1, fulgor: ovr.glowK ?? 1, spread: 0.12 });
       if (ovr.trail) glow(out[id].chest, 3, HEROES[id].c, 0.7);
       return;
     }
@@ -1297,7 +1298,7 @@ const DRAW = [
   function montage(lt, t) {
     // five years of war: four long battles, with a discovery about Malvor between each one
     const PARTS = [['c', 0], ['b', 0], ['d', 0], ['c', 2], ['b', 2], ['d', 3], ['c', 4], ['b', 4], ['d', 5], ['c', 6], ['b', 6]];
-    const LAST = PARTS[PARTS.length - 1], lenOf = pt => pt[0] === 'c' ? CARD : pt[0] === 'd' ? 11 : pt === LAST ? 9.5 : 8;
+    const LAST = PARTS[PARTS.length - 1], lenOf = pt => pt[0] === 'c' ? CARD : pt[0] === 'd' ? 11 : pt === LAST ? 15.5 : 14;
     let rest = lt, part = LAST;
     for (const pt of PARTS) { const len = lenOf(pt); if (rest < len) { part = pt; break; } rest -= len; }
     const plen = lenOf(part);
@@ -1331,7 +1332,11 @@ const DRAW = [
             return { pos: p, yaw: yawTo(p, sl < TC ? catchP : rBase), fly: true, aR: carrying ? 1.5 : 1.4, aL: carrying ? 1.5 : 0.6, trail: !carrying };
           }
           if (id === 'rayo' && sl > T0) {
-            if (sl < TC) return { pos: fallPos(sl), rot: (sl - T0) * 5, aR: 2.6, glowK: 0.3 };
+            if (sl < TC) {
+              // knocked out, he tumbles slowly backwards around his own middle, arms and legs loose
+              const f = sl - T0, th = f * 1.7, c = fallPos(sl);
+              return { pos: c.sub(V(-Math.sin(th), Math.cos(th), 0).multiplyScalar(1.0)), rot: th, aR: 2.1 + Math.sin(f * 4) * 0.4, aL: 1.4 + Math.sin(f * 3.3 + 1) * 0.5, walk: f * 2.2, glowK: 0.3 };
+            }
             if (carrying) {
               const p = sPos(), yS = yawTo(p, rBase), fwd = V(Math.cos(yS), 0, -Math.sin(yS));
               const C = p.clone().add(V(0, 1.12, 0)).addScaledVector(fwd, 0.5);
@@ -1350,12 +1355,18 @@ const DRAW = [
       // in the wars of Ceres and of the ice moons, one of Malvor's allies joins the fight
       let ally = null;
       if (bi < 2) {
-        const [am, ac2] = ALLY[bi], k = ss(0.8, 1.5, sl);
-        const ap = V(bi ? 14 : 16, lerp(26, 0, k) + Math.sin(sl * 1.6) * 0.12, bi ? 3 : -2);
-        const acore = poseMalvor(am, ap, { s: 1.15, t: lt, col: ac2 });
+        const [am, ac2] = ALLY[bi], k = ss(0.8, 1.5, sl), leave = ss(12.6, 14, sl);
+        const ap = V((bi ? 14 : 16) + leave * 10, lerp(26, 0, k) + Math.sin(sl * 1.6) * 0.12 + leave * leave * 30, bi ? 3 : -2);
+        const acore = poseMalvor(am, ap, { s: 1.15, t: lt, col: ac2, hurt: sl > 11 && sl < 12.5 ? 0.6 : 0 });
+        if (leave > 0) for (let q = 1; q < 7; q++) glow(ap.clone().add(V(-q * 0.6, -q * 1.6 * leave + 2, 0)), 3 - q * 0.35, ac2, 0.5 * leave);
+        if (bi === 0 && sl > 3.1 && sl < 3.9) {
+          // Krog lifts a boulder over his head before throwing it at Sky Warrior
+          hurtRock.visible = true; hurtRock.material.color.setHex(0x8a5a3a); hurtRock.scale.setScalar(1.3);
+          hurtRock.position.copy(acore).add(V(0, 2.2 + ss(3.1, 3.6, sl) * 0.9, 0)); hurtRock.rotation.set(sl, sl * 0.7, 0);
+        }
         ally = { ap, acore, c: ac2 };
         if (sl > 1.5 && sl < 2.3) { const q = (sl - 1.5) / 0.8; ring.visible = true; ring.position.set(ap.x, 0.2, ap.z); ring.rotation.set(Math.PI / 2, 0, 0); ring.scale.setScalar(1 + q * 16); ring.material.opacity = 1 - q; ring.material.color.setRGB(ac2[0] / 255, ac2[1] / 255, ac2[2] / 255); }
-        if (bi === 0) HURTS[0].from = acore.clone().add(V(-1, 1.2, 0));
+        if (bi === 0) HURTS[0].from = acore.clone().add(V(0, 3.1, 0));
       }
       const outW = skirmish(sl, D_WAR[bi], bi === 2 ? { rayo: [-8, 5, 1.5], guardian: [-6.5, 7.5, -1], sombra: [-5, 3.5, 2.2] } : ground, { fly: bi === 2, hurtHero: HURTS[bi], overrides });
       if (ally) {
@@ -1368,13 +1379,36 @@ const DRAW = [
         // Vexa shoots the ice above Mangar, and the shard falls on her
         if (bi === 1 && sl > 2.1 && sl < 2.5) { const top = outW.sombra.chest.clone().add(V(0.6, 10, 0.3)); beam(ally.acore, top, 0.3, ally.c, 0.9); glow(top, 4, ally.c, 0.9); }
         // the heroes fire back at the ally
-        if (sl > 3 && Math.sin(sl * 9) > 0.6) { const hit = ally.acore.clone().add(V(0, Math.sin(sl * 5), 0)); beam(outW.rayo.hand, hit, 0.12, HEROES.rayo.c, 0.8); glow(hit, 2, HEROES.rayo.c, 0.8); }
+        if (sl > 3 && sl < 12.6 && Math.sin(sl * 9) > 0.6) {
+          // he is hard to beat: the shots bounce off an energy barrier
+          const hit = ally.acore.clone().add(V(-1.6, Math.sin(sl * 5), 0)); beam(outW.rayo.hand, hit, 0.12, HEROES.rayo.c, 0.8); glow(hit, 2, HEROES.rayo.c, 0.8);
+          domeWire.visible = true; domeWire.position.copy(ally.acore); domeWire.scale.setScalar(2.4); domeWire.material.color.setRGB(ally.c[0] / 255, ally.c[1] / 255, ally.c[2] / 255); domeWire.material.opacity = 0.5;
+        }
+      }
+      // second part of every battle: Malvor's small soldiers drop in, the heroes answer with a team attack
+      if (sl > 8) {
+        const p2 = sl - 8, base = bi === 2 ? 4 : 0, pts = [];
+        MINIONS.forEach((mn, i) => {
+          const sx = 6 + (i % 3) * 3.2, sz = -4.5 + i * 1.8, kt = 3.4 + i * 0.22;
+          const xAt = tt => sx - Math.max(0, tt - 0.8) * 0.6;
+          const mp = V(xAt(Math.min(p2, kt)), base + lerp(18, 0, ss(0.2 + i * 0.12, 0.8 + i * 0.12, p2)) + (bi === 2 ? Math.sin(p2 * 2 + i) * 0.4 : 0), sz);
+          pts.push(mp.clone().add(V(0, 1.6, 0)));
+          if (p2 > kt) { boom(mp.clone().add(V(0, 1.4, 0)), p2 - kt, 2.6, [255, 120, 80]); return; }
+          const mc = poseMalvor(mn, mp, { s: 0.55, t: lt, col: [255, 90, 70] });
+          if (p2 > 1 && Math.sin(p2 * 6 + i * 1.7) > 0.93) { const tg = outW.guardian.chest.clone().add(V(3.2, (i % 3) * 0.4 - 0.3, (i % 2) - 0.5)); beam(mc, tg, 0.08, RED, 0.8); glow(tg, 1.2, RED, 0.8); }
+          // Thunderbolt calls lightning down on each one
+          if (p2 > kt - 0.3 && p2 < kt) { const top = mp.clone().add(V(0, 24, 0)); let a = top; for (let q = 1; q <= 4; q++) { const b2 = top.clone().lerp(mc, q / 4).add(V((q % 2 ? 1 : -1) * 0.8 * (q < 4), 0, 0)); beam(a, b2, 0.18, HEROES.rayo.c, 1); beam(a, b2, 0.06, [255, 255, 255], 1); a = b2; } glow(mc, 4, HEROES.rayo.c, 1); }
+        });
+        // Mangar races through them, Sky Warrior sends a shock wave along the ground
+        if (p2 > 3 && p2 < 4.8) { const fa = 1 - ss(4.2, 4.8, p2); for (let q = 0; q < pts.length - 1; q++) { beam(pts[q], pts[q + 1], 0.3, HEROES.sombra.c, 0.6 * fa); beam(pts[q], pts[q + 1], 0.08, [255, 240, 200], fa); } }
+        if (p2 > 3.1 && p2 < 4.3) { const q = (p2 - 3.1) / 1.2; ring2.visible = true; ring2.position.set(-6.5, base + 0.3, -0.8); ring2.rotation.set(Math.PI / 2, 0, 0); ring2.scale.setScalar(1 + q * 22); ring2.material.opacity = 1 - q; ring2.material.color.setHex(0xa77bff); }
+        if (p2 > 2.6 && p2 < 3.4) glow(outW.rayo.hand, 3 * ss(2.6, 3.3, p2), HEROES.rayo.c, 1);
       }
       const cams = [
-        [[0, [-16, 3.2, 14], [6, 3, 0]], [4, [-12, 2.6, 11], [2, 2, 0]], [8, [-15, 3.8, 15], [6, 3, 0]]],
-        [[0, [-6, 2.2, 16], [4, 3, 0]], [3, [-8, 2, 11], [-4, 1.5, 1]], [8, [-3, 2.6, 16], [4, 3, 0]]],
-        [[0, [-19, 9, 12], [6, 6, 0]], [2.6, [-17, 7, 13], [-7, 4, 1]], [4.4, [-16, -3, 12], [-11, -6.5, 3]], [5.8, [-13, 4, 11], [-7, 5, 1]], [8, [-12, 6, 9], [50, 8, -88]]],
-        [[0, [-14, 6, 13], [5, 2, 0]], [4, [-12, 3, 10], [-2, 1.5, 0]], [8, [-11, 5, 14], [5, 2, 0]]]
+        [[0, [-16, 3.2, 14], [6, 3, 0]], [4, [-12, 2.6, 11], [2, 2, 0]], [8, [-15, 3.8, 15], [6, 3, 0]], [9.5, [-15, 4, 15], [8, 3, 0]], [11.3, [-11, 3, 11], [8, 2.5, 0]], [14, [-17, 6, 16], [10, 8, 0]]],
+        [[0, [-6, 2.2, 16], [4, 3, 0]], [3, [-8, 2, 11], [-4, 1.5, 1]], [8, [-3, 2.6, 16], [4, 3, 0]], [9.5, [-15, 4, 15], [7, 3, 0]], [11.3, [-11, 3, 11], [8, 2.5, 0]], [14, [-17, 6, 16], [10, 8, 0]]],
+        [[0, [-19, 9, 12], [6, 6, 0]], [2.6, [-17, 7, 13], [-7, 4, 1]], [4.4, [-16, -3, 12], [-11, -6.5, 3]], [5.8, [-13, 4, 11], [-7, 5, 1]], [8, [-12, 6, 9], [50, 8, -88]], [9.5, [-14, 8, 13], [5, 6, 0]], [11.3, [-10, 6, 10], [7, 5, 0]], [14, [-16, 9, 15], [6, 6, 0]]],
+        [[0, [-14, 6, 13], [5, 2, 0]], [4, [-12, 3, 10], [-2, 1.5, 0]], [8, [-11, 5, 14], [5, 2, 0]], [9.5, [-15, 4, 15], [7, 3, 0]], [11.3, [-11, 3, 11], [8, 2.5, 0]], [15.5, [-17, 6, 16], [8, 6, 0]]]
       ];
       camKeys(sl, cams[bi]);
       const labels = [['AÑO 2', 'Desiertos de Ceres'], ['AÑO 3', 'Lunas de hielo de Tauro'], ['AÑO 4', 'Cinturón de asteroides'], ['AÑO 5', 'De vuelta en Valdoria']];
@@ -1584,7 +1618,7 @@ draw = function (t) {
   const sc = SCENES[idx], lt = t - sc.a, len = sc.b - sc.a;
   POOLS.forEach(p => p.reset()); gpN = 0;
   [H.rayo, H.guardian, H.sombra, ...GHOSTS].forEach(h => h.g.visible = false);
-  [MALVOR, MALHOLO, KROG, VEXA].forEach(m => m.g.visible = false);
+  [MALVOR, MALHOLO, KROG, VEXA, ...MINIONS].forEach(m => m.g.visible = false);
   [SHIP, SHIPHOLO].forEach(s => s.g.visible = false);
   hurtRock.visible = hurtShard.visible = false; SCIENTIST.visible = false; BIGROCK.visible = REDMOON.visible = false;
   bomb.visible = domeClip.visible = domeWire.visible = shieldArc.visible = ring.visible = ring2.visible = false;
@@ -1789,9 +1823,33 @@ const SUBS = [
   place('¡Se escapan!', B1 + 13.9, 1.3);
   SFX.push({ t: B1 + 11.8, k: 'boom' }, { t: B1 + 12.2, k: 'pew' }, { t: B1 + 12.8, k: 'boom' }, { t: B1 + 13.3, k: 'whoosh' }, { t: B1 + 13.5, k: 'rumble' });
   SHAKES.push([B1 + 11.8, 0.7, 0.35]);
+  // every war battle gets a 6 s second part
+  [164.2, 140.1, 117.5, 94.9].forEach(P => {
+    SUBS.forEach(l => { if (l[0] >= P) { l[0] += 6; l[1] += 6; } });
+    SFX.forEach(e => { if (e.t >= P) e.t += 6; });
+    SHAKES.forEach(x => { if (x[0] >= P) x[0] += 6; });
+  });
+  {
+    const war = SCENES.find(x => x.name === 'Cinco años de guerra').a, bs = [0, 1, 2, 3].map(i => war + CARD + i * (CARD + 14 + 11));
+    bs.forEach((b, i) => {
+      SFX.push({ t: b + 8.6, k: 'boom' }, { t: b + 9.8, k: 'pew' }, { t: b + 10.4, k: 'pew' }, { t: b + 11.1, k: 'beam' });
+      for (let q = 0; q < 6; q++) SFX.push({ t: b + 11.4 + q * 0.22, k: 'boom' });
+      SHAKES.push([b + 11.4, 1.3, 0.25]);
+      if (i < 2) SFX.push({ t: b + 12.7, k: 'whoosh' });
+    });
+    const L = [
+      [[8.3, 10, 'sombra', '¡Cuidado, vienen más robots!'], [10.2, 11.6, 'guardian', '¡Todos juntos, ahora!'], [12.2, 14, 'rayo', '¡Ese gigante no se cae con nada!']],
+      [[8.3, 10, 'guardian', '¡Más soldados de Malvor!'], [10.2, 11.6, 'rayo', '¡Todos juntos, ahora!'], [12.4, 14, 'sombra', '¡Se escapa otra vez!']],
+      [[8.4, 10, 'sombra', '¡Más robots de Malvor!'], [10.2, 11.6, 'guardian', '¡Todos juntos, ahora!']],
+      [[8.6, 10.2, 'sombra', '¡Vienen más soldados!'], [10.3, 11.6, 'guardian', '¡Todos juntos, ahora!']]
+    ];
+    L.forEach((ls, i) => ls.forEach(([a, b2, who, txt]) => SUBS.push([bs[i] + a, bs[i] + b2, who, txt])));
+    place('¡No vamos a perder nuestra ciudad!', bs[3] + 12.4, 2.8);
+    SUBS.sort((a, b2) => a[0] - b2[0]);
+  }
   // the allies' attacks in the wars of Ceres and of the ice moons
   {
-    const war = SCENES.find(x => x.name === 'Cinco años de guerra').a, starts = [war + CARD, war + CARD + 8 + 11 + CARD];
+    const war = SCENES.find(x => x.name === 'Cinco años de guerra').a, starts = [war + CARD, war + CARD + 14 + 11 + CARD];
     starts.forEach(b0 => {
       SFX.push({ t: b0 + 1.5, k: 'boom' }, { t: b0 + 1.0, k: 'whoosh' }); SHAKES.push([b0 + 1.5, 0.5, 0.3]);
       for (let n = 0; n < 5; n++) { const st = b0 + 1.8 + n * 1.1; SFX.push({ t: st, k: 'pew' }, { t: st + 0.18, k: 'boom' }); }
@@ -1805,13 +1863,13 @@ const SUBS = [
 const CARD_WINDOWS = (() => {
   const w = [], war = SCENES.find(s => s.name === 'Cinco años de guerra');
   ['Año 1', 'Batalla final'].forEach(n => { const a = SCENES.find(s => s.name === n).a; w.push([a, a + CARD]); });
-  let x = war.a; for (const len of [CARD, 8, 11, CARD, 8, 11, CARD, 8, 11, CARD]) { if (len === CARD) w.push([x, x + CARD]); x += len; }
+  let x = war.a; for (const len of [CARD, 14, 11, CARD, 14, 11, CARD, 14, 11, CARD]) { if (len === CARD) w.push([x, x + CARD]); x += len; }
   return w;
 })();
 const HOLDS = (() => {
   const b = SCENES.slice(1).map(s => s.a);
   const war = SCENES.find(s => s.name === 'Cinco años de guerra');
-  let x = war.a; for (const len of [CARD, 8, 11, CARD, 8, 11, CARD, 8, 11, CARD]) { x += len; b.push(x); }
+  let x = war.a; for (const len of [CARD, 14, 11, CARD, 14, 11, CARD, 14, 11, CARD]) { x += len; b.push(x); }
   ['Año 1', 'Batalla final'].forEach(n => b.push(SCENES.find(s => s.name === n).a + CARD));
   return b.map(v => v - 0.45).sort((p, q) => p - q);
 })();
