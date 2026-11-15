@@ -104,7 +104,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · 3 min 40 s</div>
+    <div class="eyebrow">Ciencia ficción en 3D · cortometraje animado · 3 min 42 s</div>
     <h1>La Guardia de <span>Valdoria</span></h1>
     <p class="logline">Año 2187. Malvor invade la ciudad de Valdoria con un ejército de drones. Capitán Relámpago, Guardián Cósmico y Sombra Dorada pelean contra él durante cinco años y cien batallas. Más de una vez están a punto de perder a uno de los suyos, hasta que descubren cómo derrotarlo.</p>
   </header>
@@ -130,8 +130,8 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
     <div class="controls">
       <button class="btn" id="play">Reproducir</button>
       <button class="btn" id="restart">Desde el inicio</button>
-      <input type="range" id="scrub" min="0" max="220.6" step="0.01" value="0" aria-label="Posición en la película">
-      <span class="time" id="time">0:00 / 3:40</span>
+      <input type="range" id="scrub" min="0" max="222.1" step="0.01" value="0" aria-label="Posición en la película">
+      <span class="time" id="time">0:00 / 3:42</span>
       <button class="btn" id="sound" aria-pressed="true">Sonido: encendido</button>
     </div>
   </section>
@@ -162,7 +162,7 @@ h2 { font: 700 15px var(--font-display); letter-spacing: .18em; text-transform: 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 <script>
 (() => {
-const DUR = 220.6;
+const DUR = 222.1;
 const CARD = 3.6; // seconds a black year card stays on screen while the battle waits
 const cv = document.getElementById('film');
 const subsEl = document.getElementById('subs'), scrub = document.getElementById('scrub');
@@ -233,8 +233,8 @@ const SHAKES = [[24.2, 0.6, 0.3], [13, 1.6, 1.2], [14, 3, 0.15], [95.6, 1.6, 0.3
 
 const SCENES = [
   { a: 0, b: 10, name: 'Prólogo' }, { a: 10, b: 22, name: 'La invasión' }, { a: 22, b: 41.5, name: 'Los héroes' },
-  { a: 41.5, b: 57.1, name: 'Año 1' }, { a: 57.1, b: 67.1, name: 'La guarida' }, { a: 67.1, b: 80.1, name: 'El cuartel' }, { a: 80.1, b: 161, name: 'Cinco años de guerra' }, { a: 161, b: 173, name: 'Al borde' },
-  { a: 173, b: 183, name: 'El plan' }, { a: 183, b: 202.6, name: 'Batalla final' }, { a: 202.6, b: 220.6, name: 'Amanecer' }
+  { a: 41.5, b: 58.6, name: 'Año 1' }, { a: 58.6, b: 68.6, name: 'La guarida' }, { a: 68.6, b: 81.6, name: 'El cuartel' }, { a: 81.6, b: 162.5, name: 'Cinco años de guerra' }, { a: 162.5, b: 174.5, name: 'Al borde' },
+  { a: 174.5, b: 184.5, name: 'El plan' }, { a: 184.5, b: 204.1, name: 'Batalla final' }, { a: 204.1, b: 222.1, name: 'Amanecer' }
 ];
 
 // ---------- 3D setup ----------
@@ -1144,9 +1144,9 @@ const DRAW = [
     const P = { rayo: [-8, 0, 1.5], guardian: [-6.5, 0, -0.8], sombra: [-5, 0, 2.2] };
     const out = skirmish(lt, D_YEAR1, P, { hurtHero: { id: 'sombra', t0: 3, kind: 'blast', down: 2.3 } });
     // Malvor arrives, the heroes beat him down
-    const atk = ss(6.1, 6.5, lt) * (1 - ss(8.5, 8.8, lt));
-    const kneel = ss(6.4, 8.2, lt) * (1 - ss(9.4, 10, lt));
-    const flee = ss(10.4, 12, lt);
+    const atk = ss(6.1, 6.5, lt) * (1 - ss(9.3, 9.6, lt));
+    const kneel = ss(6.4, 8.2, lt) * (1 - ss(10.4, 11, lt));
+    const flee = ss(11.6, 13.5, lt);
     const mx = lerp(45, 16, ss(4.4, 6, lt));
     const mpos = V(mx + flee * 6, 0.3 + Math.sin(lt * 1.5) * 0.2 - 0.9 * kneel + flee * flee * 26, -1);
     let mcore = V(mx, 7, -1);
@@ -1160,18 +1160,18 @@ const DRAW = [
     }
     // the allies drop in to save him
     ALLY.forEach(([m, c], i) => {
-      if (lt < 8.4) return;
-      const z = i ? 3.6 : -5, k = ss(8.4, 9.1, lt);
+      if (lt < 9.4) return;
+      const z = i ? 3.6 : -5, k = ss(9.4, 10.1, lt);
       const p = V(19 + flee * 6, lerp(30, 0, k) + flee * flee * 24 + Math.sin(lt * 1.6 + i) * 0.15, z);
       const core = poseMalvor(m, p, { s: 1.05, t: lt, col: c });
-      if (lt > 9.4 && lt < 10.3) { const tgt = V(P.guardian[0] + 3.4, 1.4 + i, P.guardian[2] + (i ? 1 : -1)); if (Math.sin(lt * 14 + i * 2) > 0) { beam(core, tgt, 0.14, c, 0.9); glow(tgt, 1.8, c, 0.9); } }
+      if (lt > 10.4 && lt < 11.3) { const tgt = V(P.guardian[0] + 3.4, 1.4 + i, P.guardian[2] + (i ? 1 : -1)); if (Math.sin(lt * 14 + i * 2) > 0) { beam(core, tgt, 0.14, c, 0.9); glow(tgt, 1.8, c, 0.9); } }
       if (flee > 0) for (let q = 1; q < 6; q++) glow(p.clone().add(V(-q * 0.3, -q * 1.5 * flee + 2, 0)), 2.4 - q * 0.3, c, 0.5 * flee);
     });
-    if (lt > 9.1 && lt < 10) { const k = (lt - 9.1) / 0.9; ring.visible = true; ring.position.set(19, 0.2, -0.7); ring.rotation.set(Math.PI / 2, 0, 0); ring.scale.setScalar(1 + k * 20); ring.material.opacity = 1 - k; ring.material.color.setHex(0xff8a30); }
+    if (lt > 10.1 && lt < 11) { const k = (lt - 10.1) / 0.9; ring.visible = true; ring.position.set(19, 0.2, -0.7); ring.rotation.set(Math.PI / 2, 0, 0); ring.scale.setScalar(1 + k * 20); ring.material.opacity = 1 - k; ring.material.color.setHex(0xff8a30); }
     if (flee > 0) for (let q = 0; q < 10; q++) glow(mpos.clone().add(V(-q * 0.4, -q * 1.8 * flee + 3, 0)), 3 - q * 0.25, RED, 0.5 * flee);
     // smoke bomb to cover the escape
-    if (lt > 10 && lt < 12) { const a = lt - 10, f = 1 - ss(1, 2, a); for (let q = 0; q < 8; q++) smoke(V(17 + Math.cos(q * 0.8) * (3 + a * 6), 2 + a * 3 + (q % 3) * 2, -0.5 + Math.sin(q * 0.8) * (2 + a * 3)), 9 + a * 6, 0.6 * f); }
-    camKeys(lt, [[0, [-17, 4, 15], [6, 3, 0]], [4.6, [-15, 4.5, 17], [8, 3.5, 0]], [6.6, [-5, 2.2, 10], [14, 3.4, -1]], [8.6, [-6, 3, 13], [16, 4, 0]], [10.3, [-8, 3, 15], [17, 7, 0]], [12, [-9, 2.6, 15], [22, 20, 0]]]);
+    if (lt > 11 && lt < 13.5) { const a = lt - 11, f = 1 - ss(1.3, 2.5, a); for (let q = 0; q < 8; q++) smoke(V(17 + Math.cos(q * 0.8) * (3 + a * 6), 2 + a * 3 + (q % 3) * 2, -0.5 + Math.sin(q * 0.8) * (2 + a * 3)), 9 + a * 6, 0.6 * f); }
+    camKeys(lt, [[0, [-17, 4, 15], [6, 3, 0]], [4.6, [-15, 4.5, 17], [8, 3.5, 0]], [6.6, [-5, 2.2, 10], [14, 3.4, -1]], [8.3, [-4, 2, 9], [15, 2.6, -1]], [9.4, [-6, 3, 13], [16, 6, 0]], [11.3, [-8, 3, 15], [17, 7, 0]], [13.5, [-9, 2.6, 15], [22, 20, 0]]]);
     chapterCard('AÑO 1', 'La batalla de Valdoria', cardA);
   },
   function lair(lt, t) {
@@ -1567,8 +1567,7 @@ const SUBS = [
   SHAKES.forEach(x => { x[0] = S(x[0]); });
   SUBS.push([46.4, 50, 'narrador', 'Malvor y sus aliados huyeron a su guarida, en la luna roja.'], [50.1, 52, 'malvor', 'Volveremos más fuertes.']);
   SUBS.sort((a, b) => a[0] - b[0]);
-  SFX.push({ t: 42.5, k: 'boom' }, { t: 43.1, k: 'boom' }, { t: 44.2, k: 'whoosh' }, { t: 44.4, k: 'rumble' }, { t: 46.6, k: 'whoosh' });
-  SHAKES.push([43.1, 0.7, 0.35]);
+  SFX.push({ t: 46.6, k: 'whoosh' });
   [106.2, 108.1, 110, 112, 114.2, 116.3, 118.4].forEach(t => SFX.push({ t, k: 'cheer' }));
   // the headquarters scene was inserted at 52 s: push every later moment 8 s forward
   const S2 = (t, end) => (end ? t > 52 : t >= 52) ? t + 8 : t;
@@ -1655,6 +1654,15 @@ const SUBS = [
   place('Después de cinco años y cien batallas, Valdoria volvió a brillar.', 206.2, 5.6);
   place('¡Viva la Guardia de Valdoria!', 211.9, 3);
   place('Y la Guardia de Valdoria siempre la va a cuidar.', 215.3, 4.2);
+  // year 1 is 1.5 s longer: Malvor cries for help, and one second later his allies drop in
+  SUBS.forEach(l => { if (l[0] >= 57.1) { l[0] += 1.5; l[1] += 1.5; } });
+  SFX.forEach(e => { if (e.t >= 57.1) e.t += 1.5; });
+  SHAKES.forEach(x => { if (x[0] >= 57.1) x[0] += 1.5; });
+  const B1 = 41.5 + CARD;
+  place('¡Ayuda!', B1 + 8.3, 1.2);
+  place('¡Se escapan!', B1 + 12.2, 1.3);
+  SFX.push({ t: B1 + 10.1, k: 'boom' }, { t: B1 + 10.5, k: 'pew' }, { t: B1 + 11.1, k: 'boom' }, { t: B1 + 11.6, k: 'whoosh' }, { t: B1 + 11.8, k: 'rumble' });
+  SHAKES.push([B1 + 10.1, 0.7, 0.35]);
   SUBS.sort((a, b) => a[0] - b[0]);
 }
 // ---------- playback ----------
